@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AuthProvider } from "@/lib/auth-context";
+import { AuthButton } from "@/components/auth/AuthButton";
+import { AuthModal } from "@/components/auth/AuthModal";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,29 +35,33 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-[family-name:var(--font-inter)] min-h-screen`}>
         <ThemeProvider>
-          <header className="fixed top-0 left-0 right-0 z-40 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md">
-            <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 h-14">
-              <a href="/" className="text-lg font-[900] tracking-tighter">
-                Color<span className="opacity-40">Guesser</span>
-              </a>
-              <div className="flex items-center gap-6">
-                <a
-                  href="/play"
-                  className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-200"
-                >
-                  Play
+          <AuthProvider>
+            <header className="fixed top-0 left-0 right-0 z-40 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md">
+              <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 h-14">
+                <a href="/" className="text-lg font-[900] tracking-tighter">
+                  Color<span className="opacity-40">Guesser</span>
                 </a>
-                <a
-                  href="/leaderboard"
-                  className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-200"
-                >
-                  Leaderboard
-                </a>
-                <ThemeToggle />
-              </div>
-            </nav>
-          </header>
-          <main className="pt-14">{children}</main>
+                <div className="flex items-center gap-5">
+                  <a
+                    href="/play"
+                    className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-200"
+                  >
+                    Play
+                  </a>
+                  <a
+                    href="/leaderboard"
+                    className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-200"
+                  >
+                    Leaderboard
+                  </a>
+                  <AuthButton />
+                  <ThemeToggle />
+                </div>
+              </nav>
+            </header>
+            <main className="pt-14">{children}</main>
+            <AuthModal />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

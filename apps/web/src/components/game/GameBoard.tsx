@@ -13,6 +13,7 @@ import { ScoreDisplay } from "./ScoreDisplay";
 import { ScoreFeedback } from "./ScoreFeedback";
 import { CountdownTimer } from "./CountdownTimer";
 import { BlitzClock } from "./BlitzClock";
+import { ScoreSubmitter } from "./ScoreSubmitter";
 import { Button } from "@/components/ui/Button";
 import { hsbToHex } from "@colorguesser/color-utils";
 import { BLITZ_DURATION_MS } from "@colorguesser/game-logic";
@@ -383,6 +384,9 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
                   </motion.div>
                 ))}
           </motion.div>
+
+          {/* Score submission */}
+          <ScoreSubmitter results={results} />
 
           {/* Actions */}
           <motion.div
