@@ -8,7 +8,7 @@
     "@colorguesser/types": "workspace:*"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --noEmit",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
