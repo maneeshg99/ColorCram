@@ -14,6 +14,7 @@ interface Profile {
   id: string;
   username: string;
   avatar_url: string | null;
+  role: string;
 }
 
 interface AuthContextValue {
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const supabase = getSupabase();
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, avatar_url")
+      .select("id, username, avatar_url, role")
       .eq("id", userId)
       .single();
     if (data) setProfile(data);

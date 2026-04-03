@@ -13,6 +13,14 @@ export function AuthButton() {
   if (user && profile) {
     return (
       <div className="flex items-center gap-3">
+        {profile.role === "admin" && (
+          <a
+            href="/admin"
+            className="text-xs text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
+          >
+            Admin
+          </a>
+        )}
         <span className="text-sm font-medium hidden sm:inline">
           {profile.username}
         </span>
