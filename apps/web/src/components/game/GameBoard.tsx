@@ -171,7 +171,7 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
       {state.phase === "guess" && (
         <motion.div
           key={`guess-${state.currentRound}`}
-          className="flex flex-col items-center gap-6 py-8 px-6"
+          className="flex flex-col items-center justify-center gap-4 px-6 min-h-[calc(100vh-3.5rem)] overflow-hidden"
           {...fadeIn}
         >
           {isBlitz && state.timeRemainingMs !== null && (

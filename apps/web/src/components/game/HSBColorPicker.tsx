@@ -47,7 +47,7 @@ function Strip({ label, valueLabel, gradient, position, onDrag, disabled }: Stri
       </span>
       <div
         ref={stripRef}
-        className="relative w-10 h-[280px] rounded-full overflow-hidden cursor-pointer select-none"
+        className="relative w-10 h-[200px] sm:h-[280px] rounded-full overflow-hidden cursor-pointer select-none touch-none"
         style={{ background: gradient }}
         onPointerDown={(e) => {
           if (disabled) return;
@@ -102,12 +102,12 @@ export function HSBColorPicker({ value, onChange, disabled = false }: HSBColorPi
 
   return (
     <motion.div
-      className={`flex flex-col items-center gap-6 ${disabled ? "opacity-30 pointer-events-none" : ""}`}
+      className={`flex flex-col items-center gap-3 sm:gap-6 ${disabled ? "opacity-30 pointer-events-none" : ""}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="flex gap-6">
+      <div className="flex gap-5 sm:gap-6">
         <Strip
           label="H"
           valueLabel={`${Math.round(value.h)}°`}
@@ -135,9 +135,9 @@ export function HSBColorPicker({ value, onChange, disabled = false }: HSBColorPi
       </div>
 
       {/* Color preview */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4">
         <motion.div
-          className="w-[100px] h-[100px] rounded-2xl border border-[var(--border)]"
+          className="w-[72px] h-[72px] sm:w-[100px] sm:h-[100px] rounded-2xl border border-[var(--border)]"
           style={{
             backgroundColor: hex,
             boxShadow: `0 8px 32px ${hex}40`,
