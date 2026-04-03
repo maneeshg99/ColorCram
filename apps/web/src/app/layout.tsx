@@ -52,8 +52,7 @@ export default function RootLayout({
                     href="/leaderboard"
                     className="text-xs sm:text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-200"
                   >
-                    <span className="hidden sm:inline">Leaderboard</span>
-                    <span className="sm:hidden">Board</span>
+                    Leaderboard
                   </a>
                   <AuthButton />
                   <ThemeToggle />
