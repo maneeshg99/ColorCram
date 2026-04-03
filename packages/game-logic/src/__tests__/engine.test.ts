@@ -22,7 +22,7 @@ describe("createGame", () => {
     expect(createGame("classic", "easy").totalRounds).toBe(5);
     expect(createGame("classic", "medium").totalRounds).toBe(5);
     expect(createGame("classic", "hard").totalRounds).toBe(8);
-    expect(createGame("classic", "expert").totalRounds).toBe(10);
+    expect(createGame("classic", "expert").totalRounds).toBe(5);
   });
 
   it("generates target colors for each round", () => {

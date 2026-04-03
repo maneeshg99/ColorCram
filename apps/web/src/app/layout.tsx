@@ -41,18 +41,19 @@ export default function RootLayout({
                 <a href="/" className="text-lg font-[900] tracking-tighter">
                   Color<span className="opacity-40">Guesser</span>
                 </a>
-                <div className="flex items-center gap-5">
+                <div className="flex items-center gap-2 sm:gap-5">
                   <a
                     href="/play"
-                    className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-200"
+                    className="text-xs sm:text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-200"
                   >
                     Play
                   </a>
                   <a
                     href="/leaderboard"
-                    className="text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-200"
+                    className="text-xs sm:text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors duration-200"
                   >
-                    Leaderboard
+                    <span className="hidden sm:inline">Leaderboard</span>
+                    <span className="sm:hidden">Board</span>
                   </a>
                   <AuthButton />
                   <ThemeToggle />

@@ -10,7 +10,7 @@ const EXPERT_WARNINGS = [
   "Your confidence is inspiring. Your accuracy? We'll see.",
   "Bold move. Hope your cones are warmed up.",
   "Expert mode doesn't grade on a curve. Just saying.",
-  "10 rounds. 2 seconds each. No mercy.",
+  "5 rounds. 2 seconds each. No mercy.",
   "You sure? The colors don't get easier, the timer gets shorter.",
   "Most people regret this. Just so you know.",
   "The leaderboard remembers everything.",

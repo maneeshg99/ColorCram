@@ -255,7 +255,9 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
           })()}
 
           <Button onClick={handleNextRound} size="md">
-            Next Round
+            {!isBlitz && state.currentRound + 1 >= state.totalRounds
+              ? "See Results"
+              : "Next Round"}
           </Button>
         </motion.div>
       )}

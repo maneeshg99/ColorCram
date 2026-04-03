@@ -162,7 +162,7 @@ export default function AdminPage() {
               <span className="w-40">Email</span>
               <span className="w-16 text-center">Role</span>
               <span className="w-16 text-center">Games</span>
-              <span className="w-48 text-right">Actions</span>
+              <span className="w-36 text-right">Actions</span>
             </div>
 
             {users.map((u) => (
@@ -208,21 +208,9 @@ export default function AdminPage() {
                   {u.games_played}
                 </span>
 
-                <div className="flex gap-2 w-48 justify-end">
+                <div className="flex gap-2 w-36 justify-end">
                   {u.id !== user.id && (
                     <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          handleRoleChange(
-                            u.id,
-                            u.role === "admin" ? "user" : "admin"
-                          )
-                        }
-                      >
-                        {u.role === "admin" ? "Demote" : "Promote"}
-                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"

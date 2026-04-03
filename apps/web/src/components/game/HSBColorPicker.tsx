@@ -47,7 +47,7 @@ function Strip({ label, valueLabel, gradient, position, onDrag, disabled }: Stri
       </span>
       <div
         ref={stripRef}
-        className="relative w-10 h-[200px] sm:h-[280px] rounded-full overflow-hidden cursor-pointer select-none touch-none"
+        className="relative w-14 sm:w-10 h-[200px] sm:h-[280px] rounded-full overflow-hidden cursor-pointer select-none touch-none"
         style={{ background: gradient }}
         onPointerDown={(e) => {
           if (disabled) return;
@@ -60,7 +60,7 @@ function Strip({ label, valueLabel, gradient, position, onDrag, disabled }: Stri
       >
         {/* Thumb */}
         <motion.div
-          className="absolute left-1/2 -translate-x-1/2 w-12 h-[6px] rounded-full bg-white border-2 border-[var(--bg)] pointer-events-none"
+          className="absolute left-1/2 -translate-x-1/2 w-16 sm:w-12 h-[6px] rounded-full bg-white border-2 border-[var(--bg)] pointer-events-none"
           style={{
             top: `calc(${position * 100}% - 3px)`,
             boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
