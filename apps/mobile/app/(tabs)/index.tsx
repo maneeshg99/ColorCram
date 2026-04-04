@@ -1,7 +1,9 @@
-import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
+import { View, Text, Pressable, StyleSheet, Alert, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "@/constants/theme";
+
+export const APP_VERSION = "0.5.0";
 
 const EXPERT_WARNINGS = [
   "Your confidence is inspiring. Your accuracy? We'll see.",
@@ -35,53 +37,59 @@ export default function PlayTab() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]}>
-      <Text style={[styles.title, { color: c.fg }]}>
-        Color<Text style={{ opacity: 0.4 }}>Cram</Text>
-      </Text>
-      <Text style={[styles.subtitle, { color: c.fgMuted }]}>
-        Memorize colors. Recreate them from memory.
-      </Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.title, { color: c.fg }]}>
+          Color<Text style={{ opacity: 0.4 }}>Cram</Text>
+        </Text>
+        <Text style={[styles.subtitle, { color: c.fgMuted }]}>
+          Memorize colors. Recreate them from memory.
+        </Text>
 
-      <View style={styles.modes}>
-        <ModeCard
-          title="Classic"
-          description="Memorize and recreate at your own pace"
-          onPress={() => null}
-          buttons={
-            <View style={styles.diffRow}>
-              <Pressable
-                style={[styles.diffBtn, { borderColor: c.border }]}
-                onPress={() =>
-                  router.push("/game/classic?difficulty=easy" as any)
-                }
-              >
-                <Text style={[styles.diffText, { color: c.fg }]}>Easy</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.diffBtn, { borderColor: c.border }]}
-                onPress={handleExpert}
-              >
-                <Text style={[styles.diffText, { color: c.fg }]}>Expert</Text>
-              </Pressable>
-            </View>
-          }
-        />
-        <ModeCard
-          title="Daily"
-          description="Same colors for everyone. One shot."
-          onPress={() => router.push("/game/daily" as any)}
-        />
-        <ModeCard
-          title="Blitz"
-          description="60 seconds. As many as you can."
-          onPress={() => router.push("/game/blitz" as any)}
-        />
-        <ModeCard
-          title="Gradient"
-          description="Recreate gradients, not just flats"
-          onPress={() => router.push("/game/gradient" as any)}
-        />
-      </View>
+        <View style={styles.modes}>
+          <ModeCard
+            title="Classic"
+            description="Memorize and recreate at your own pace"
+            onPress={() => null}
+            buttons={
+              <View style={styles.diffRow}>
+                <Pressable
+                  style={[styles.diffBtn, { borderColor: c.border }]}
+                  onPress={() =>
+                    router.push("/game/classic?difficulty=easy" as any)
+                  }
+                >
+                  <Text style={[styles.diffText, { color: c.fg }]}>Easy</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.diffBtn, { borderColor: c.border }]}
+                  onPress={handleExpert}
+                >
+                  <Text style={[styles.diffText, { color: c.fg }]}>Expert</Text>
+                </Pressable>
+              </View>
+            }
+          />
+          <ModeCard
+            title="Daily"
+            description="Same colors for everyone. One shot."
+            onPress={() => router.push("/game/daily" as any)}
+          />
+          <ModeCard
+            title="Blitz"
+            description="60 seconds. As many as you can."
+            onPress={() => router.push("/game/blitz" as any)}
+          />
+          <ModeCard
+            title="Gradient"
+            description="Recreate gradients, not just flats"
+            onPress={() => router.push("/game/gradient" as any)}
+          />
+        </View>
+
+        <Text style={[styles.versionText, { color: c.fgMuted }]}>
+          ColorCram v{APP_VERSION}
+        </Text>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -111,7 +119,8 @@ function ModeCard({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
+  container: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24 },
   title: { fontSize: 32, fontWeight: "900", letterSpacing: -1 },
   subtitle: { fontSize: 14, marginTop: 8, marginBottom: 28 },
   modes: { gap: 12 },
@@ -130,4 +139,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   diffText: { fontSize: 13, fontWeight: "600" },
+  versionText: {
+    fontSize: 11,
+    textAlign: "center",
+    marginTop: 32,
+    opacity: 0.5,
+  },
 });

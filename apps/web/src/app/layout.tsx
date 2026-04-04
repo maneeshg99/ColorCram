@@ -60,6 +60,11 @@ export default function RootLayout({
               </nav>
             </header>
             <main className="pt-14">{children}</main>
+            <footer className="border-t border-[var(--border)] py-4 text-center">
+              <span className="text-xs text-[var(--fg-muted)] opacity-50">
+                ColorCram v0.5.0
+              </span>
+            </footer>
             <AuthModal />
           </AuthProvider>
         </ThemeProvider>

@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   PanResponder,
-  GestureResponderEvent,
+  LayoutChangeEvent,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { HSB } from "@colorcram/types";
@@ -29,40 +29,64 @@ interface StripProps {
 }
 
 function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
-  // Use a ref so PanResponder always calls the latest callback
+  // Track the strip's absolute Y position on screen so we can use pageY
+  // instead of locationY — this prevents the "two bars" bug where locationY
+  // changes reference frame when the finger moves over the thumb.
+  const stripPageY = useRef(0);
+
   const onDragRef = useRef(onDrag);
   onDragRef.current = onDrag;
 
-  // Use a ref for the touch handler itself so the PanResponder closure
-  // always invokes the current version
-  const handleTouchRef = useRef((evt: GestureResponderEvent) => {
-    const y = evt.nativeEvent.locationY;
-    const clamped = Math.max(0, Math.min(STRIP_HEIGHT, y));
+  const handleTouch = useCallback((pageY: number) => {
+    const relativeY = pageY - stripPageY.current;
+    const clamped = Math.max(0, Math.min(STRIP_HEIGHT, relativeY));
     onDragRef.current(clamped / STRIP_HEIGHT);
-  });
-  handleTouchRef.current = (evt: GestureResponderEvent) => {
-    const y = evt.nativeEvent.locationY;
-    const clamped = Math.max(0, Math.min(STRIP_HEIGHT, y));
-    onDragRef.current(clamped / STRIP_HEIGHT);
-  };
+  }, []);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt) => handleTouchRef.current(evt),
-      onPanResponderMove: (evt) => handleTouchRef.current(evt),
+      onPanResponderGrant: (evt) => handleTouch(evt.nativeEvent.pageY),
+      onPanResponderMove: (evt) => handleTouch(evt.nativeEvent.pageY),
     })
   ).current;
 
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    // Measure after layout to get the absolute Y on screen
+    (e.target as any).measureInWindow?.(
+      (_x: number, y: number) => {
+        stripPageY.current = y;
+      }
+    );
+  }, []);
+
+  // Also re-measure when the view reference reports layout
+  const handleViewLayout = useCallback((e: LayoutChangeEvent) => {
+    e.target.measure?.(
+      (_x: number, _y: number, _w: number, _h: number, _px: number, pageY: number) => {
+        if (typeof pageY === "number" && !isNaN(pageY)) {
+          stripPageY.current = pageY;
+        }
+      }
+    );
+  }, []);
+
   // Clamp thumb position within bounds
-  const thumbTop = Math.max(0, Math.min(STRIP_HEIGHT - THUMB_HEIGHT, position * STRIP_HEIGHT - THUMB_HEIGHT / 2));
+  const thumbTop = Math.max(
+    0,
+    Math.min(STRIP_HEIGHT - THUMB_HEIGHT, position * STRIP_HEIGHT - THUMB_HEIGHT / 2)
+  );
 
   return (
     <View style={styles.stripContainer}>
       <Text style={styles.stripLabel}>{label}</Text>
       {/* Outer wrapper for touch area — no overflow hidden so thumb is visible */}
-      <View style={styles.stripTouchArea} {...panResponder.panHandlers}>
+      <View
+        style={styles.stripTouchArea}
+        onLayout={handleViewLayout}
+        {...panResponder.panHandlers}
+      >
         {/* Inner gradient with overflow hidden + borderRadius */}
         <View style={styles.stripGradientClip}>
           <LinearGradient
@@ -73,7 +97,10 @@ function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
           />
         </View>
         {/* Thumb sits on top, not clipped */}
-        <View style={[styles.thumb, { top: thumbTop }]} />
+        <View
+          style={[styles.thumb, { top: thumbTop }]}
+          pointerEvents="none"
+        />
       </View>
       <Text style={styles.stripValue}>{valueLabel}</Text>
     </View>
