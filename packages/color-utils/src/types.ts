@@ -1,1 +1,1 @@
-export type { HSB, RGB, LAB, XYZ } from "@colorguesser/types";
+export type { HSB, RGB, LAB, XYZ } from "@colorcram/types";

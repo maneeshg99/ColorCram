@@ -36,7 +36,7 @@ export default function PlayTab() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]}>
       <Text style={[styles.title, { color: c.fg }]}>
-        Color<Text style={{ opacity: 0.4 }}>Guesser</Text>
+        Color<Text style={{ opacity: 0.4 }}>Cram</Text>
       </Text>
       <Text style={[styles.subtitle, { color: c.fgMuted }]}>
         Memorize colors. Recreate them from memory.

@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { HSB, GameMode, Difficulty, GameState, GameResults } from "@colorguesser/types";
+import type { HSB, GameMode, Difficulty, GameState, GameResults } from "@colorcram/types";
 import {
   createGame,
   startMemorize,
@@ -13,7 +13,7 @@ import {
   getCurrentTarget,
   getCurrentGradientTarget,
   getResults,
-} from "@colorguesser/game-logic";
+} from "@colorcram/game-logic";
 
 interface GameStore {
   state: GameState | null;

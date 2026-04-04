@@ -1,4 +1,4 @@
-import { getSupabase } from "./supabase";
+import { supabase } from "./supabase";
 import type { GameMode } from "@colorcram/types";
 
 export interface LeaderboardRow {
@@ -14,7 +14,6 @@ export async function fetchLeaderboard(
   mode: GameMode,
   limit: number = 50
 ): Promise<LeaderboardRow[]> {
-  const supabase = getSupabase();
   const { data, error } = await supabase.rpc("get_leaderboard", {
     p_mode: mode,
     p_limit: limit,

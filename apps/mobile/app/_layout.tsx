@@ -1,24 +1,26 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { AuthProvider } from "@/lib/auth-context";
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={styles.root}>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="game"
-          options={{ animation: "slide_from_right" }}
-        />
-        <Stack.Screen
-          name="auth/modal"
-          options={{ presentation: "modal", animation: "slide_from_bottom" }}
-        />
-      </Stack>
-    </GestureHandlerRootView>
+    <AuthProvider>
+      <View style={styles.root}>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="game"
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="auth/modal"
+            options={{ presentation: "modal", animation: "slide_from_bottom" }}
+          />
+        </Stack>
+      </View>
+    </AuthProvider>
   );
 }
 

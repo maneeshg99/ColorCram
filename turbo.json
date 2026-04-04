@@ -5,7 +5,7 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
-    "@colorguesser/web#build": {
+    "@colorcram/web#build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },

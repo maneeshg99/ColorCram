@@ -8,9 +8,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   transpilePackages: [
-    "@colorguesser/color-utils",
-    "@colorguesser/game-logic",
-    "@colorguesser/types",
+    "@colorcram/color-utils",
+    "@colorcram/game-logic",
+    "@colorcram/types",
   ],
 };
 

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "ColorGuesser",
-    "slug": "colorguesser",
+    "name": "ColorCram",
+    "slug": "colorcram",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "colorguesser",
+    "scheme": "colorcram",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -13,13 +13,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.colorguesser.app"
+      "bundleIdentifier": "com.colorcram.app"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#000000"
       },
-      "package": "com.colorguesser.app"
+      "package": "com.colorcram.app"
     },
     "plugins": [
       "expo-router",

@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ColorGuesser - Test Your Color Memory",
+  title: "ColorCram - Test Your Color Memory",
   description:
     "A color memory game that challenges your visual perception. Memorize colors, recreate them, and compete on global leaderboards.",
 };
@@ -39,7 +39,7 @@ export default function RootLayout({
             <header className="fixed top-0 left-0 right-0 z-40 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md">
               <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 h-14">
                 <a href="/" className="text-lg font-[900] tracking-tighter">
-                  Color<span className="opacity-40">Guesser</span>
+                  Color<span className="opacity-40">Cram</span>
                 </a>
                 <div className="flex items-center gap-2 sm:gap-5">
                   <a

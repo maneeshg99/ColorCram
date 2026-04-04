@@ -1,5 +1,5 @@
 {
-  "name": "@colorguesser/web",
+  "name": "@colorcram/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,9 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@colorguesser/color-utils": "workspace:*",
-    "@colorguesser/game-logic": "workspace:*",
-    "@colorguesser/types": "workspace:*",
+    "@colorcram/color-utils": "workspace:*",
+    "@colorcram/game-logic": "workspace:*",
+    "@colorcram/types": "workspace:*",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
     "framer-motion": "^12.0.0",

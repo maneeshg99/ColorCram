@@ -1,4 +1,4 @@
-import type { HSB } from "@colorguesser/types";
+import type { HSB } from "@colorcram/types";
 
 /**
  * Mulberry32 seeded PRNG.

@@ -1,4 +1,4 @@
-import type { HSB } from "@colorguesser/types";
+import type { HSB } from "@colorcram/types";
 
 /**
  * Linearly interpolate between two HSB colors.

@@ -112,6 +112,15 @@ export interface LeaderboardEntry {
   gamesPlayed: number;
 }
 
+// Validation
+export {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+  sanitizeInput,
+  type ValidationResult,
+} from "./validation";
+
 // Profile types
 export interface UserProfile {
   id: string;

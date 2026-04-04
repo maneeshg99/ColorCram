@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { HSB } from "@colorguesser/types";
-import { hsbToHex, hsbToRgb } from "@colorguesser/color-utils";
+import type { HSB } from "@colorcram/types";
+import { hsbToHex, hsbToRgb } from "@colorcram/color-utils";
 
 interface ColorDisplayProps {
   color: HSB;

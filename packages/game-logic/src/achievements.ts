@@ -1,4 +1,4 @@
-import type { AchievementDefinition, GameResults } from "@colorguesser/types";
+import type { AchievementDefinition, GameResults } from "@colorcram/types";
 
 export const ACHIEVEMENTS: AchievementDefinition[] = [
   { id: "first_game", name: "First Steps", description: "Complete your first game", icon: "🎮", category: "milestone" },

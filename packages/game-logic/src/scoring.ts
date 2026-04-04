@@ -1,5 +1,5 @@
-import { ciede2000, hsbToLab } from "@colorguesser/color-utils";
-import type { HSB } from "@colorguesser/types";
+import { ciede2000, hsbToLab } from "@colorcram/color-utils";
+import type { HSB } from "@colorcram/types";
 
 /**
  * Calculate the perceptual distance between two HSB colors
@@ -39,5 +39,5 @@ export function calculateScoreWithSpeedBonus(
 ): number {
   const baseScore = deltaEToScore(deltaE);
   const speedMultiplier = timeMs < 3000 ? 1 + 0.5 * (1 - timeMs / 3000) : 1;
-  return Math.round(baseScore * speedMultiplier);
+  return Math.min(100, Math.round(baseScore * speedMultiplier));
 }

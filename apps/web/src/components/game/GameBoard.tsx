@@ -15,9 +15,9 @@ import { CountdownTimer } from "./CountdownTimer";
 import { BlitzClock } from "./BlitzClock";
 import { ScoreSubmitter } from "./ScoreSubmitter";
 import { Button } from "@/components/ui/Button";
-import { hsbToHex } from "@colorguesser/color-utils";
-import { BLITZ_DURATION_MS } from "@colorguesser/game-logic";
-import type { GameMode, Difficulty } from "@colorguesser/types";
+import { hsbToHex } from "@colorcram/color-utils";
+import { BLITZ_DURATION_MS } from "@colorcram/game-logic";
+import type { GameMode, Difficulty } from "@colorcram/types";
 
 interface GameBoardProps {
   mode: GameMode;

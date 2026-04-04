@@ -4,6 +4,12 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth-context";
+import {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+  sanitizeInput,
+} from "@colorcram/types";
 
 export function AuthModal() {
   const { showAuthModal, setShowAuthModal, signIn, signUp } = useAuth();
@@ -25,18 +31,39 @@ export function AuthModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Validate inputs
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.error!);
+      return;
+    }
+
+    const pwCheck = validatePassword(password);
+    if (!pwCheck.valid) {
+      setError(pwCheck.error!);
+      return;
+    }
+
+    if (tab === "signup") {
+      const usernameCheck = validateUsername(username);
+      if (!usernameCheck.valid) {
+        setError(usernameCheck.error!);
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     let err: string | null;
     if (tab === "signin") {
-      err = await signIn(email, password);
+      err = await signIn(sanitizeInput(email), password);
     } else {
-      if (!username.trim()) {
-        setError("Username is required");
-        setSubmitting(false);
-        return;
-      }
-      err = await signUp(email, password, username.trim());
+      err = await signUp(
+        sanitizeInput(email),
+        password,
+        sanitizeInput(username)
+      );
     }
 
     if (err) {
@@ -114,8 +141,12 @@ export function AuthModal() {
                     className="w-full px-3 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--fg-muted)] transition-colors"
                     placeholder="ChromaKing"
                     maxLength={24}
+                    autoComplete="username"
                     required
                   />
+                  <p className="text-[10px] text-[var(--fg-muted)] mt-1">
+                    2-24 characters, letters, numbers, underscores
+                  </p>
                 </div>
               )}
               <div>
@@ -128,6 +159,8 @@ export function AuthModal() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--fg-muted)] transition-colors"
                   placeholder="you@example.com"
+                  maxLength={254}
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -142,6 +175,8 @@ export function AuthModal() {
                   className="w-full px-3 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--fg-muted)] transition-colors"
                   placeholder="••••••••"
                   minLength={6}
+                  maxLength={128}
+                  autoComplete={tab === "signin" ? "current-password" : "new-password"}
                   required
                 />
               </div>

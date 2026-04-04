@@ -1,4 +1,4 @@
-import type { LAB } from "@colorguesser/types";
+import type { LAB } from "@colorcram/types";
 
 /**
  * CIEDE2000 color difference.

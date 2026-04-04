@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { GameBoard } from "@/components/game/GameBoard";
-import type { Difficulty } from "@colorguesser/types";
+import type { Difficulty } from "@colorcram/types";
 
 function ClassicGame() {
   const searchParams = useSearchParams();

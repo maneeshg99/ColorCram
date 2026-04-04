@@ -15,7 +15,4 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
-// Prevent Metro from walking up the tree and finding wrong copies
-config.resolver.disableHierarchicalLookup = true;
-
 module.exports = config;

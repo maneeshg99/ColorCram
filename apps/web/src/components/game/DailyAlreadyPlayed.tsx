@@ -42,7 +42,7 @@ export function DailyAlreadyPlayed({ result }: DailyAlreadyPlayedProps) {
 
   const handleShare = () => {
     const lines = [
-      `ColorGuesser Daily \u2014 ${result.date}`,
+      `ColorCram Daily \u2014 ${result.date}`,
       `Average: ${result.avgScore}% match`,
       "",
       ...result.rounds.map(
@@ -50,7 +50,7 @@ export function DailyAlreadyPlayed({ result }: DailyAlreadyPlayedProps) {
           `Round ${i + 1}: ${r.score >= 97 ? "\ud83d\udfe2" : r.score >= 90 ? "\ud83d\udfe1" : r.score >= 70 ? "\ud83d\udfe0" : r.score >= 40 ? "\ud83d\udfe0" : "\ud83d\udd34"} ${r.score}%`
       ),
       "",
-      "colorguesser.gg",
+      "colorcram.app",
     ];
     navigator.clipboard.writeText(lines.join("\n"));
     setCopied(true);

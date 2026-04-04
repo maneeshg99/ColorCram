@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import type { HSB } from "@colorguesser/types";
+import type { HSB } from "@colorcram/types";
 import { HSBColorPicker } from "./HSBColorPicker";
 import { GradientDisplay } from "./GradientDisplay";
 

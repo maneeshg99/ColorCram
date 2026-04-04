@@ -1,4 +1,4 @@
-import type { GameResults } from "@colorguesser/types";
+import type { GameResults } from "@colorcram/types";
 
 export interface DailyResult {
   date: string;
@@ -13,7 +13,7 @@ function getTodayUTC(): string {
 }
 
 function getKey(date?: string): string {
-  return `colorguesser:daily:${date ?? getTodayUTC()}`;
+  return `colorcram:daily:${date ?? getTodayUTC()}`;
 }
 
 export function hasPlayedToday(): boolean {

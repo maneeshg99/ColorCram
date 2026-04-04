@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { HSB } from "@colorguesser/types";
-import { hsbToHex } from "@colorguesser/color-utils";
+import type { HSB } from "@colorcram/types";
+import { hsbToHex } from "@colorcram/color-utils";
 import { getContrastColor } from "./ColorDisplay";
 
 interface ColorComparisonProps {

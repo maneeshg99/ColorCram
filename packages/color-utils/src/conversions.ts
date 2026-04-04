@@ -1,4 +1,4 @@
-import type { HSB, RGB, XYZ, LAB } from "@colorguesser/types";
+import type { HSB, RGB, XYZ, LAB } from "@colorcram/types";
 
 /**
  * HSB to RGB conversion.

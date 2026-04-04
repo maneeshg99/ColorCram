@@ -1,4 +1,4 @@
-import { generateColors, generateGradientPairs } from "@colorguesser/color-utils";
+import { generateColors, generateGradientPairs } from "@colorcram/color-utils";
 import type {
   GameState,
   GamePhase,
@@ -8,7 +8,7 @@ import type {
   RoundData,
   GradientRoundData,
   GameResults,
-} from "@colorguesser/types";
+} from "@colorcram/types";
 import { DIFFICULTY_CONFIGS, BLITZ_DURATION_MS, BLITZ_MEMORIZE_MS } from "./difficulty";
 import { calculateDeltaE, deltaEToScore, calculateScoreWithSpeedBonus } from "./scoring";
 

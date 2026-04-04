@@ -8,7 +8,7 @@ import {
   fetchLeaderboard,
   type LeaderboardRow,
 } from "@/lib/leaderboard";
-import type { GameMode } from "@colorguesser/types";
+import type { GameMode } from "@colorcram/types";
 
 const MODES: { id: GameMode; label: string }[] = [
   { id: "classic", label: "Classic" },

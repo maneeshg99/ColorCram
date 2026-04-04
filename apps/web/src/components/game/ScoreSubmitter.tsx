@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth-context";
 import { getSupabase } from "@/lib/supabase";
-import type { GameResults } from "@colorguesser/types";
+import type { GameResults } from "@colorcram/types";
 
 interface ScoreSubmitterProps {
   results: GameResults;

@@ -29,7 +29,7 @@ export default function HomePage() {
             ))}
           </span>
           <span className="block text-[var(--fg-muted)]" style={{ fontSize: "clamp(3rem, 9vw, 8rem)" }}>
-            {"Guesser".split("").map((char, i) => (
+            {"Cram".split("").map((char, i) => (
               <motion.span
                 key={`b-${i}`}
                 className="inline-block"

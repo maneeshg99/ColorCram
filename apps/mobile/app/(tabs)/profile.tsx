@@ -1,21 +1,215 @@
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors } from "@/constants/theme";
+import { useRouter } from "expo-router";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/Button";
+import { Colors, getScoreColor } from "@/constants/theme";
+
+interface GameStat {
+  mode: string;
+  difficulty: string;
+  games_played: number;
+  best_avg_score: number;
+}
 
 export default function ProfileTab() {
+  const { user, profile, loading, signOut } = useAuth();
+  const router = useRouter();
   const c = Colors.dark;
+
+  const [stats, setStats] = useState<GameStat[]>([]);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setStats([]);
+      return;
+    }
+    setStatsLoading(true);
+    supabase
+      .from("game_scores")
+      .select("mode, difficulty, avg_score")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (!data) {
+          setStatsLoading(false);
+          return;
+        }
+        // Group by mode+difficulty
+        const grouped: Record<string, { scores: number[]; count: number }> = {};
+        data.forEach((row: any) => {
+          const key = `${row.mode}-${row.difficulty}`;
+          if (!grouped[key]) grouped[key] = { scores: [], count: 0 };
+          grouped[key].scores.push(row.avg_score);
+          grouped[key].count++;
+        });
+
+        const result: GameStat[] = Object.entries(grouped).map(
+          ([key, val]) => {
+            const [mode, difficulty] = key.split("-");
+            return {
+              mode,
+              difficulty,
+              games_played: val.count,
+              best_avg_score: Math.max(...val.scores),
+            };
+          }
+        );
+        result.sort((a, b) => b.best_avg_score - a.best_avg_score);
+        setStats(result);
+        setStatsLoading(false);
+      });
+  }, [user]);
+
+  // Not logged in
+  if (!loading && !user) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]}>
+        <View style={styles.signedOutContent}>
+          <Text style={[styles.title, { color: c.fg }]}>Profile</Text>
+          <Text style={[styles.subtitle, { color: c.fgMuted }]}>
+            Sign in to track your scores and compete on the leaderboard.
+          </Text>
+          <Button
+            title="Sign In / Sign Up"
+            onPress={() => router.push("/auth/modal")}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]}>
+        <ActivityIndicator color={c.fgMuted} style={{ flex: 1 }} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]}>
-      <Text style={[styles.title, { color: c.fg }]}>Profile</Text>
-      <Text style={[styles.subtitle, { color: c.fgMuted }]}>
-        Sign in to track your scores
-      </Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={[styles.title, { color: c.fg }]}>Profile</Text>
+
+        {/* User card */}
+        <View style={[styles.userCard, { backgroundColor: c.surface }]}>
+          <View style={[styles.avatar, { backgroundColor: c.surfaceElevated }]}>
+            <Text style={[styles.avatarText, { color: c.fg }]}>
+              {(profile?.username ?? "?")[0].toUpperCase()}
+            </Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.username, { color: c.fg }]}>
+              {profile?.username ?? "Loading..."}
+            </Text>
+            <Text style={[styles.email, { color: c.fgMuted }]}>
+              {user?.email}
+            </Text>
+          </View>
+        </View>
+
+        {/* Stats */}
+        <Text style={[styles.sectionTitle, { color: c.fg }]}>Your Stats</Text>
+
+        {statsLoading ? (
+          <ActivityIndicator color={c.fgMuted} style={{ marginTop: 16 }} />
+        ) : stats.length === 0 ? (
+          <Text style={[styles.emptyText, { color: c.fgMuted }]}>
+            No games played yet. Go play some rounds!
+          </Text>
+        ) : (
+          <View style={styles.statsList}>
+            {stats.map((stat) => (
+              <View
+                key={`${stat.mode}-${stat.difficulty}`}
+                style={[styles.statRow, { backgroundColor: c.surface }]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.statMode, { color: c.fg }]}>
+                    {stat.mode.charAt(0).toUpperCase() + stat.mode.slice(1)}
+                  </Text>
+                  <Text style={[styles.statDifficulty, { color: c.fgMuted }]}>
+                    {stat.difficulty} · {stat.games_played} game
+                    {stat.games_played !== 1 ? "s" : ""}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.statScore,
+                    { color: getScoreColor(stat.best_avg_score) },
+                  ]}
+                >
+                  {Math.round(stat.best_avg_score)}%
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Sign out */}
+        <View style={{ marginTop: 32 }}>
+          <Button title="Sign Out" variant="secondary" onPress={signOut} />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
-  title: { fontSize: 28, fontWeight: "900", letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, marginTop: 8 },
+  scrollContent: { paddingBottom: 40 },
+  signedOutContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+    marginBottom: 16,
+  },
+  subtitle: { fontSize: 14, textAlign: "center", maxWidth: 280 },
+  userCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 24,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: { fontSize: 20, fontWeight: "800" },
+  username: { fontSize: 18, fontWeight: "700" },
+  email: { fontSize: 12, marginTop: 2 },
+  sectionTitle: { fontSize: 18, fontWeight: "800", marginBottom: 12 },
+  emptyText: { fontSize: 14 },
+  statsList: { gap: 8 },
+  statRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 12,
+  },
+  statMode: { fontSize: 14, fontWeight: "700" },
+  statDifficulty: { fontSize: 12, marginTop: 2 },
+  statScore: { fontSize: 18, fontWeight: "900", fontFamily: "monospace" },
 });

@@ -1,20 +1,18 @@
-import React, { useCallback } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  runOnJS,
-} from "react-native-reanimated";
+import React, { useRef, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  PanResponder,
+  GestureResponderEvent,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
-import type { HSB } from "@colorguesser/types";
-import { hsbToHex } from "@colorguesser/color-utils";
+import type { HSB } from "@colorcram/types";
+import { hsbToHex } from "@colorcram/color-utils";
 import { Colors } from "@/constants/theme";
 
 const STRIP_HEIGHT = 260;
 const STRIP_WIDTH = 56;
-const THUMB_WIDTH = 68;
 const THUMB_HEIGHT = 6;
 
 interface HSBColorPickerProps {
@@ -26,55 +24,57 @@ interface StripProps {
   label: string;
   valueLabel: string;
   colors: string[];
-  position: number;
+  position: number; // 0-1 normalized
   onDrag: (position: number) => void;
 }
 
 function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
-  const thumbY = useSharedValue(position * STRIP_HEIGHT);
-  const lastInt = useSharedValue(-1);
+  // Use a ref so PanResponder always calls the latest callback
+  const onDragRef = useRef(onDrag);
+  onDragRef.current = onDrag;
 
-  const doHaptic = useCallback(() => {
-    Haptics.selectionAsync();
-  }, []);
+  // Use a ref for the touch handler itself so the PanResponder closure
+  // always invokes the current version
+  const handleTouchRef = useRef((evt: GestureResponderEvent) => {
+    const y = evt.nativeEvent.locationY;
+    const clamped = Math.max(0, Math.min(STRIP_HEIGHT, y));
+    onDragRef.current(clamped / STRIP_HEIGHT);
+  });
+  handleTouchRef.current = (evt: GestureResponderEvent) => {
+    const y = evt.nativeEvent.locationY;
+    const clamped = Math.max(0, Math.min(STRIP_HEIGHT, y));
+    onDragRef.current(clamped / STRIP_HEIGHT);
+  };
 
-  const gesture = Gesture.Pan()
-    .onStart((e) => {
-      const y = Math.max(0, Math.min(STRIP_HEIGHT, e.y));
-      thumbY.value = y;
-      runOnJS(onDrag)(y / STRIP_HEIGHT);
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => handleTouchRef.current(evt),
+      onPanResponderMove: (evt) => handleTouchRef.current(evt),
     })
-    .onUpdate((e) => {
-      const y = Math.max(0, Math.min(STRIP_HEIGHT, e.y));
-      thumbY.value = y;
-      const norm = y / STRIP_HEIGHT;
-      const intVal = Math.round(norm * 100);
-      if (intVal !== lastInt.value) {
-        lastInt.value = intVal;
-        runOnJS(doHaptic)();
-      }
-      runOnJS(onDrag)(norm);
-    })
-    .hitSlop({ horizontal: 20, vertical: 10 });
+  ).current;
 
-  const thumbStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: thumbY.value - THUMB_HEIGHT / 2 }],
-  }));
+  // Clamp thumb position within bounds
+  const thumbTop = Math.max(0, Math.min(STRIP_HEIGHT - THUMB_HEIGHT, position * STRIP_HEIGHT - THUMB_HEIGHT / 2));
 
   return (
     <View style={styles.stripContainer}>
       <Text style={styles.stripLabel}>{label}</Text>
-      <GestureDetector gesture={gesture}>
-        <View style={styles.stripWrapper}>
+      {/* Outer wrapper for touch area — no overflow hidden so thumb is visible */}
+      <View style={styles.stripTouchArea} {...panResponder.panHandlers}>
+        {/* Inner gradient with overflow hidden + borderRadius */}
+        <View style={styles.stripGradientClip}>
           <LinearGradient
             colors={colors as any}
             style={styles.strip}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
           />
-          <Animated.View style={[styles.thumb, thumbStyle]} />
         </View>
-      </GestureDetector>
+        {/* Thumb sits on top, not clipped */}
+        <View style={[styles.thumb, { top: thumbTop }]} />
+      </View>
       <Text style={styles.stripValue}>{valueLabel}</Text>
     </View>
   );
@@ -83,17 +83,14 @@ function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
 export function HSBColorPicker({ value, onChange }: HSBColorPickerProps) {
   const hex = hsbToHex(value);
 
-  // Hue: rainbow spectrum
   const hueColors = [
     "#ff0000", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#ff00ff", "#ff0000",
   ];
 
-  // Saturation: desaturated to saturated at current H+B
   const satColors = [0, 25, 50, 75, 100].map((s) =>
     hsbToHex({ h: value.h, s, b: value.b })
   );
 
-  // Brightness: bright (top) to dark (bottom)
   const briColors = [100, 75, 50, 25, 0].map((b) =>
     hsbToHex({ h: value.h, s: value.s, b })
   );
@@ -106,21 +103,21 @@ export function HSBColorPicker({ value, onChange }: HSBColorPickerProps) {
           valueLabel={`${Math.round(value.h)}°`}
           colors={hueColors}
           position={value.h / 360}
-          onDrag={(y) => onChange({ ...value, h: Math.round(y * 360) })}
+          onDrag={(norm) => onChange({ ...value, h: Math.round(norm * 360) })}
         />
         <Strip
           label="S"
           valueLabel={`${Math.round(value.s)}%`}
           colors={satColors}
           position={value.s / 100}
-          onDrag={(y) => onChange({ ...value, s: Math.round(y * 100) })}
+          onDrag={(norm) => onChange({ ...value, s: Math.round(norm * 100) })}
         />
         <Strip
           label="B"
           valueLabel={`${Math.round(value.b)}%`}
           colors={briColors}
           position={1 - value.b / 100}
-          onDrag={(y) => onChange({ ...value, b: Math.round((1 - y) * 100) })}
+          onDrag={(norm) => onChange({ ...value, b: Math.round((1 - norm) * 100) })}
         />
       </View>
 
@@ -151,22 +148,26 @@ const styles = StyleSheet.create({
     color: c.fgMuted,
     textTransform: "uppercase",
   },
-  stripWrapper: {
+  stripTouchArea: {
+    width: STRIP_WIDTH + 12, // extra touch padding
+    height: STRIP_HEIGHT,
+    position: "relative",
+    alignItems: "center",
+  },
+  stripGradientClip: {
     width: STRIP_WIDTH,
     height: STRIP_HEIGHT,
     borderRadius: STRIP_WIDTH / 2,
     overflow: "hidden",
-    position: "relative",
   },
   strip: {
     width: "100%",
     height: "100%",
-    borderRadius: STRIP_WIDTH / 2,
   },
   thumb: {
     position: "absolute",
-    left: (STRIP_WIDTH - THUMB_WIDTH) / 2,
-    width: THUMB_WIDTH,
+    alignSelf: "center",
+    width: STRIP_WIDTH + 12,
     height: THUMB_HEIGHT,
     borderRadius: 3,
     backgroundColor: "#fff",
