@@ -57,8 +57,12 @@ export default function DailyPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <GameBoard key={today} mode="daily" difficulty="medium" seed={today} />
-    </div>
+    <GameBoard
+      key={today}
+      mode="daily"
+      difficulty="medium"
+      seed={today}
+      onExit={() => setStarted(false)}
+    />
   );
 }

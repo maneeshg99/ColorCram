@@ -19,9 +19,11 @@ function ClassicGame() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <GameBoard mode="classic" difficulty={difficulty} />
-    </div>
+    <GameBoard
+      mode="classic"
+      difficulty={difficulty}
+      onExit={() => setDifficulty(null)}
+    />
   );
 }
 

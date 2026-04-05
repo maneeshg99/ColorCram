@@ -73,11 +73,12 @@ export function ResultScreen({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       style={{
-        minHeight: "100vh",
+        height: "100dvh",
         backgroundColor: "#131313",
         display: "flex",
         flexDirection: "column",
-        padding: "clamp(20px, 3vw, 40px)",
+        padding: "clamp(16px, 3vw, 40px)",
+        overflow: "hidden",
       }}
     >
       {/* Top bar */}

@@ -17,9 +17,10 @@ interface GameBoardProps {
   mode: GameMode;
   difficulty: Difficulty;
   seed?: string;
+  onExit?: () => void;
 }
 
-export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
+export function GameBoard({ mode, difficulty, seed, onExit }: GameBoardProps) {
   const {
     state,
     currentGuess,
@@ -111,8 +112,40 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
   const isBlitz = state.mode === "blitz";
   const isGradient = state.mode === "gradient";
 
+  const showExit = onExit && state.phase !== "summary" && state.phase !== "idle";
+
   return (
-    <div style={{ position: "relative", minHeight: "100vh" }}>
+    <>
+    {/* Exit button — rendered outside overflow container */}
+    {showExit && (
+      <button
+        onClick={onExit}
+        style={{
+          position: "fixed",
+          bottom: "clamp(12px, 2vw, 20px)",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 200,
+          background: "rgba(40,40,40,0.8)",
+          border: "1px solid rgba(255,255,255,0.25)",
+          borderRadius: 20,
+          padding: "6px 16px",
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#bbb",
+          cursor: "pointer",
+          transition: "color 0.2s, border-color 0.2s",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "#bbb"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; }}
+      >
+        Exit
+      </button>
+    )}
+
+    <div style={{ position: "relative", height: "100dvh", overflow: "hidden" }}>
       {/* Persistent blitz clock overlay */}
       {isBlitz && state.timeRemainingMs !== null && state.phase !== "summary" && (
         <div
@@ -221,5 +254,6 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
         )}
       </ScreenTransition>
     </div>
+    </>
   );
 }
