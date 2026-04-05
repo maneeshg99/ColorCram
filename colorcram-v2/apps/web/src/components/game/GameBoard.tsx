@@ -1,0 +1,225 @@
+"use client";
+
+import { useEffect, useCallback, useRef } from "react";
+import { useGameStore } from "@/hooks/useGame";
+import { ScreenTransition } from "@/components/design-system/ScreenTransition";
+import { MemorizeScreen } from "./MemorizeScreen";
+import { GuessScreen } from "./GuessScreen";
+import { ResultScreen } from "./ResultScreen";
+import { SummaryScreen } from "./SummaryScreen";
+import { BlitzClock } from "./BlitzClock";
+import { hsbToHex } from "@colorcram-v2/color-utils";
+import { BLITZ_DURATION_MS } from "@colorcram-v2/game-logic";
+import type { GameMode, Difficulty } from "@colorcram-v2/types";
+import { playSound } from "@/lib/sounds";
+
+interface GameBoardProps {
+  mode: GameMode;
+  difficulty: Difficulty;
+  seed?: string;
+}
+
+export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
+  const {
+    state,
+    currentGuess,
+    currentGuessStart,
+    currentGuessEnd,
+    newGame,
+    beginMemorize,
+    beginGuess,
+    setGuess,
+    setGuessStart,
+    setGuessEnd,
+    confirmGuess,
+    confirmGradientGuess,
+    advance,
+    tickBlitz,
+    getTarget,
+    getGradientTarget,
+    getGameResults,
+  } = useGameStore();
+
+  const initialized = useRef(false);
+  const blitzStartRef = useRef<number | null>(null);
+
+  // Initialize game
+  useEffect(() => {
+    if (!initialized.current) {
+      initialized.current = true;
+      newGame(mode, difficulty, seed);
+      queueMicrotask(() => {
+        useGameStore.getState().state && beginMemorize();
+      });
+    }
+  }, [mode, difficulty, seed, newGame, beginMemorize]);
+
+  // Blitz timer loop
+  const phase = state?.phase;
+  useEffect(() => {
+    if (mode !== "blitz") return;
+    if (!phase || phase === "idle" || phase === "summary" || phase === "submitted") return;
+
+    if (blitzStartRef.current === null) {
+      blitzStartRef.current = Date.now();
+    }
+
+    const interval = setInterval(() => {
+      if (blitzStartRef.current === null) return;
+      tickBlitz(Date.now() - blitzStartRef.current);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [mode, phase, tickBlitz]);
+
+  const handleMemorizeComplete = useCallback(() => {
+    playSound("transition");
+    beginGuess();
+  }, [beginGuess]);
+
+  const handleSubmitGuess = useCallback(() => {
+    playSound("submit");
+    if (mode === "gradient") {
+      confirmGradientGuess();
+    } else {
+      confirmGuess();
+    }
+  }, [mode, confirmGuess, confirmGradientGuess]);
+
+  const handleNextRound = useCallback(() => {
+    playSound("transition");
+    advance();
+  }, [advance]);
+
+  const handlePlayAgain = useCallback(() => {
+    blitzStartRef.current = null;
+    initialized.current = false;
+    newGame(mode, difficulty, seed);
+    queueMicrotask(() => {
+      initialized.current = true;
+      beginMemorize();
+    });
+  }, [mode, difficulty, seed, newGame, beginMemorize]);
+
+  if (!state) return null;
+
+  const target = getTarget();
+  const gradientTarget = getGradientTarget();
+  const results = getGameResults();
+  const currentRoundData = state.rounds[state.currentRound];
+  const currentGradientRound = state.gradientRounds[state.currentRound];
+  const isBlitz = state.mode === "blitz";
+  const isGradient = state.mode === "gradient";
+
+  return (
+    <div style={{ position: "relative", minHeight: "100vh" }}>
+      {/* Persistent blitz clock overlay */}
+      {isBlitz && state.timeRemainingMs !== null && state.phase !== "summary" && (
+        <div
+          style={{
+            position: "fixed",
+            top: "clamp(16px, 2vw, 24px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 100,
+          }}
+        >
+          <BlitzClock
+            timeRemainingMs={state.timeRemainingMs}
+            totalTimeMs={BLITZ_DURATION_MS}
+          />
+        </div>
+      )}
+
+      <ScreenTransition phase={`${state.phase}-${state.currentRound}`}>
+        {/* MEMORIZE */}
+        {state.phase === "memorize" && (target || gradientTarget) && (
+          <MemorizeScreen
+            color={target ?? { h: 0, s: 0, b: 50 }}
+            round={state.currentRound + 1}
+            totalRounds={isBlitz ? state.currentRound + 1 : state.totalRounds}
+            timeMs={state.memorizeTimeMs}
+            totalTimeMs={state.memorizeTimeMs}
+            onComplete={handleMemorizeComplete}
+            gradient={
+              isGradient && gradientTarget
+                ? gradientTarget
+                : undefined
+            }
+          />
+        )}
+
+        {/* GUESS */}
+        {state.phase === "guess" && (
+          <GuessScreen
+            round={state.currentRound + 1}
+            totalRounds={isBlitz ? state.currentRound + 1 : state.totalRounds}
+            guess={currentGuess}
+            onGuessChange={setGuess}
+            onSubmit={handleSubmitGuess}
+            isGradient={isGradient}
+            guessStart={currentGuessStart}
+            guessEnd={currentGuessEnd}
+            onGuessStartChange={setGuessStart}
+            onGuessEndChange={setGuessEnd}
+          />
+        )}
+
+        {/* REVEAL */}
+        {state.phase === "reveal" && (
+          (() => {
+            const score = isGradient
+              ? currentGradientRound?.score
+              : currentRoundData?.score;
+            const isLastRound = !isBlitz && state.currentRound + 1 >= state.totalRounds;
+
+            if (isGradient && currentGradientRound?.guessStart && currentGradientRound?.guessEnd) {
+              return (
+                <ResultScreen
+                  target={currentGradientRound.targetStart}
+                  guess={currentGradientRound.guessStart}
+                  score={score ?? 0}
+                  round={state.currentRound + 1}
+                  totalRounds={state.totalRounds}
+                  onNext={handleNextRound}
+                  isGradient={true}
+                  targetStart={currentGradientRound.targetStart}
+                  targetEnd={currentGradientRound.targetEnd}
+                  guessStart={currentGradientRound.guessStart}
+                  guessEnd={currentGradientRound.guessEnd}
+                  isLastRound={isLastRound}
+                />
+              );
+            }
+
+            if (target && currentRoundData?.guess) {
+              return (
+                <ResultScreen
+                  target={target}
+                  guess={currentRoundData.guess}
+                  score={score ?? 0}
+                  round={state.currentRound + 1}
+                  totalRounds={isBlitz ? state.currentRound + 1 : state.totalRounds}
+                  onNext={handleNextRound}
+                  isLastRound={isLastRound}
+                />
+              );
+            }
+
+            return null;
+          })()
+        )}
+
+        {/* SUMMARY */}
+        {state.phase === "summary" && results && (
+          <SummaryScreen
+            results={results}
+            mode={state.mode}
+            difficulty={state.difficulty}
+            onPlayAgain={handlePlayAgain}
+          />
+        )}
+      </ScreenTransition>
+    </div>
+  );
+}
