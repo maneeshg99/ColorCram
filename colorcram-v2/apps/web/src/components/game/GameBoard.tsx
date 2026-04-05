@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useGameStore } from "@/hooks/useGame";
 import { ScreenTransition } from "@/components/design-system/ScreenTransition";
 import { MemorizeScreen } from "./MemorizeScreen";
@@ -43,6 +43,7 @@ export function GameBoard({ mode, difficulty, seed, onExit }: GameBoardProps) {
 
   const initialized = useRef(false);
   const blitzStartRef = useRef<number | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Initialize game
   useEffect(() => {
@@ -119,7 +120,7 @@ export function GameBoard({ mode, difficulty, seed, onExit }: GameBoardProps) {
     {/* Exit button — rendered outside overflow container */}
     {showExit && (
       <button
-        onClick={onExit}
+        onClick={() => setShowExitConfirm(true)}
         style={{
           position: "fixed",
           bottom: "clamp(12px, 2vw, 20px)",
@@ -143,6 +144,82 @@ export function GameBoard({ mode, difficulty, seed, onExit }: GameBoardProps) {
       >
         Exit
       </button>
+    )}
+
+    {/* Exit confirmation modal */}
+    {showExitConfirm && (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 300,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "rgba(0,0,0,0.7)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+        onClick={() => setShowExitConfirm(false)}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: "#1a1a1a",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 16,
+            padding: "28px 32px",
+            maxWidth: 320,
+            width: "90%",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+            Quit game?
+          </p>
+          <p style={{ fontSize: 13, color: "#888", marginBottom: 24, lineHeight: 1.5 }}>
+            You&apos;ll lose all progress in this round.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            <button
+              onClick={() => { setShowExitConfirm(false); onExit?.(); }}
+              style={{
+                background: "none",
+                border: "1px solid rgba(239,68,68,0.4)",
+                borderRadius: 20,
+                padding: "8px 20px",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#ef4444",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.1)"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.6)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.4)"; }}
+            >
+              Quit
+            </button>
+            <button
+              onClick={() => setShowExitConfirm(false)}
+              style={{
+                background: "none",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 20,
+                padding: "8px 20px",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#fff",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+            >
+              Keep playing
+            </button>
+          </div>
+        </div>
+      </div>
     )}
 
     <div style={{ position: "relative", height: "100dvh", overflow: "hidden" }}>
