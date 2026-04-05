@@ -29,6 +29,11 @@ export default function LeaderboardPage() {
   const [entries, setEntries] = useState<LeaderboardRow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     setLoading(true);
     fetchLeaderboard(selectedMode).then((data) => {
@@ -38,42 +43,66 @@ export default function LeaderboardPage() {
   }, [selectedMode]);
 
   return (
-    <div className="min-h-screen px-6 sm:px-12 py-16 max-w-2xl mx-auto">
-      {/* Back */}
-      <Link
-        href="/"
-        className="text-xs text-[#666] hover:text-[#adadad] transition-colors duration-200 inline-block mb-12"
+    <div
+      style={{
+        minHeight: "100dvh",
+        maxWidth: 600,
+        margin: "0 auto",
+        padding: "0 clamp(24px, 5vw, 48px)",
+      }}
+    >
+      {/* Nav bar — matches home page */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "16px 0",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          marginBottom: 32,
+        }}
       >
-        &larr; back
-      </Link>
+        <Link
+          href="/"
+          className="text-sm text-[#888] hover:text-white transition-colors duration-200"
+        >
+          &larr; Home
+        </Link>
+      </div>
 
       {/* Title */}
       <motion.h1
-        className="font-[900] tracking-tighter leading-none mb-12"
-        style={{ fontSize: "clamp(2.5rem, 8vw, 5rem)" }}
-        initial={{ opacity: 0, y: -20 }}
+        className="font-[900] tracking-tighter leading-none text-white"
+        style={{ fontSize: "clamp(2rem, 7vw, 3.5rem)", marginBottom: 24 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
-        leaderboard
+        Leaderboard
       </motion.h1>
 
       {/* Mode tabs */}
       <motion.div
-        className="flex gap-6 mb-12"
+        style={{ display: "flex", gap: 20, marginBottom: 28 }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
       >
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setSelectedMode(tab.id)}
-            className={`text-sm font-semibold transition-colors duration-200 pb-1 ${
-              selectedMode === tab.id
-                ? "text-white"
-                : "text-[#adadad] hover:text-white"
-            }`}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: selectedMode === tab.id ? 700 : 500,
+              color: selectedMode === tab.id ? "#fff" : "#888",
+              padding: "4px 0",
+              borderBottom: selectedMode === tab.id ? "2px solid #fff" : "2px solid transparent",
+              transition: "all 0.2s",
+            }}
           >
             {tab.label}
           </button>
@@ -82,23 +111,27 @@ export default function LeaderboardPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="space-y-6">
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {Array.from({ length: 8 }, (_, i) => (
             <div
               key={i}
-              className="h-5 rounded bg-[#1f1f1f] animate-pulse"
-              style={{ width: `${70 - i * 4}%` }}
+              style={{
+                height: 44,
+                borderRadius: 10,
+                background: "#1a1a1a",
+                animation: "pulse 1.5s ease-in-out infinite",
+              }}
             />
           ))}
         </div>
       ) : entries.length === 0 ? (
         <motion.div
-          className="py-24"
+          style={{ paddingTop: 48 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <p className="text-[#adadad] text-sm">No scores yet.</p>
-          <p className="text-[#666] text-xs mt-1">
+          <p style={{ color: "#adadad", fontSize: 14 }}>No scores yet.</p>
+          <p style={{ color: "#666", fontSize: 12, marginTop: 4 }}>
             Be the first to play {selectedMode} mode.
           </p>
         </motion.div>
@@ -111,40 +144,83 @@ export default function LeaderboardPage() {
             hidden: {},
             visible: { transition: { staggerChildren: 0.03 } },
           }}
+          style={{ display: "flex", flexDirection: "column", gap: 4 }}
         >
           {entries.map((entry) => {
             const isCurrentUser = user?.id === entry.user_id;
             const rankColor = RANK_COLORS[entry.rank];
+            const isTop3 = entry.rank <= 3;
 
             return (
               <motion.div
                 key={entry.user_id}
-                className="flex items-baseline gap-6 py-3 px-3 -mx-3 rounded-lg transition-colors duration-200 hover:bg-[#1f1f1f]"
                 variants={{
                   hidden: { opacity: 0, x: -12 },
                   visible: { opacity: 1, x: 0 },
                 }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 16,
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  background: isCurrentUser
+                    ? "rgba(255,255,255,0.04)"
+                    : isTop3
+                    ? "rgba(255,255,255,0.02)"
+                    : "transparent",
+                  border: isCurrentUser
+                    ? "1px solid rgba(255,255,255,0.08)"
+                    : "1px solid transparent",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isCurrentUser ? "rgba(255,255,255,0.04)" : isTop3 ? "rgba(255,255,255,0.02)" : "transparent"; }}
               >
+                {/* Rank */}
                 <span
-                  className="text-xs font-mono tabular-nums w-6 text-right shrink-0"
-                  style={{ color: rankColor || "#666" }}
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: isTop3 ? 16 : 12,
+                    fontWeight: isTop3 ? 800 : 500,
+                    color: rankColor || "#555",
+                    width: 28,
+                    textAlign: "right",
+                    flexShrink: 0,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
                 >
                   {entry.rank}
                 </span>
+
+                {/* Username */}
                 <span
-                  className={`flex-1 text-sm truncate ${
-                    isCurrentUser ? "font-bold" : "font-medium"
-                  }`}
-                  style={{ color: rankColor || "#ffffff" }}
+                  style={{
+                    flex: 1,
+                    fontSize: 14,
+                    fontWeight: isCurrentUser ? 700 : isTop3 ? 600 : 400,
+                    color: rankColor || "#ccc",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
                 >
                   {entry.username}
                   {isCurrentUser && (
-                    <span className="text-[#666] text-xs ml-2">you</span>
+                    <span style={{ color: "#666", fontSize: 11, marginLeft: 8 }}>you</span>
                   )}
                 </span>
+
+                {/* Score */}
                 <span
-                  className="text-sm font-[800] tabular-nums font-mono"
-                  style={{ color: rankColor || "#ffffff" }}
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: 14,
+                    fontWeight: 800,
+                    color: rankColor || "#fff",
+                    fontVariantNumeric: "tabular-nums",
+                    flexShrink: 0,
+                  }}
                 >
                   {Math.round(entry.best_avg_score)}%
                 </span>
@@ -153,6 +229,9 @@ export default function LeaderboardPage() {
           })}
         </motion.div>
       )}
+
+      {/* Bottom padding */}
+      <div style={{ height: 48 }} />
     </div>
   );
 }
