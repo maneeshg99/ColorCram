@@ -1,19 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { GameBoard } from "@/components/game/GameBoard";
 import { PreGameScreen } from "@/components/game/PreGameScreen";
 import type { Difficulty } from "@colorcram-v2/types";
 
 function ClassicGame() {
-  const searchParams = useSearchParams();
-  const difficulty = (searchParams.get("difficulty") || "easy") as Difficulty;
-  const [started, setStarted] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
 
-  if (!started) {
-    return <PreGameScreen mode="classic" difficulty={difficulty} onStart={() => setStarted(true)} />;
+  if (!difficulty) {
+    return (
+      <PreGameScreen
+        mode="classic"
+        onStart={(diff) => setDifficulty((diff as Difficulty) || "easy")}
+      />
+    );
   }
 
   return (

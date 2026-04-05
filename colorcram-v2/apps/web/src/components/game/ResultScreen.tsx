@@ -108,7 +108,7 @@ export function ResultScreen({
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 25 }}
+          transition={{ delay: 0.05, type: "spring", stiffness: 300, damping: 25 }}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -130,7 +130,7 @@ export function ResultScreen({
           <motion.span
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.2 }}
             style={{
               fontSize: 14,
               fontWeight: 500,

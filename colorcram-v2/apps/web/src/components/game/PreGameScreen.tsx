@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { RainbowRing } from "@/components/design-system/RainbowRing";
 import { playSound } from "@/lib/sounds";
@@ -29,20 +30,48 @@ const MODE_INFO: Record<string, { title: string; description: string; detail: st
   },
 };
 
+const EXPERT_WARNINGS = [
+  "Your confidence is inspiring. Your accuracy? We'll see.",
+  "Bold move. Hope your cones are warmed up.",
+  "Expert mode doesn't grade on a curve. Just saying.",
+  "5 rounds. 2 seconds each. No mercy.",
+  "You sure? The colors don't get easier, the timer gets shorter.",
+  "Most people regret this. Just so you know.",
+  "The leaderboard remembers everything.",
+  "Statistically, you will be humbled.",
+];
+
+function PlayIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" style={{ marginLeft: 2 }}>
+      <polygon points="6,3 20,12 6,21" />
+    </svg>
+  );
+}
+
 interface PreGameScreenProps {
   mode: GameMode;
   difficulty?: string;
-  onStart: () => void;
+  onStart: (difficulty?: string) => void;
 }
 
 export function PreGameScreen({ mode, onStart }: PreGameScreenProps) {
   const info = MODE_INFO[mode] ?? MODE_INFO.classic;
+  const isClassic = mode === "classic";
+  const [warningIdx, setWarningIdx] = useState(0);
+  const [showExpertWarning, setShowExpertWarning] = useState(false);
+
+  const handleExpertClick = () => {
+    playSound("click");
+    setShowExpertWarning(true);
+    setWarningIdx((prev) => (prev + 1) % EXPERT_WARNINGS.length);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-8 select-none">
       {/* Back link */}
       <motion.div
-        className="fixed top-4 left-5 z-50"
+        className="fixed top-4 left-8 sm:left-12 z-50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
@@ -86,22 +115,87 @@ export function PreGameScreen({ mode, onStart }: PreGameScreenProps) {
         {info.detail}
       </motion.p>
 
-      {/* Start button */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
-        onClick={() => {
-          playSound("click");
-          onStart();
-        }}
-        onMouseEnter={() => playSound("hover")}
-        style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
-      >
-        <RainbowRing size={88} spinning>
-          <span className="text-lg font-[800] text-white tracking-widest">GO</span>
-        </RainbowRing>
-      </motion.button>
+      {isClassic ? (
+        /* Classic: Easy and Expert buttons side by side */
+        <motion.div
+          className="flex flex-col items-center gap-6 relative"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
+        >
+          <div className="flex items-center gap-8">
+            <button
+              onClick={() => { playSound("click"); onStart("easy"); }}
+              onMouseEnter={() => playSound("hover")}
+              className="flex flex-col items-center gap-2"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            >
+              <RainbowRing size={72}>
+                <PlayIcon />
+              </RainbowRing>
+              <span className="text-sm font-bold text-white tracking-wide">Easy</span>
+            </button>
+
+            <button
+              onClick={handleExpertClick}
+              onMouseEnter={() => playSound("hover")}
+              className="flex flex-col items-center gap-2"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            >
+              <RainbowRing size={72}>
+                <PlayIcon />
+              </RainbowRing>
+              <span className="text-sm font-bold text-white tracking-wide">Expert</span>
+            </button>
+          </div>
+
+          {/* Expert warning popup */}
+          <AnimatePresence>
+            {showExpertWarning && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                transition={{ duration: 0.2 }}
+                className="w-72 p-4 bg-[#1a1a1a] border border-white/10 rounded-xl"
+              >
+                <p className="text-sm font-semibold text-white mb-1">Expert Mode</p>
+                <p className="text-xs text-[#adadad] mb-4 leading-relaxed italic">
+                  &ldquo;{EXPERT_WARNINGS[warningIdx]}&rdquo;
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { playSound("click"); onStart("expert"); }}
+                    className="text-xs font-bold text-white px-3 py-1.5 border border-white/30 rounded-full hover:border-white/60 transition-colors"
+                  >
+                    Bring it on
+                  </button>
+                  <button
+                    onClick={() => { playSound("click"); setShowExpertWarning(false); }}
+                    className="text-xs text-[#666] hover:text-[#adadad] transition-colors px-3 py-1.5"
+                  >
+                    Maybe not
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      ) : (
+        /* Other modes: single GO button */
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
+          onClick={() => { playSound("click"); onStart(); }}
+          onMouseEnter={() => playSound("hover")}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+        >
+          <RainbowRing size={88} spinning>
+            <span className="text-lg font-[800] text-white tracking-widest">GO</span>
+          </RainbowRing>
+        </motion.button>
+      )}
     </div>
   );
 }

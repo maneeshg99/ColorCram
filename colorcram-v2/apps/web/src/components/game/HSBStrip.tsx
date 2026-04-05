@@ -32,6 +32,7 @@ export function HSBStrip({ label, colors, position, onDrag }: HSBStripProps) {
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
+      e.preventDefault();
       setDragging(true);
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
       computePosition(e.pageY);
@@ -42,6 +43,7 @@ export function HSBStrip({ label, colors, position, onDrag }: HSBStripProps) {
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!dragging) return;
+      e.preventDefault();
       computePosition(e.pageY);
     },
     [dragging, computePosition]
@@ -51,11 +53,17 @@ export function HSBStrip({ label, colors, position, onDrag }: HSBStripProps) {
     setDragging(false);
   }, []);
 
-  // Display value based on position
   const displayValue = Math.round(position * 100);
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div
+      className="flex flex-col items-center gap-2"
+      style={{
+        WebkitUserSelect: "none",
+        userSelect: "none",
+        WebkitTouchCallout: "none",
+      }}
+    >
       <span
         style={{
           fontSize: "10px",
@@ -72,37 +80,37 @@ export function HSBStrip({ label, colors, position, onDrag }: HSBStripProps) {
         ref={stripRef}
         style={{
           position: "relative",
-          width: 40,
-          height: "70vh",
-          maxHeight: 500,
-          minHeight: 200,
-          borderRadius: 20,
+          width: 48,
+          height: "clamp(160px, 45vh, 400px)",
+          borderRadius: 24,
           background: gradient,
           cursor: dragging ? "grabbing" : "pointer",
           touchAction: "none",
           userSelect: "none",
+          WebkitUserSelect: "none",
+          WebkitTouchCallout: "none",
         }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
-        {/* Circular handle */}
+        {/* Bar-style handle */}
         <motion.div
           style={{
             position: "absolute",
-            left: "50%",
+            left: 3,
+            right: 3,
             top: `${position * 100}%`,
-            width: 25,
-            height: 25,
-            borderRadius: "50%",
+            height: 8,
+            borderRadius: 4,
             backgroundColor: "#ffffff",
-            transform: "translate(-50%, -50%)",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.3), 0 0 0 2px rgba(255,255,255,0.2)",
+            transform: "translateY(-50%)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,255,255,0.2)",
             pointerEvents: "none",
           }}
           animate={{
-            scale: dragging ? 1.15 : 1,
+            height: dragging ? 10 : 8,
           }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         />

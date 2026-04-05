@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import type { HSB } from "@colorcram-v2/types";
 import { hsbToHex } from "@colorcram-v2/color-utils";
@@ -9,12 +10,12 @@ interface HSBColorPickerProps {
   value: HSB;
   onChange: (hsb: HSB) => void;
   disabled?: boolean;
+  submitButton?: ReactNode;
 }
 
-export function HSBColorPicker({ value, onChange, disabled = false }: HSBColorPickerProps) {
+export function HSBColorPicker({ value, onChange, disabled = false, submitButton }: HSBColorPickerProps) {
   const hex = hsbToHex(value);
 
-  // Hue gradient: full spectrum
   const hueColors = [
     "hsl(0,100%,50%)",
     "hsl(60,100%,50%)",
@@ -25,12 +26,10 @@ export function HSBColorPicker({ value, onChange, disabled = false }: HSBColorPi
     "hsl(360,100%,50%)",
   ];
 
-  // Saturation gradient: desaturated to fully saturated
   const satColors = [0, 25, 50, 75, 100].map(
     (s) => hsbToHex({ h: value.h, s, b: value.b })
   );
 
-  // Brightness gradient: bright at top, dark at bottom
   const briColors = [100, 75, 50, 25, 0].map(
     (b) => hsbToHex({ h: value.h, s: value.s, b })
   );
@@ -41,10 +40,14 @@ export function HSBColorPicker({ value, onChange, disabled = false }: HSBColorPi
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      style={{
+        WebkitUserSelect: "none",
+        userSelect: "none",
+      }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "clamp(12px, 2vw, 24px)" }}>
         {/* Strips */}
-        <div style={{ display: "flex", gap: 24 }}>
+        <div style={{ display: "flex", gap: "clamp(8px, 1.5vw, 16px)" }}>
           <HSBStrip
             label="H"
             colors={hueColors}
@@ -65,12 +68,12 @@ export function HSBColorPicker({ value, onChange, disabled = false }: HSBColorPi
           />
         </div>
 
-        {/* Color preview */}
+        {/* Color preview + submit button */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
           <motion.div
             style={{
-              width: 120,
-              height: 120,
+              width: "clamp(72px, 14vw, 120px)",
+              height: "clamp(72px, 14vw, 120px)",
               borderRadius: "50%",
               backgroundColor: hex,
               boxShadow: `0 12px 40px ${hex}50`,
@@ -81,7 +84,7 @@ export function HSBColorPicker({ value, onChange, disabled = false }: HSBColorPi
           <span
             style={{
               fontFamily: "monospace",
-              fontSize: 14,
+              fontSize: 12,
               color: "#adadad",
               fontVariantNumeric: "tabular-nums",
               letterSpacing: "0.05em",
@@ -89,6 +92,11 @@ export function HSBColorPicker({ value, onChange, disabled = false }: HSBColorPi
           >
             {hex}
           </span>
+          {submitButton && (
+            <div style={{ marginTop: 8 }}>
+              {submitButton}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
