@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { GameBoard } from "@/components/game/GameBoard";
 import { DailyAlreadyPlayed } from "@/components/game/DailyAlreadyPlayed";
+import { PreGameScreen } from "@/components/game/PreGameScreen";
 import { useGameStore } from "@/hooks/useGame";
 import {
   hasPlayedToday,
@@ -14,6 +15,7 @@ export default function DailyPage() {
   const today = new Date().toISOString().split("T")[0];
   const [alreadyPlayed, setAlreadyPlayed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
     setAlreadyPlayed(hasPlayedToday());
@@ -48,6 +50,10 @@ export default function DailyPage() {
     if (result) {
       return <DailyAlreadyPlayed result={result} />;
     }
+  }
+
+  if (!started) {
+    return <PreGameScreen mode="daily" onStart={() => setStarted(true)} />;
   }
 
   return (

@@ -2,11 +2,23 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ObsidianText } from "@/components/design-system/ObsidianText";
 import { RainbowRing } from "@/components/design-system/RainbowRing";
 import { AuthButton } from "@/components/auth/AuthButton";
 import { playSound } from "@/lib/sounds";
+
+const EXPERT_WARNINGS = [
+  "Your confidence is inspiring. Your accuracy? We'll see.",
+  "Bold move. Hope your cones are warmed up.",
+  "Expert mode doesn't grade on a curve. Just saying.",
+  "5 rounds. 2 seconds each. No mercy.",
+  "You sure? The colors don't get easier, the timer gets shorter.",
+  "Most people regret this. Just so you know.",
+  "The leaderboard remembers everything.",
+  "Statistically, you will be humbled.",
+];
 
 const modes = [
   { id: "classic", label: "Classic", href: "/play/classic?difficulty=easy", hasSubmodes: true },
@@ -14,6 +26,20 @@ const modes = [
   { id: "blitz", label: "Blitz", href: "/play/blitz", hasSubmodes: false },
   { id: "gradient", label: "Gradient", href: "/play/gradient", hasSubmodes: false },
 ];
+
+function PlayIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="white"
+      style={{ marginLeft: 2 }}
+    >
+      <polygon points="6,3 20,12 6,21" />
+    </svg>
+  );
+}
 
 function MuteToggle() {
   const [muted, setMuted] = useState(false);
@@ -54,28 +80,76 @@ function MuteToggle() {
 }
 
 function ClassicSubMenu({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const [warningIdx, setWarningIdx] = useState(0);
+  const [showExpertWarning, setShowExpertWarning] = useState(false);
+
+  const handleExpertClick = () => {
+    playSound("click");
+    setShowExpertWarning(true);
+    setWarningIdx((prev) => (prev + 1) % EXPERT_WARNINGS.length);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
       transition={{ duration: 0.2 }}
-      className="absolute top-full mt-4 flex gap-4"
+      className="absolute top-full mt-4 flex flex-col items-center gap-2"
     >
       <Link
         href="/play/classic?difficulty=easy"
-        onClick={onClose}
-        className="text-xs font-bold text-white hover:text-[#adadad] transition-colors px-3 py-1.5"
+        onClick={() => { playSound("click"); onClose(); }}
+        className="text-xs font-bold text-white hover:text-[#adadad] transition-colors px-5 py-2 border border-white/20 rounded-full hover:border-white/50"
       >
         Easy
       </Link>
-      <Link
-        href="/play/classic?difficulty=expert"
-        onClick={onClose}
-        className="text-xs font-bold text-white hover:text-[#adadad] transition-colors px-3 py-1.5"
+      <button
+        onClick={handleExpertClick}
+        className="text-xs font-bold text-white hover:text-[#adadad] transition-colors px-5 py-2 border border-white/20 rounded-full hover:border-white/50"
       >
         Expert
-      </Link>
+      </button>
+
+      {/* Expert warning popup */}
+      <AnimatePresence>
+        {showExpertWarning && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full mt-2 w-64 p-4 bg-[#1a1a1a] border border-white/10 rounded-xl z-50"
+          >
+            <p className="text-sm font-semibold text-white mb-1">Expert Mode</p>
+            <p className="text-xs text-[#adadad] mb-4 leading-relaxed italic">
+              &ldquo;{EXPERT_WARNINGS[warningIdx]}&rdquo;
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  playSound("click");
+                  router.push("/play/classic?difficulty=expert");
+                  onClose();
+                }}
+                className="text-xs font-bold text-white px-3 py-1.5 border border-white/30 rounded-full hover:border-white/60 transition-colors"
+              >
+                Bring it on
+              </button>
+              <button
+                onClick={() => {
+                  playSound("click");
+                  setShowExpertWarning(false);
+                }}
+                className="text-xs text-[#666] hover:text-[#adadad] transition-colors px-3 py-1.5"
+              >
+                Maybe not
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -85,8 +159,15 @@ export default function HomePage() {
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen px-8 select-none">
-      {/* Auth — top right */}
-      <div className="fixed top-6 right-6 z-50">
+      {/* Top nav bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4">
+        <Link
+          href="/leaderboard"
+          className="text-sm font-black text-[#adadad] hover:text-white transition-colors duration-200 tracking-widest uppercase"
+          style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+        >
+          Leaderboard
+        </Link>
         <AuthButton />
       </div>
 
@@ -166,14 +247,14 @@ export default function HomePage() {
                 <button onClick={() => { playSound("click"); setClassicOpen((prev) => !prev); }}
                   onMouseEnter={() => playSound("hover")}>
                   <RainbowRing size={72}>
-                    <span className="sr-only">{mode.label}</span>
+                    <PlayIcon />
                   </RainbowRing>
                 </button>
               ) : (
                 <Link href={mode.href} onClick={() => playSound("click")}
                   onMouseEnter={() => playSound("hover")}>
                   <RainbowRing size={72}>
-                    <span className="sr-only">{mode.label}</span>
+                    <PlayIcon />
                   </RainbowRing>
                 </Link>
               )}
@@ -192,21 +273,6 @@ export default function HomePage() {
             </motion.div>
           );
         })}
-      </motion.div>
-
-      {/* Leaderboard link */}
-      <motion.div
-        className="mt-16"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.6 }}
-      >
-        <Link
-          href="/leaderboard"
-          className="text-xs text-[#adadad] hover:text-white transition-colors duration-200 tracking-wider uppercase"
-        >
-          Leaderboard
-        </Link>
       </motion.div>
 
       {/* Version — bottom left */}
