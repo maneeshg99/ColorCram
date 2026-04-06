@@ -78,7 +78,6 @@ export function ResultScreen({
         display: "flex",
         flexDirection: "column",
         padding: "clamp(16px, 3vw, 40px)",
-        overflow: "hidden",
       }}
     >
       {/* Top bar */}
@@ -118,7 +117,7 @@ export function ResultScreen({
         >
           <div
             style={{
-              fontSize: "clamp(3rem, 8vw, 6rem)",
+              fontSize: "clamp(3rem, 7vw, 5rem)",
               fontWeight: 900,
               color: scoreColor,
               lineHeight: 1,
