@@ -15,4 +15,12 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
+// Force critical packages to resolve from the correct node_modules
+// to prevent version mismatches with react-native-renderer
+config.resolver.extraNodeModules = {
+  react: path.resolve(monorepoRoot, "node_modules/react"),
+  "react-dom": path.resolve(monorepoRoot, "node_modules/react-dom"),
+  "react-native": path.resolve(monorepoRoot, "node_modules/react-native"),
+};
+
 module.exports = config;

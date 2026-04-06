@@ -15,4 +15,17 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
+// Block Metro from resolving into colorcram-v2's node_modules
+// to prevent picking up a different React version
+config.resolver.blockList = [
+  /colorcram-v2\/node_modules\/.*/,
+];
+
+// Force critical packages to resolve from the correct node_modules
+config.resolver.extraNodeModules = {
+  react: path.resolve(monorepoRoot, "node_modules/react"),
+  "react-dom": path.resolve(monorepoRoot, "node_modules/react-dom"),
+  "react-native": path.resolve(monorepoRoot, "node_modules/react-native"),
+};
+
 module.exports = config;
