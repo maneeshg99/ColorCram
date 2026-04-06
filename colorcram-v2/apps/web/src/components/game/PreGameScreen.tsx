@@ -117,6 +117,7 @@ export function PreGameScreen({ mode, onStart }: PreGameScreenProps) {
 
       {isClassic ? (
         /* Classic: Easy and Expert buttons side by side */
+        <>
         <motion.div
           className="flex flex-col items-center gap-6 relative"
           initial={{ opacity: 0, scale: 0.9 }}
@@ -233,6 +234,7 @@ export function PreGameScreen({ mode, onStart }: PreGameScreenProps) {
           </motion.div>
         )}
       </AnimatePresence>
+        </>
       ) : (
         /* Other modes: single GO button */
         <motion.button
