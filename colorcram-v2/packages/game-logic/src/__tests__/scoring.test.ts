@@ -25,8 +25,8 @@ describe("deltaEToScore", () => {
     expect(deltaEToScore(0)).toBe(100);
   });
 
-  it("is generous for close matches (~97% at deltaE 3.5)", () => {
-    expect(deltaEToScore(3.5)).toBeGreaterThanOrEqual(95);
+  it("is generous for close matches (~93% at deltaE 5)", () => {
+    expect(deltaEToScore(5)).toBeGreaterThanOrEqual(90);
   });
 
   it("returns lower scores for higher deltaE", () => {
@@ -35,12 +35,51 @@ describe("deltaEToScore", () => {
     expect(deltaEToScore(20)).toBeGreaterThan(deltaEToScore(50));
   });
 
-  it("punishes opposite colors (< 15% at deltaE 50)", () => {
-    expect(deltaEToScore(50)).toBeLessThan(15);
+  it("punishes bad guesses (< 30% at deltaE 50)", () => {
+    expect(deltaEToScore(50)).toBeLessThan(30);
   });
 
-  it("approaches 0 for very large deltaE", () => {
-    expect(deltaEToScore(100)).toBeLessThan(2);
+  it("approaches low scores for very large deltaE", () => {
+    expect(deltaEToScore(100)).toBeLessThan(15);
+  });
+
+  it("rewards correct hue on saturated colors (hue recovery)", () => {
+    const target = { h: 0, s: 90, b: 80 };
+    const guessRightHue = { h: 0, s: 90, b: 40 }; // right hue, wrong brightness
+    const guessWrongHue = { h: 60, s: 90, b: 40 }; // wrong hue, wrong brightness
+
+    const deltaERight = calculateDeltaE(target, guessRightHue);
+    const deltaEWrong = calculateDeltaE(target, guessWrongHue);
+
+    const scoreRight = deltaEToScore(deltaERight, target, guessRightHue);
+    const scoreWrong = deltaEToScore(deltaEWrong, target, guessWrongHue);
+
+    // Right hue should score higher even if deltaE is similar
+    expect(scoreRight).toBeGreaterThan(scoreWrong);
+  });
+
+  it("applies hue penalty for very wrong hue on vivid colors", () => {
+    const target = { h: 120, s: 90, b: 80 };
+    const guess = { h: 240, s: 90, b: 80 }; // opposite hue
+
+    const deltaE = calculateDeltaE(target, guess);
+    const scoreWithHue = deltaEToScore(deltaE, target, guess);
+    const scoreBase = deltaEToScore(deltaE); // no hue adjustment
+
+    // Hue penalty should reduce score for very wrong hue
+    expect(scoreWithHue).toBeLessThanOrEqual(scoreBase);
+  });
+
+  it("does not apply hue adjustments for desaturated colors", () => {
+    const target = { h: 0, s: 5, b: 50 };
+    const guess = { h: 180, s: 5, b: 50 }; // opposite hue but very desaturated
+
+    const deltaE = calculateDeltaE(target, guess);
+    const scoreWithHue = deltaEToScore(deltaE, target, guess);
+    const scoreBase = deltaEToScore(deltaE);
+
+    // For desaturated colors, hue adjustments should be minimal
+    expect(Math.abs(scoreWithHue - scoreBase)).toBeLessThan(3);
   });
 });
 
@@ -58,6 +97,6 @@ describe("calculateScoreWithSpeedBonus", () => {
 
   it("gives max 1.5x bonus for instant guess", () => {
     const base = deltaEToScore(5);
-    expect(calculateScoreWithSpeedBonus(5, 0)).toBe(Math.round(base * 1.5));
+    expect(calculateScoreWithSpeedBonus(5, 0)).toBe(Math.min(100, Math.round(base * 1.5)));
   });
 });

@@ -104,8 +104,8 @@ export function submitGuess(state: GameState, guess: HSB): GameState {
 
   const score =
     state.mode === "blitz"
-      ? calculateScoreWithSpeedBonus(deltaE, timeMs)
-      : deltaEToScore(deltaE);
+      ? calculateScoreWithSpeedBonus(deltaE, timeMs, round.target, guess)
+      : deltaEToScore(deltaE, round.target, guess);
 
   const updatedRounds = [...state.rounds];
   updatedRounds[state.currentRound] = { ...round, guess, deltaE, score, timeMs };
@@ -140,8 +140,8 @@ export function submitGradientGuess(
   const round = state.gradientRounds[state.currentRound];
   const deltaEStart = calculateDeltaE(round.targetStart, guessStart);
   const deltaEEnd = calculateDeltaE(round.targetEnd, guessEnd);
-  const scoreStart = deltaEToScore(deltaEStart);
-  const scoreEnd = deltaEToScore(deltaEEnd);
+  const scoreStart = deltaEToScore(deltaEStart, round.targetStart, guessStart);
+  const scoreEnd = deltaEToScore(deltaEEnd, round.targetEnd, guessEnd);
   const score = Math.round((scoreStart + scoreEnd) / 2);
   const timeMs = state.guessStartTime ? Date.now() - state.guessStartTime : 0;
 
