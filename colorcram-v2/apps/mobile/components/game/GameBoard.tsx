@@ -14,6 +14,9 @@ import { useGameStore } from "@/hooks/useGame";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { HSBColorPicker } from "./HSBColorPicker";
+import { DualHSBPicker } from "./DualHSBPicker";
+import { GradientDisplay } from "./GradientDisplay";
+import { GradientComparison } from "./GradientComparison";
 import { CountdownTimer } from "./CountdownTimer";
 import { ScoreFeedback } from "./ScoreFeedback";
 import { Button } from "@/components/ui/Button";
@@ -236,14 +239,20 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
   const {
     state,
     currentGuess,
+    currentGuessStart,
+    currentGuessEnd,
     newGame,
     beginMemorize,
     beginGuess,
     setGuess,
+    setGuessStart,
+    setGuessEnd,
     confirmGuess,
+    confirmGradientGuess,
     advance,
     tickBlitz,
     getTarget,
+    getGradientTarget,
     getGameResults,
   } = useGameStore();
 
@@ -284,8 +293,12 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
   }, [beginGuess]);
 
   const handleSubmit = useCallback(() => {
-    confirmGuess();
-  }, [confirmGuess]);
+    if (isGradient) {
+      confirmGradientGuess();
+    } else {
+      confirmGuess();
+    }
+  }, [isGradient, confirmGuess, confirmGradientGuess]);
 
   const handleNext = useCallback(() => {
     advance();
@@ -313,26 +326,11 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
 
   if (!state) return null;
 
-  // Gradient mode not yet implemented on mobile
-  if (isGradient) {
-    return (
-      <SafeAreaView style={[styles.fullScreen, { backgroundColor: c.bg }]}>
-        <View style={styles.gradientPlaceholder}>
-          <Text style={[styles.heading, { color: c.fg }]}>Gradient Mode</Text>
-          <Text style={{ color: c.fgMuted, fontSize: 14, textAlign: "center", maxWidth: 280 }}>
-            Gradient mode is coming soon to mobile. Play it on the web for now!
-          </Text>
-          <View style={{ marginTop: 16 }}>
-            <Button title="Back" variant="secondary" onPress={() => router.back()} />
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const target = getTarget();
+  const gradientTarget = isGradient ? getGradientTarget() : null;
   const results = getGameResults();
   const roundData = state.rounds[state.currentRound];
+  const gradientRoundData = isGradient ? state.gradientRounds?.[state.currentRound] : null;
 
   // Blitz timer component — used on all blitz screens
   const blitzTimerDisplay =
@@ -362,10 +360,7 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
   );
 
   // MEMORIZE PHASE
-  if (state.phase === "memorize" && target) {
-    const hex = hsbToHex(target);
-    const textColor = contrastColor(target);
-
+  if (state.phase === "memorize" && (target || gradientTarget)) {
     return (
       <SafeAreaView style={[styles.fullScreen, { backgroundColor: c.bg }]}>
         {exitButton}
@@ -375,20 +370,27 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
           onConfirm={handleExit}
         />
         <View style={styles.memorizeContent}>
-          <View
-            style={[
-              styles.memorizeSwatch,
-              {
-                backgroundColor: hex,
-                width: COLOR_SWATCH_SIZE,
-                height: COLOR_SWATCH_SIZE,
-              },
-            ]}
-          >
-            <Text style={[styles.memorizeLabel, { color: textColor, opacity: 0.5 }]}>
-              MEMORIZE
-            </Text>
-          </View>
+          {isGradient && gradientTarget ? (
+            <GradientDisplay
+              startColor={gradientTarget.start}
+              endColor={gradientTarget.end}
+            />
+          ) : target ? (
+            <View
+              style={[
+                styles.memorizeSwatch,
+                {
+                  backgroundColor: hsbToHex(target),
+                  width: COLOR_SWATCH_SIZE,
+                  height: COLOR_SWATCH_SIZE,
+                },
+              ]}
+            >
+              <Text style={[styles.memorizeLabel, { color: contrastColor(target), opacity: 0.5 }]}>
+                MEMORIZE
+              </Text>
+            </View>
+          ) : null}
 
           <Text style={[styles.roundTextSmall, { color: c.fgMuted }]}>
             Round {state.currentRound + 1} {!isBlitz && `/ ${state.totalRounds}`}
@@ -417,23 +419,78 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
           onCancel={() => setShowExitModal(false)}
           onConfirm={handleExit}
         />
-        <View style={styles.guessContent}>
+        <ScrollView contentContainerStyle={styles.guessContent}>
           {blitzTimerDisplay}
           <Text style={[styles.roundTextSmall, { color: c.fgMuted }]}>
             Round {state.currentRound + 1}{" "}
             {!isBlitz && `/ ${state.totalRounds}`}
           </Text>
           <Text style={[styles.heading, { color: c.fg }]}>
-            Recreate the color
+            {isGradient ? "Recreate the gradient" : "Recreate the color"}
           </Text>
-          <HSBColorPicker value={currentGuess} onChange={setGuess} />
+          {isGradient ? (
+            <DualHSBPicker
+              startValue={currentGuessStart}
+              endValue={currentGuessEnd}
+              onStartChange={setGuessStart}
+              onEndChange={setGuessEnd}
+            />
+          ) : (
+            <HSBColorPicker value={currentGuess} onChange={setGuess} />
+          )}
           <Button title="Submit Guess" onPress={handleSubmit} size="lg" />
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
 
-  // REVEAL PHASE
+  // REVEAL PHASE — gradient
+  if (state.phase === "reveal" && isGradient && gradientRoundData) {
+    const score = gradientRoundData.score ?? 0;
+    const scoreColor = getScoreColor(score);
+
+    return (
+      <SafeAreaView style={[styles.fullScreen, { backgroundColor: c.bg }]}>
+        {exitButton}
+        <ExitModal
+          visible={showExitModal}
+          onCancel={() => setShowExitModal(false)}
+          onConfirm={handleExit}
+        />
+        <ScrollView contentContainerStyle={styles.revealContent}>
+          <Text style={[styles.roundTextSmall, { color: c.fgMuted }]}>
+            Round {state.currentRound + 1} / {state.totalRounds}
+          </Text>
+
+          <GradientComparison
+            targetStart={gradientRoundData.targetStart}
+            targetEnd={gradientRoundData.targetEnd}
+            guessStart={gradientRoundData.guessStart ?? { h: 0, s: 0, b: 0 }}
+            guessEnd={gradientRoundData.guessEnd ?? { h: 0, s: 0, b: 0 }}
+          />
+
+          <Text style={[styles.scoreText, { color: scoreColor }]}>
+            {score}%
+          </Text>
+          <Text style={[styles.matchLabel, { color: c.fgMuted }]}>match</Text>
+          <ScoreFeedback score={score} roundIndex={state.currentRound} />
+
+          <View style={{ marginTop: 16 }}>
+            <Button
+              title={
+                state.currentRound + 1 >= state.totalRounds
+                  ? "See Results"
+                  : "Next Round"
+              }
+              onPress={handleNext}
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // REVEAL PHASE — standard
   if (state.phase === "reveal" && target && roundData?.guess) {
     const score = roundData.score ?? 0;
     const scoreColor = getScoreColor(score);
@@ -501,46 +558,85 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
 
           {/* Round breakdown */}
           <View style={styles.roundList}>
-            {results.rounds.map((round, i) => {
-              const roundScore = round.score ?? 0;
-              return (
-                <View
-                  key={i}
-                  style={[styles.roundRow, { backgroundColor: c.surface }]}
-                >
-                  <Text style={[styles.roundNum, { color: c.fgSubtle }]}>
-                    {i + 1}
-                  </Text>
-                  <View style={styles.roundColors}>
+            {isGradient && results.gradientRounds
+              ? results.gradientRounds.map((round, i) => {
+                  const roundScore = round.score ?? 0;
+                  return (
                     <View
-                      style={[
-                        styles.miniSwatch,
-                        { backgroundColor: hsbToHex(round.target) },
-                      ]}
-                    />
-                    {round.guess && (
-                      <View
+                      key={i}
+                      style={[styles.roundRow, { backgroundColor: c.surface }]}
+                    >
+                      <Text style={[styles.roundNum, { color: c.fgSubtle }]}>
+                        {i + 1}
+                      </Text>
+                      <View style={styles.roundColors}>
+                        <View
+                          style={[
+                            styles.miniSwatch,
+                            { backgroundColor: hsbToHex(round.targetStart) },
+                          ]}
+                        />
+                        <View
+                          style={[
+                            styles.miniSwatch,
+                            {
+                              backgroundColor: hsbToHex(round.targetEnd),
+                              marginLeft: -6,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text
                         style={[
-                          styles.miniSwatch,
-                          {
-                            backgroundColor: hsbToHex(round.guess),
-                            marginLeft: -6,
-                          },
+                          styles.roundScore,
+                          { color: getScoreColor(roundScore) },
                         ]}
-                      />
-                    )}
-                  </View>
-                  <Text
-                    style={[
-                      styles.roundScore,
-                      { color: getScoreColor(roundScore) },
-                    ]}
-                  >
-                    {roundScore}%
-                  </Text>
-                </View>
-              );
-            })}
+                      >
+                        {roundScore}%
+                      </Text>
+                    </View>
+                  );
+                })
+              : results.rounds.map((round, i) => {
+                  const roundScore = round.score ?? 0;
+                  return (
+                    <View
+                      key={i}
+                      style={[styles.roundRow, { backgroundColor: c.surface }]}
+                    >
+                      <Text style={[styles.roundNum, { color: c.fgSubtle }]}>
+                        {i + 1}
+                      </Text>
+                      <View style={styles.roundColors}>
+                        <View
+                          style={[
+                            styles.miniSwatch,
+                            { backgroundColor: hsbToHex(round.target) },
+                          ]}
+                        />
+                        {round.guess && (
+                          <View
+                            style={[
+                              styles.miniSwatch,
+                              {
+                                backgroundColor: hsbToHex(round.guess),
+                                marginLeft: -6,
+                              },
+                            ]}
+                          />
+                        )}
+                      </View>
+                      <Text
+                        style={[
+                          styles.roundScore,
+                          { color: getScoreColor(roundScore) },
+                        ]}
+                      >
+                        {roundScore}%
+                      </Text>
+                    </View>
+                  );
+                })}
           </View>
 
           {/* Score submission */}
@@ -580,15 +676,6 @@ const styles = StyleSheet.create({
     color: Colors.dark.fgMuted,
     fontSize: 13,
     fontWeight: "600",
-  },
-
-  // Gradient placeholder
-  gradientPlaceholder: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 24,
   },
 
   // Memorize
