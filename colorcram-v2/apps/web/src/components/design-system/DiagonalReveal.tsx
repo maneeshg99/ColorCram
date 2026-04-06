@@ -29,7 +29,7 @@ export function DiagonalReveal({ targetColor, guessColor }: DiagonalRevealProps)
         style={{
           position: "absolute",
           inset: 0,
-          backgroundColor: targetColor,
+          background: targetColor,
           clipPath: "polygon(0 0, 100% 0, 0 100%)",
         }}
       >
@@ -62,7 +62,7 @@ export function DiagonalReveal({ targetColor, guessColor }: DiagonalRevealProps)
         style={{
           position: "absolute",
           inset: 0,
-          backgroundColor: guessColor,
+          background: guessColor,
           clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
         }}
       >

@@ -12,7 +12,7 @@ function SlideChar({ char, index }: { char: string; index: number }) {
     <span
       style={{
         display: "inline-block",
-        width: "0.65em",
+        width: char === "%" ? "0.85em" : "0.65em",
         height: "1.2em",
         overflow: "hidden",
         position: "relative",
