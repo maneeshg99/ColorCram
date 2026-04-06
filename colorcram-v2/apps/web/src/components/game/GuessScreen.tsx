@@ -101,27 +101,27 @@ export function GuessScreen({
         >
           {/* Picker strips */}
           {isGradient && guessStart && guessEnd && onGuessStartChange && onGuessEndChange ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-              <DualHSBPicker
-                startValue={guessStart}
-                endValue={guessEnd}
-                onStartChange={onGuessStartChange}
-                onEndChange={onGuessEndChange}
-              />
-              <motion.button
-                onHoverStart={() => setGoHovered(true)}
-                onHoverEnd={() => setGoHovered(false)}
-                onClick={onSubmit}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <RainbowRing size={64} spinning={goHovered}>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", letterSpacing: "0.1em" }}>
-                    GO
-                  </span>
-                </RainbowRing>
-              </motion.button>
-            </div>
+            <DualHSBPicker
+              startValue={guessStart}
+              endValue={guessEnd}
+              onStartChange={onGuessStartChange}
+              onEndChange={onGuessEndChange}
+              submitButton={
+                <motion.button
+                  onHoverStart={() => setGoHovered(true)}
+                  onHoverEnd={() => setGoHovered(false)}
+                  onClick={onSubmit}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <RainbowRing size={64} spinning={goHovered}>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", letterSpacing: "0.1em" }}>
+                      GO
+                    </span>
+                  </RainbowRing>
+                </motion.button>
+              }
+            />
           ) : (
             <HSBColorPicker value={guess} onChange={onGuessChange} submitButton={
               <motion.button

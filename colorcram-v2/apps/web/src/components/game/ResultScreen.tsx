@@ -143,7 +143,7 @@ export function ResultScreen({
         </motion.div>
       </div>
 
-      {/* Diagonal color comparison */}
+      {/* Color comparison */}
       <div
         style={{
           flex: 1,
@@ -153,26 +153,89 @@ export function ResultScreen({
           minHeight: 0,
         }}
       >
-        <div
-          style={{
-            width: "min(80vw, 500px)",
-            height: "min(50vh, 400px)",
-            borderRadius: 24,
-            overflow: "hidden",
-          }}
-        >
-          {isGradient && targetStart && targetEnd && guessStart && guessEnd ? (
-            <DiagonalReveal
-              targetColor={`linear-gradient(135deg, ${hsbToHex(targetStart)}, ${hsbToHex(targetEnd)})`}
-              guessColor={`linear-gradient(135deg, ${hsbToHex(guessStart)}, ${hsbToHex(guessEnd)})`}
-            />
-          ) : (
+        {isGradient && targetStart && targetEnd && guessStart && guessEnd ? (
+          <div
+            style={{
+              display: "flex",
+              gap: "clamp(12px, 3vw, 24px)",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "min(90vw, 500px)",
+              height: "min(55vh, 450px)",
+            }}
+          >
+            {/* Target gradient */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, flex: 1, height: "100%" }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#adadad",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Target
+              </span>
+              <div
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  borderRadius: 20,
+                  background: `linear-gradient(to bottom, ${hsbToHex(targetStart)}, ${hsbToHex(targetEnd)})`,
+                  boxShadow: `0 8px 32px ${hsbToHex(targetStart)}30`,
+                }}
+              />
+            </motion.div>
+            {/* Guess gradient */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, flex: 1, height: "100%" }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#adadad",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Yours
+              </span>
+              <div
+                style={{
+                  flex: 1,
+                  width: "100%",
+                  borderRadius: 20,
+                  background: `linear-gradient(to bottom, ${hsbToHex(guessStart)}, ${hsbToHex(guessEnd)})`,
+                  boxShadow: `0 8px 32px ${hsbToHex(guessStart)}30`,
+                }}
+              />
+            </motion.div>
+          </div>
+        ) : (
+          <div
+            style={{
+              width: "min(80vw, 500px)",
+              height: "min(50vh, 400px)",
+              borderRadius: 24,
+              overflow: "hidden",
+            }}
+          >
             <DiagonalReveal
               targetColor={targetHex}
               guessColor={guessHex}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom: Next button */}
