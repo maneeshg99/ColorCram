@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
-import { AuthModal } from "@/components/auth/AuthModal";
+import { LazyAuthModal } from "@/components/auth/LazyAuthModal";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "700", "900"],
   variable: "--font-inter",
 });
 
@@ -28,7 +28,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
-          <AuthModal />
+          <LazyAuthModal />
         </AuthProvider>
       </body>
     </html>

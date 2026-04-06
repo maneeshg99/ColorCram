@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { type ReactNode } from "react";
 
 interface ScreenTransitionProps {
@@ -40,7 +40,7 @@ export function ScreenTransition({ children, phase }: ScreenTransitionProps) {
         initial="initial"
         animate="animate"
         exit="exit"
-        style={{ width: "100%" }}
+        style={{ width: "100%", height: "100%" }}
       >
         {children}
       </motion.div>

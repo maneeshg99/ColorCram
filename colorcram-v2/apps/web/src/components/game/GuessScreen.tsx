@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import type { HSB } from "@colorcram-v2/types";
 import { hsbToHex } from "@colorcram-v2/color-utils";
 import { HSBColorPicker } from "./HSBColorPicker";

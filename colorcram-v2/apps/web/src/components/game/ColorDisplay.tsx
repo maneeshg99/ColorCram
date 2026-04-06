@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import type { HSB } from "@colorcram-v2/types";
 import { hsbToHex, hsbToRgb } from "@colorcram-v2/color-utils";
 

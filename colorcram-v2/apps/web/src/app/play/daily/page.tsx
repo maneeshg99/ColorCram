@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { GameBoard } from "@/components/game/GameBoard";
+import dynamic from "next/dynamic";
 import { DailyAlreadyPlayed } from "@/components/game/DailyAlreadyPlayed";
 import { PreGameScreen } from "@/components/game/PreGameScreen";
 import { useGameStore } from "@/hooks/useGame";
@@ -10,6 +10,11 @@ import {
   getDailyResult,
   saveDailyResult,
 } from "@/lib/daily-storage";
+
+const GameBoard = dynamic(
+  () => import("@/components/game/GameBoard").then((m) => ({ default: m.GameBoard })),
+  { ssr: false }
+);
 
 export default function DailyPage() {
   const today = new Date().toISOString().split("T")[0];

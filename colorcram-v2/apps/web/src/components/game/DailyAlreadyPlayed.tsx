@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Button } from "@/components/ui/Button";
 import type { DailyResult } from "@/lib/daily-storage";
 import { getTimeUntilNextChallenge } from "@/lib/daily-storage";

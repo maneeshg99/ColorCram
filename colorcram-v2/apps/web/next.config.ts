@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
     "@colorcram-v2/game-logic",
     "@colorcram-v2/types",
   ],
+  experimental: {
+    optimizePackageImports: ["framer-motion", "motion"],
+  },
 };
 
 export default nextConfig;

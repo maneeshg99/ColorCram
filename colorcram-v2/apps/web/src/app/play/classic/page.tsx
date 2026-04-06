@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import { Suspense } from "react";
-import { GameBoard } from "@/components/game/GameBoard";
+import dynamic from "next/dynamic";
 import { PreGameScreen } from "@/components/game/PreGameScreen";
 import type { Difficulty } from "@colorcram-v2/types";
+
+const GameBoard = dynamic(
+  () => import("@/components/game/GameBoard").then((m) => ({ default: m.GameBoard })),
+  { ssr: false }
+);
 
 function ClassicGame() {
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);

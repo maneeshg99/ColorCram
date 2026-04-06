@@ -5,8 +5,16 @@ import { useAuth } from "@/lib/auth-context";
 export function AuthButton() {
   const { user, profile, loading, setShowAuthModal, signOut } = useAuth();
 
+  // Show "sign in" optimistically while auth loads instead of blank placeholder
   if (loading) {
-    return <div className="w-12 h-4" />;
+    return (
+      <button
+        onClick={() => setShowAuthModal(true)}
+        className="text-xs text-[#adadad] hover:text-white transition-colors duration-200"
+      >
+        sign in
+      </button>
+    );
   }
 
   if (user && profile) {

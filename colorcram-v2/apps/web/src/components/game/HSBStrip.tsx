@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface HSBStripProps {
   label: string;
