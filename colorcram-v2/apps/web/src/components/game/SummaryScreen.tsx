@@ -75,11 +75,12 @@ export function SummaryScreen({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       style={{
-        minHeight: "100vh",
+        height: "100dvh",
         backgroundColor: "#131313",
         display: "flex",
         flexDirection: "column",
         padding: "clamp(24px, 4vw, 48px)",
+        overflow: "hidden",
       }}
     >
       {/* Main layout */}
@@ -87,9 +88,11 @@ export function SummaryScreen({
         style={{
           flex: 1,
           display: "flex",
-          gap: "clamp(32px, 5vw, 80px)",
+          gap: "clamp(16px, 3vw, 40px)",
           flexWrap: "wrap",
           alignItems: "flex-start",
+          minHeight: 0,
+          overflow: "auto",
         }}
       >
         {/* Left side: score + actions */}

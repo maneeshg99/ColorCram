@@ -68,7 +68,7 @@ export function PreGameScreen({ mode, onStart }: PreGameScreenProps) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-8 select-none">
+    <div style={{ height: "100dvh", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", userSelect: "none" }}>
       {/* Back link */}
       <motion.div
         className="fixed top-4 left-8 sm:left-12 z-50"

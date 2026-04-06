@@ -105,7 +105,7 @@ export function DualHSBPicker({
       </div>
 
       {/* HSB strips + right column (color circle, gradient bar, GO) */}
-      <div style={{ display: "flex", alignItems: "center", gap: "clamp(12px, 2vw, 24px)" }}>
+      <div style={{ display: "flex", alignItems: "stretch", gap: "clamp(12px, 2vw, 24px)" }}>
         {/* Strips */}
         <div style={{ display: "flex", gap: "clamp(8px, 1.5vw, 16px)" }}>
           <HSBStrip
@@ -154,12 +154,13 @@ export function DualHSBPicker({
             {hex}
           </span>
 
-          {/* Gradient preview bar (vertical) */}
+          {/* Gradient preview bar (vertical) — matches strip height minus circle/hex/button */}
           <div
             style={{
-              width: "clamp(48px, 10vw, 80px)",
-              height: "clamp(60px, 12vh, 100px)",
-              borderRadius: 10,
+              width: "clamp(56px, 12vw, 90px)",
+              flex: 1,
+              minHeight: 60,
+              borderRadius: 12,
               background: `linear-gradient(to bottom, ${startHex}, ${endHex})`,
               boxShadow: `0 4px 16px ${startHex}20, 0 4px 16px ${endHex}20`,
               border: "2px solid rgba(255,255,255,0.1)",
