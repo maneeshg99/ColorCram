@@ -1,15 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/Button";
+import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "@/lib/auth-context";
 import {
   validateUsername,
   validateEmail,
   validatePassword,
   sanitizeInput,
-} from "@colorcram/types";
+} from "@colorcram-v2/types";
 
 export function AuthModal() {
   const { showAuthModal, setShowAuthModal, signIn, signUp } = useAuth();
@@ -32,7 +31,6 @@ export function AuthModal() {
     e.preventDefault();
     setError(null);
 
-    // Validate inputs
     const emailCheck = validateEmail(email);
     if (!emailCheck.valid) {
       setError(emailCheck.error!);
@@ -82,29 +80,45 @@ export function AuthModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.25 }}
         >
+          {/* Overlay */}
           <div
-            className="absolute inset-0 bg-[var(--bg)]/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
             onClick={() => {
               setShowAuthModal(false);
               reset();
             }}
           />
+
+          {/* Close button */}
+          <button
+            onClick={() => {
+              setShowAuthModal(false);
+              reset();
+            }}
+            className="absolute top-6 right-6 text-[#666] hover:text-white transition-colors duration-200 z-10"
+            aria-label="Close"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+
+          {/* Form */}
           <motion.div
-            className="relative w-full max-w-sm p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl"
-            initial={{ scale: 0.9, y: 20 }}
+            className="relative w-full max-w-xs z-10"
+            initial={{ scale: 0.95, y: 20 }}
             animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, y: 20 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            exit={{ scale: 0.95, y: 20 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
             {/* Tabs */}
-            <div className="flex gap-1 p-1 rounded-lg bg-[var(--bg)] mb-6">
+            <div className="flex gap-6 mb-10 justify-center">
               <button
-                className={`flex-1 py-2 rounded-md text-sm font-semibold transition-colors ${
-                  tab === "signin"
-                    ? "bg-[var(--accent)] text-[var(--bg)]"
-                    : "text-[var(--fg-muted)]"
+                className={`text-sm font-semibold transition-colors duration-200 ${
+                  tab === "signin" ? "text-white" : "text-[#adadad] hover:text-white"
                 }`}
                 onClick={() => {
                   setTab("signin");
@@ -114,10 +128,8 @@ export function AuthModal() {
                 Sign In
               </button>
               <button
-                className={`flex-1 py-2 rounded-md text-sm font-semibold transition-colors ${
-                  tab === "signup"
-                    ? "bg-[var(--accent)] text-[var(--bg)]"
-                    : "text-[var(--fg-muted)]"
+                className={`text-sm font-semibold transition-colors duration-200 ${
+                  tab === "signup" ? "text-white" : "text-[#adadad] hover:text-white"
                 }`}
                 onClick={() => {
                   setTab("signup");
@@ -128,74 +140,69 @@ export function AuthModal() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {tab === "signup" && (
                 <div>
-                  <label className="text-xs text-[var(--fg-muted)] block mb-1">
-                    Username
-                  </label>
                   <input
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--fg-muted)] transition-colors"
-                    placeholder="ChromaKing"
+                    className="w-full bg-transparent border-0 border-b border-white/20 focus:border-white outline-none py-2 text-sm text-white placeholder:text-[#666] transition-colors duration-200"
+                    placeholder="Username"
                     maxLength={24}
                     autoComplete="username"
                     required
                   />
-                  <p className="text-[10px] text-[var(--fg-muted)] mt-1">
+                  <p className="text-[10px] text-[#666] mt-2">
                     2-24 characters, letters, numbers, underscores
                   </p>
                 </div>
               )}
+
               <div>
-                <label className="text-xs text-[var(--fg-muted)] block mb-1">
-                  Email
-                </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--fg-muted)] transition-colors"
-                  placeholder="you@example.com"
+                  className="w-full bg-transparent border-0 border-b border-white/20 focus:border-white outline-none py-2 text-sm text-white placeholder:text-[#666] transition-colors duration-200"
+                  placeholder="Email"
                   maxLength={254}
                   autoComplete="email"
                   required
                 />
               </div>
+
               <div>
-                <label className="text-xs text-[var(--fg-muted)] block mb-1">
-                  Password
-                </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-sm focus:outline-none focus:border-[var(--fg-muted)] transition-colors"
-                  placeholder="••••••••"
+                  className="w-full bg-transparent border-0 border-b border-white/20 focus:border-white outline-none py-2 text-sm text-white placeholder:text-[#666] transition-colors duration-200"
+                  placeholder="Password"
                   minLength={6}
                   maxLength={128}
-                  autoComplete={tab === "signin" ? "current-password" : "new-password"}
+                  autoComplete={
+                    tab === "signin" ? "current-password" : "new-password"
+                  }
                   required
                 />
               </div>
 
               {error && (
-                <p className="text-xs text-[var(--score-poor)]">{error}</p>
+                <p className="text-xs text-[#ff3b3b]">{error}</p>
               )}
 
-              <Button
-                size="md"
-                className="w-full"
+              <button
+                type="submit"
                 disabled={submitting}
+                className="w-full text-sm font-semibold text-white py-2 transition-all duration-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] disabled:opacity-40"
               >
                 {submitting
                   ? "..."
                   : tab === "signin"
                     ? "Sign In"
                     : "Create Account"}
-              </Button>
+              </button>
             </form>
           </motion.div>
         </motion.div>

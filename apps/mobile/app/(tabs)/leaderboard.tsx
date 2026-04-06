@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/lib/auth-context";
 import { fetchLeaderboard, type LeaderboardRow } from "@/lib/leaderboard";
 import { Colors } from "@/constants/theme";
-import type { GameMode } from "@colorcram/types";
+import type { GameMode } from "@colorcram-v2/types";
 
 const TABS: { id: string; label: string; mode: GameMode; difficulty?: string }[] = [
   { id: "classic-easy", label: "Easy", mode: "classic", difficulty: "easy" },

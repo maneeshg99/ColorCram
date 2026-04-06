@@ -1,15 +1,22 @@
 "use client";
 
-import { GameBoard } from "@/components/game/GameBoard";
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import { PreGameScreen } from "@/components/game/PreGameScreen";
+
+const GameBoard = dynamic(
+  () => import("@/components/game/GameBoard").then((m) => ({ default: m.GameBoard })),
+  { ssr: false }
+);
 
 export default function BlitzPage() {
+  const [started, setStarted] = useState(false);
+
+  if (!started) {
+    return <PreGameScreen mode="blitz" onStart={() => setStarted(true)} />;
+  }
+
   return (
-    <div className="flex flex-col items-center py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold">Blitz Mode</h1>
-        <p className="text-[var(--muted)] mt-1">60 seconds. Go fast.</p>
-      </div>
-      <GameBoard mode="blitz" difficulty="medium" />
-    </div>
+    <GameBoard mode="blitz" difficulty="medium" onExit={() => setStarted(false)} />
   );
 }

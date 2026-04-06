@@ -1,1 +1,1 @@
-export type { HSB, RGB, LAB, XYZ } from "@colorcram/types";
+export type { HSB, RGB, LAB, XYZ } from "@colorcram-v2/types";

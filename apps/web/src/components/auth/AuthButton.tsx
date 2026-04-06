@@ -1,49 +1,52 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 
 export function AuthButton() {
   const { user, profile, loading, setShowAuthModal, signOut } = useAuth();
 
+  // Show "sign in" optimistically while auth loads instead of blank placeholder
   if (loading) {
-    return <div className="w-16 h-8" />;
+    return (
+      <button
+        onClick={() => setShowAuthModal(true)}
+        className="text-xs text-[#adadad] hover:text-white transition-colors duration-200"
+      >
+        sign in
+      </button>
+    );
   }
 
   if (user && profile) {
     return (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {profile.role === "admin" && (
           <a
             href="/admin"
-            className="text-xs text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
+            className="text-xs text-[#666] hover:text-white transition-colors duration-200"
           >
-            Admin
+            admin
           </a>
         )}
-        <span className="text-sm font-medium hidden sm:inline">
+        <span className="text-xs text-[#adadad]">
           {profile.username}
         </span>
-        <motion.button
+        <button
           onClick={signOut}
-          className="text-xs text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="text-xs text-[#666] hover:text-white transition-colors duration-200"
         >
-          Sign Out
-        </motion.button>
+          sign out
+        </button>
       </div>
     );
   }
 
   return (
-    <motion.button
+    <button
       onClick={() => setShowAuthModal(true)}
-      className="text-sm font-medium text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      className="text-xs text-[#adadad] hover:text-white transition-colors duration-200"
     >
-      Sign In
-    </motion.button>
+      sign in
+    </button>
   );
 }

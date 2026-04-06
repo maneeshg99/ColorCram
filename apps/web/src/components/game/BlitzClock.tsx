@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
+import { NumberSlide } from "@/components/design-system/NumberSlide";
 
 interface BlitzClockProps {
   timeRemainingMs: number;
@@ -15,21 +16,23 @@ export function BlitzClock({ timeRemainingMs, totalTimeMs }: BlitzClockProps) {
   const isCritical = timeRemainingMs < 5000;
 
   const color = isCritical
-    ? "var(--score-poor)"
+    ? "#ef4444"
     : isWarning
-      ? "var(--score-good)"
-      : "var(--fg)";
+      ? "#eab308"
+      : "#ffffff";
+
+  const timeStr = `${seconds}.${ms.toString().padStart(2, "0")}`;
 
   // SVG ring
-  const size = 100;
-  const strokeWidth = 4;
+  const size = 90;
+  const strokeWidth = 3;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - progress);
 
   return (
     <motion.div
-      className="flex flex-col items-center"
+      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
       animate={isCritical ? { scale: [1, 1.04, 1] } : { scale: 1 }}
       transition={
         isCritical
@@ -37,7 +40,7 @@ export function BlitzClock({ timeRemainingMs, totalTimeMs }: BlitzClockProps) {
           : { duration: 0.2 }
       }
     >
-      <div className="relative" style={{ width: size, height: size }}>
+      <div style={{ position: "relative", width: size, height: size }}>
         <svg
           width={size}
           height={size}
@@ -49,7 +52,7 @@ export function BlitzClock({ timeRemainingMs, totalTimeMs }: BlitzClockProps) {
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="var(--surface-elevated)"
+            stroke="rgba(255,255,255,0.06)"
             strokeWidth={strokeWidth}
           />
           <circle
@@ -65,19 +68,28 @@ export function BlitzClock({ timeRemainingMs, totalTimeMs }: BlitzClockProps) {
             style={{ transition: "stroke-dashoffset 0.1s linear, stroke 0.3s ease" }}
           />
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span
-            className="text-2xl font-[800] tabular-nums leading-none"
-            style={{ color }}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="font-mono"
+            style={{
+              fontSize: 20,
+              fontWeight: 800,
+              color,
+              lineHeight: 1,
+              fontVariantNumeric: "tabular-nums",
+            }}
           >
-            {seconds}
-          </span>
-          <span
-            className="text-xs font-mono tabular-nums opacity-60"
-            style={{ color }}
-          >
-            .{ms.toString().padStart(2, "0")}
-          </span>
+            <NumberSlide value={timeStr} />
+          </div>
         </div>
       </div>
     </motion.div>

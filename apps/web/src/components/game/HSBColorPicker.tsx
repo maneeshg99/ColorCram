@@ -1,155 +1,102 @@
 "use client";
 
-import { useRef, useCallback, useState } from "react";
-import { motion } from "framer-motion";
-import type { HSB } from "@colorcram/types";
-import { hsbToHex } from "@colorcram/color-utils";
+import type { ReactNode } from "react";
+import { motion } from "motion/react";
+import type { HSB } from "@colorcram-v2/types";
+import { hsbToHex } from "@colorcram-v2/color-utils";
+import { HSBStrip } from "./HSBStrip";
 
 interface HSBColorPickerProps {
   value: HSB;
   onChange: (hsb: HSB) => void;
   disabled?: boolean;
+  submitButton?: ReactNode;
 }
 
-function hslString(h: number, s: number, l: number) {
-  return `hsl(${h}, ${s}%, ${l}%)`;
-}
-
-interface StripProps {
-  label: string;
-  valueLabel: string;
-  gradient: string;
-  position: number; // 0-1
-  onDrag: (position: number) => void;
-  disabled: boolean;
-}
-
-function Strip({ label, valueLabel, gradient, position, onDrag, disabled }: StripProps) {
-  const stripRef = useRef<HTMLDivElement>(null);
-  const [dragging, setDragging] = useState(false);
-
-  const handlePointer = useCallback(
-    (e: React.PointerEvent) => {
-      if (disabled) return;
-      const el = stripRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-      onDrag(y);
-    },
-    [onDrag, disabled]
-  );
-
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <span className="text-[10px] font-semibold tracking-[0.2em] text-[var(--fg-muted)] uppercase">
-        {label}
-      </span>
-      <div
-        ref={stripRef}
-        className="relative w-14 sm:w-10 h-[200px] sm:h-[280px] rounded-full overflow-hidden cursor-pointer select-none touch-none"
-        style={{ background: gradient }}
-        onPointerDown={(e) => {
-          if (disabled) return;
-          setDragging(true);
-          (e.target as HTMLElement).setPointerCapture(e.pointerId);
-          handlePointer(e);
-        }}
-        onPointerMove={(e) => dragging && handlePointer(e)}
-        onPointerUp={() => setDragging(false)}
-      >
-        {/* Thumb */}
-        <motion.div
-          className="absolute left-1/2 -translate-x-1/2 w-16 sm:w-12 h-[6px] rounded-full bg-white border-2 border-[var(--bg)] pointer-events-none"
-          style={{
-            top: `calc(${position * 100}% - 3px)`,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
-            cursor: dragging ? "grabbing" : "grab",
-          }}
-          whileHover={{ scaleX: 1.15 }}
-          animate={{ scaleX: dragging ? 1.1 : 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        />
-      </div>
-      <span className="text-xs font-mono text-[var(--fg-muted)] tabular-nums">
-        {valueLabel}
-      </span>
-    </div>
-  );
-}
-
-export function HSBColorPicker({ value, onChange, disabled = false }: HSBColorPickerProps) {
+export function HSBColorPicker({ value, onChange, disabled = false, submitButton }: HSBColorPickerProps) {
   const hex = hsbToHex(value);
 
-  // Hue gradient: 7 stops for full spectrum (top to bottom)
-  const hueGradient =
-    "linear-gradient(to bottom, hsl(0,100%,50%), hsl(60,100%,50%), hsl(120,100%,50%), hsl(180,100%,50%), hsl(240,100%,50%), hsl(300,100%,50%), hsl(360,100%,50%))";
+  const hueColors = [
+    "hsl(0,100%,50%)",
+    "hsl(60,100%,50%)",
+    "hsl(120,100%,50%)",
+    "hsl(180,100%,50%)",
+    "hsl(240,100%,50%)",
+    "hsl(300,100%,50%)",
+    "hsl(360,100%,50%)",
+  ];
 
-  // Saturation gradient: desaturated to fully saturated at current hue+brightness
-  // Uses HSB-to-hex to show the actual resulting color at each saturation level
-  const satStops = [0, 25, 50, 75, 100]
-    .map((s) => hsbToHex({ h: value.h, s, b: value.b }))
-    .map((hex, i) => `${hex} ${i * 25}%`)
-    .join(", ");
-  const satGradient = `linear-gradient(to bottom, ${satStops})`;
+  const satColors = [0, 25, 50, 75, 100].map(
+    (s) => hsbToHex({ h: value.h, s, b: value.b })
+  );
 
-  // Brightness gradient: bright at top, dark at bottom (drag down = darker)
-  const briStops = [100, 75, 50, 25, 0]
-    .map((b) => hsbToHex({ h: value.h, s: value.s, b }))
-    .map((hex, i) => `${hex} ${i * 25}%`)
-    .join(", ");
-  const briGradient = `linear-gradient(to bottom, ${briStops})`;
+  const briColors = [100, 75, 50, 25, 0].map(
+    (b) => hsbToHex({ h: value.h, s: value.s, b })
+  );
 
   return (
     <motion.div
-      className={`flex flex-col items-center gap-3 sm:gap-6 ${disabled ? "opacity-30 pointer-events-none" : ""}`}
+      className={disabled ? "opacity-30 pointer-events-none" : ""}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      style={{
+        WebkitUserSelect: "none",
+        userSelect: "none",
+      }}
     >
-      <div className="flex gap-5 sm:gap-6">
-        <Strip
-          label="H"
-          valueLabel={`${Math.round(value.h)}°`}
-          gradient={hueGradient}
-          position={value.h / 360}
-          onDrag={(y) => onChange({ ...value, h: Math.round(y * 360) })}
-          disabled={disabled}
-        />
-        <Strip
-          label="S"
-          valueLabel={`${Math.round(value.s)}%`}
-          gradient={satGradient}
-          position={value.s / 100}
-          onDrag={(y) => onChange({ ...value, s: Math.round(y * 100) })}
-          disabled={disabled}
-        />
-        <Strip
-          label="B"
-          valueLabel={`${Math.round(value.b)}%`}
-          gradient={briGradient}
-          position={1 - value.b / 100}
-          onDrag={(y) => onChange({ ...value, b: Math.round((1 - y) * 100) })}
-          disabled={disabled}
-        />
-      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "clamp(12px, 2vw, 24px)" }}>
+        {/* Strips */}
+        <div style={{ display: "flex", gap: "clamp(8px, 1.5vw, 16px)" }}>
+          <HSBStrip
+            label="H"
+            colors={hueColors}
+            position={value.h / 360}
+            onDrag={(y) => onChange({ ...value, h: Math.round(y * 360) })}
+          />
+          <HSBStrip
+            label="S"
+            colors={satColors}
+            position={value.s / 100}
+            onDrag={(y) => onChange({ ...value, s: Math.round(y * 100) })}
+          />
+          <HSBStrip
+            label="B"
+            colors={briColors}
+            position={1 - value.b / 100}
+            onDrag={(y) => onChange({ ...value, b: Math.round((1 - y) * 100) })}
+          />
+        </div>
 
-      {/* Color preview */}
-      <div className="flex items-center gap-4">
-        <motion.div
-          className="w-[72px] h-[72px] sm:w-[100px] sm:h-[100px] rounded-2xl border border-[var(--border)]"
-          style={{
-            backgroundColor: hex,
-            boxShadow: `0 8px 32px ${hex}40`,
-          }}
-          animate={{ boxShadow: `0 8px 32px ${hex}40` }}
-          transition={{ duration: 0.3 }}
-        />
-        <div className="space-y-1">
-          <div className="text-lg font-mono font-bold tracking-tight">{hex}</div>
-          <div className="text-xs font-mono text-[var(--fg-muted)] tabular-nums space-y-0.5">
-            <div>H {Math.round(value.h)}° &middot; S {Math.round(value.s)}% &middot; B {Math.round(value.b)}%</div>
-          </div>
+        {/* Color preview + submit button */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <motion.div
+            style={{
+              width: "clamp(72px, 14vw, 120px)",
+              height: "clamp(72px, 14vw, 120px)",
+              borderRadius: "50%",
+              backgroundColor: hex,
+              boxShadow: `0 12px 40px ${hex}50`,
+            }}
+            animate={{ boxShadow: `0 12px 40px ${hex}50` }}
+            transition={{ duration: 0.3 }}
+          />
+          <span
+            style={{
+              fontFamily: "monospace",
+              fontSize: 12,
+              color: "#adadad",
+              fontVariantNumeric: "tabular-nums",
+              letterSpacing: "0.05em",
+            }}
+          >
+            {hex}
+          </span>
+          {submitButton && (
+            <div style={{ marginTop: 8 }}>
+              {submitButton}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

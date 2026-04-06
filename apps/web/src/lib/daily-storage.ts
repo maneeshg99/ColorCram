@@ -1,4 +1,4 @@
-import type { GameResults } from "@colorcram/types";
+import type { GameResults } from "@colorcram-v2/types";
 
 export interface DailyResult {
   date: string;

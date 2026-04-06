@@ -19,7 +19,7 @@ import {
   validateEmail,
   validatePassword,
   sanitizeInput,
-} from "@colorcram/types";
+} from "@colorcram-v2/types";
 
 export default function AuthModal() {
   const router = useRouter();

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { HSB, GameMode, Difficulty, GameState, GameResults } from "@colorcram/types";
+import type { HSB, GameMode, Difficulty, GameState, GameResults } from "@colorcram-v2/types";
 import {
   createGame,
   startMemorize,
@@ -11,7 +11,7 @@ import {
   getCurrentTarget,
   getCurrentGradientTarget,
   getResults,
-} from "@colorcram/game-logic";
+} from "@colorcram-v2/game-logic";
 
 interface GameStore {
   state: GameState | null;

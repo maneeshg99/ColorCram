@@ -7,8 +7,8 @@ import {
   LayoutChangeEvent,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import type { HSB } from "@colorcram/types";
-import { hsbToHex } from "@colorcram/color-utils";
+import type { HSB } from "@colorcram-v2/types";
+import { hsbToHex } from "@colorcram-v2/color-utils";
 import { Colors } from "@/constants/theme";
 
 const STRIP_HEIGHT = 260;

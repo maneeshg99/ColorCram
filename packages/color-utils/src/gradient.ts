@@ -1,4 +1,4 @@
-import type { HSB } from "@colorcram/types";
+import type { HSB } from "@colorcram-v2/types";
 
 /**
  * Linearly interpolate between two HSB colors.

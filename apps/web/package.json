@@ -1,24 +1,25 @@
 {
-  "name": "@colorcram/web",
+  "name": "@colorcram-v2/web",
   "version": "0.5.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@colorcram/color-utils": "workspace:*",
-    "@colorcram/game-logic": "workspace:*",
-    "@colorcram/types": "workspace:*",
+    "@colorcram-v2/color-utils": "workspace:*",
+    "@colorcram-v2/game-logic": "workspace:*",
+    "@colorcram-v2/types": "workspace:*",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
     "framer-motion": "^12.0.0",
+    "motion": "^12.38.0",
     "next": "^15.3.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

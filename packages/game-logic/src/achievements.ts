@@ -1,4 +1,4 @@
-import type { AchievementDefinition, GameResults } from "@colorcram/types";
+import type { AchievementDefinition, GameResults } from "@colorcram-v2/types";
 
 export const ACHIEVEMENTS: AchievementDefinition[] = [
   { id: "first_game", name: "First Steps", description: "Complete your first game", icon: "🎮", category: "milestone" },

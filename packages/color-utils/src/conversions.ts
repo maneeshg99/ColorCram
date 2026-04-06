@@ -1,4 +1,4 @@
-import type { HSB, RGB, XYZ, LAB } from "@colorcram/types";
+import type { HSB, RGB, XYZ, LAB } from "@colorcram-v2/types";
 
 /**
  * HSB to RGB conversion.

@@ -5,7 +5,7 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
-    "@colorcram/web#build": {
+    "@colorcram-v2/web#build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
@@ -13,10 +13,6 @@
       "cache": false,
       "persistent": true
     },
-    "lint": {
-      "dependsOn": ["^build"]
-    },
-    "test": {},
     "typecheck": {
       "dependsOn": ["^build"]
     },

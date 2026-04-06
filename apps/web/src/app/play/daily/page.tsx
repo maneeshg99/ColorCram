@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { GameBoard } from "@/components/game/GameBoard";
+import dynamic from "next/dynamic";
 import { DailyAlreadyPlayed } from "@/components/game/DailyAlreadyPlayed";
+import { PreGameScreen } from "@/components/game/PreGameScreen";
 import { useGameStore } from "@/hooks/useGame";
 import {
   hasPlayedToday,
@@ -10,18 +11,22 @@ import {
   saveDailyResult,
 } from "@/lib/daily-storage";
 
+const GameBoard = dynamic(
+  () => import("@/components/game/GameBoard").then((m) => ({ default: m.GameBoard })),
+  { ssr: false }
+);
+
 export default function DailyPage() {
   const today = new Date().toISOString().split("T")[0];
   const [alreadyPlayed, setAlreadyPlayed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [started, setStarted] = useState(false);
 
-  // Check localStorage after mount (avoid SSR mismatch)
   useEffect(() => {
     setAlreadyPlayed(hasPlayedToday());
     setMounted(true);
   }, []);
 
-  // Watch for game completion and save result
   useEffect(() => {
     if (alreadyPlayed) return;
 
@@ -30,7 +35,6 @@ export default function DailyPage() {
         const results = state.getGameResults();
         if (results) {
           saveDailyResult(results);
-          // Don't setAlreadyPlayed here — let them see the summary naturally
         }
       }
     });
@@ -40,7 +44,7 @@ export default function DailyPage() {
 
   if (!mounted) {
     return (
-      <div className="flex justify-center py-16 text-[var(--fg-muted)]">
+      <div className="flex items-center justify-center min-h-screen text-[#adadad] text-sm">
         Loading...
       </div>
     );
@@ -53,15 +57,17 @@ export default function DailyPage() {
     }
   }
 
+  if (!started) {
+    return <PreGameScreen mode="daily" onStart={() => setStarted(true)} />;
+  }
+
   return (
-    <div className="flex flex-col items-center py-8">
-      <div className="text-center mb-4">
-        <h1 className="text-lg font-[800] tracking-tight">Daily Challenge</h1>
-        <p className="text-[var(--text-caption)] text-[var(--fg-muted)]">
-          {today}
-        </p>
-      </div>
-      <GameBoard key={today} mode="daily" difficulty="medium" seed={today} />
-    </div>
+    <GameBoard
+      key={today}
+      mode="daily"
+      difficulty="medium"
+      seed={today}
+      onExit={() => setStarted(false)}
+    />
   );
 }

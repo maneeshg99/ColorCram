@@ -8,10 +8,13 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   transpilePackages: [
-    "@colorcram/color-utils",
-    "@colorcram/game-logic",
-    "@colorcram/types",
+    "@colorcram-v2/color-utils",
+    "@colorcram-v2/game-logic",
+    "@colorcram-v2/types",
   ],
+  experimental: {
+    optimizePackageImports: ["framer-motion", "motion"],
+  },
 };
 
 export default nextConfig;

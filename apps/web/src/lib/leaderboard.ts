@@ -1,5 +1,5 @@
 import { getSupabase } from "./supabase";
-import type { GameMode } from "@colorcram/types";
+import type { GameMode } from "@colorcram-v2/types";
 
 export interface LeaderboardRow {
   rank: number;

@@ -1,4 +1,4 @@
-import type { Difficulty, DifficultyConfig } from "@colorcram/types";
+import type { Difficulty, DifficultyConfig } from "@colorcram-v2/types";
 
 export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
   easy: { rounds: 5, memorizeTimeMs: 6000, label: "Easy" },

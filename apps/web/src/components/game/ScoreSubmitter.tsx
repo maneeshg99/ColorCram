@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/Button";
+import { motion } from "motion/react";
 import { useAuth } from "@/lib/auth-context";
 import { getSupabase } from "@/lib/supabase";
-import type { GameResults } from "@colorcram/types";
+import type { GameResults } from "@colorcram-v2/types";
 
 interface ScoreSubmitterProps {
   results: GameResults;
@@ -46,7 +45,6 @@ export function ScoreSubmitter({ results }: ScoreSubmitterProps) {
     });
 
     if (error) {
-      // Unique constraint violation = already submitted daily
       if (error.code === "23505") {
         setStatus("submitted");
       } else {
@@ -69,9 +67,9 @@ export function ScoreSubmitter({ results }: ScoreSubmitterProps) {
   if (status === "submitted") {
     return (
       <motion.div
-        className="text-sm text-[var(--fg-muted)] text-center"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
+        style={{ fontSize: 13, color: "#adadad" }}
       >
         Saved to leaderboard
       </motion.div>
@@ -80,7 +78,7 @@ export function ScoreSubmitter({ results }: ScoreSubmitterProps) {
 
   if (status === "submitting") {
     return (
-      <div className="text-sm text-[var(--fg-muted)] text-center">
+      <div style={{ fontSize: 13, color: "#adadad" }}>
         Saving...
       </div>
     );
@@ -88,31 +86,45 @@ export function ScoreSubmitter({ results }: ScoreSubmitterProps) {
 
   if (status === "error") {
     return (
-      <div className="text-xs text-[var(--score-poor)] text-center">
+      <div style={{ fontSize: 12, color: "#ef4444" }}>
         {errorMsg}
       </div>
     );
   }
 
-  // Not logged in
   if (!user) {
     return (
       <motion.div
-        className="flex flex-col items-center gap-2"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
       >
-        <p className="text-sm text-[var(--fg-muted)]">
+        <span style={{ fontSize: 13, color: "#adadad" }}>
           Sign in to save your score
-        </p>
-        <Button
-          variant="secondary"
-          size="sm"
+        </span>
+        <button
           onClick={() => setShowAuthModal(true)}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: 600,
+            color: "#ffffff",
+            padding: 0,
+            textAlign: "left",
+            transition: "opacity 0.2s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
         >
           Sign In
-        </Button>
+        </button>
       </motion.div>
     );
   }

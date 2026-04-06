@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 const FEEDBACK_POOLS: Record<string, string[]> = {
   perfect: [
@@ -55,10 +55,16 @@ export function ScoreFeedback({ score, roundIndex }: ScoreFeedbackProps) {
 
   return (
     <motion.p
-      className="text-sm italic text-[var(--fg-muted)] text-center max-w-xs"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.6, duration: 0.4, ease: "easeOut" }}
+      style={{
+        fontSize: 14,
+        fontStyle: "italic",
+        color: "#adadad",
+        textAlign: "center",
+        maxWidth: 300,
+      }}
     >
       {message}
     </motion.p>

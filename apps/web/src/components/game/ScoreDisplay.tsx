@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate } from "motion/react";
 
 interface ScoreDisplayProps {
   score: number;
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 97) return "var(--score-perfect)";
-  if (score >= 90) return "var(--score-great)";
-  if (score >= 70) return "var(--score-good)";
-  if (score >= 40) return "var(--score-fair)";
-  return "var(--score-poor)";
+  if (score >= 90) return "#22c55e";
+  if (score >= 70) return "#eab308";
+  if (score >= 40) return "#f97316";
+  return "#ef4444";
 }
 
 export function ScoreDisplay({ score }: ScoreDisplayProps) {
@@ -41,7 +40,12 @@ export function ScoreDisplay({ score }: ScoreDisplayProps) {
 
   return (
     <motion.div
-      className="flex flex-col items-center gap-1"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4,
+      }}
       initial={{ scale: 0.5, opacity: 0 }}
       animate={
         score < 30
@@ -64,16 +68,20 @@ export function ScoreDisplay({ score }: ScoreDisplayProps) {
     >
       <motion.span
         ref={displayRef}
-        className="font-[900] tabular-nums leading-none"
         style={{
-          fontSize: "var(--text-display)",
+          fontWeight: 900,
+          fontVariantNumeric: "tabular-nums",
+          lineHeight: 1,
+          fontSize: "clamp(3rem, 8vw, 6rem)",
           color,
-          textShadow: `0 0 40px ${color}`,
+          textShadow: `0 0 60px ${color}40`,
         }}
       >
         0%
       </motion.span>
-      <span className="text-xs text-[var(--fg-muted)] mt-1">match</span>
+      <span style={{ fontSize: 12, color: "#adadad", marginTop: 4 }}>
+        match
+      </span>
     </motion.div>
   );
 }

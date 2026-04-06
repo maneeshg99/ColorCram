@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ciede2000 } from "../delta-e";
-import type { LAB } from "@colorcram/types";
+import type { LAB } from "@colorcram-v2/types";
 
 describe("ciede2000", () => {
   it("returns 0 for identical colors", () => {

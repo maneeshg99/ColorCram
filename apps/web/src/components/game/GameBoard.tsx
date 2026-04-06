@@ -1,37 +1,26 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useGameStore } from "@/hooks/useGame";
-import { HSBColorPicker } from "./HSBColorPicker";
-import { ColorDisplay } from "./ColorDisplay";
-import { ColorComparison } from "./ColorComparison";
-import { GradientDisplay } from "./GradientDisplay";
-import { DualHSBPicker } from "./DualHSBPicker";
-import { GradientComparison } from "./GradientComparison";
-import { ScoreDisplay } from "./ScoreDisplay";
-import { ScoreFeedback } from "./ScoreFeedback";
-import { CountdownTimer } from "./CountdownTimer";
+import { ScreenTransition } from "@/components/design-system/ScreenTransition";
+import { MemorizeScreen } from "./MemorizeScreen";
+import { GuessScreen } from "./GuessScreen";
+import { ResultScreen } from "./ResultScreen";
+import { SummaryScreen } from "./SummaryScreen";
 import { BlitzClock } from "./BlitzClock";
-import { ScoreSubmitter } from "./ScoreSubmitter";
-import { Button } from "@/components/ui/Button";
-import { hsbToHex } from "@colorcram/color-utils";
-import { BLITZ_DURATION_MS } from "@colorcram/game-logic";
-import type { GameMode, Difficulty } from "@colorcram/types";
+import { hsbToHex } from "@colorcram-v2/color-utils";
+import { BLITZ_DURATION_MS } from "@colorcram-v2/game-logic";
+import type { GameMode, Difficulty } from "@colorcram-v2/types";
+import { playSound } from "@/lib/sounds";
 
 interface GameBoardProps {
   mode: GameMode;
   difficulty: Difficulty;
   seed?: string;
+  onExit?: () => void;
 }
 
-const fadeIn = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-};
-
-export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
+export function GameBoard({ mode, difficulty, seed, onExit }: GameBoardProps) {
   const {
     state,
     currentGuess,
@@ -54,6 +43,7 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
 
   const initialized = useRef(false);
   const blitzStartRef = useRef<number | null>(null);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Initialize game
   useEffect(() => {
@@ -84,15 +74,24 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
     return () => clearInterval(interval);
   }, [mode, phase, tickBlitz]);
 
-  const handleMemorizeComplete = useCallback(() => beginGuess(), [beginGuess]);
+  const handleMemorizeComplete = useCallback(() => {
+    playSound("transition");
+    beginGuess();
+  }, [beginGuess]);
+
   const handleSubmitGuess = useCallback(() => {
+    playSound("submit");
     if (mode === "gradient") {
       confirmGradientGuess();
     } else {
       confirmGuess();
     }
   }, [mode, confirmGuess, confirmGradientGuess]);
-  const handleNextRound = useCallback(() => advance(), [advance]);
+
+  const handleNextRound = useCallback(() => {
+    playSound("transition");
+    advance();
+  }, [advance]);
 
   const handlePlayAgain = useCallback(() => {
     blitzStartRef.current = null;
@@ -114,296 +113,224 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
   const isBlitz = state.mode === "blitz";
   const isGradient = state.mode === "gradient";
 
+  const showExit = onExit && state.phase !== "summary" && state.phase !== "idle";
+
   return (
     <>
-      {/* MEMORIZE */}
-      {state.phase === "memorize" && (target || gradientTarget) && (
-        <motion.div
-          key={`memorize-${state.currentRound}`}
-          {...fadeIn}
-        >
-          {isGradient && gradientTarget ? (
-            <GradientDisplay
-              startColor={gradientTarget.start}
-              endColor={gradientTarget.end}
-              variant="memorize"
-            >
-              <motion.div
-                className="text-center text-[var(--text-caption)] text-[var(--fg-muted)]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                Round {state.currentRound + 1} / {state.totalRounds}
-              </motion.div>
-              <CountdownTimer
-                durationMs={state.memorizeTimeMs}
-                onComplete={handleMemorizeComplete}
-                running={true}
-              />
-            </GradientDisplay>
-          ) : (
-            <ColorDisplay color={target!} variant="memorize">
-              <motion.div
-                className="text-center text-[var(--text-caption)] text-[var(--fg-muted)]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                Round {state.currentRound + 1} {!isBlitz && `/ ${state.totalRounds}`}
-              </motion.div>
-              {isBlitz && state.timeRemainingMs !== null && (
-                <div className="mb-4">
-                  <BlitzClock timeRemainingMs={state.timeRemainingMs} totalTimeMs={BLITZ_DURATION_MS} />
-                </div>
-              )}
-              <CountdownTimer
-                durationMs={state.memorizeTimeMs}
-                onComplete={handleMemorizeComplete}
-                running={true}
-              />
-            </ColorDisplay>
-          )}
-        </motion.div>
-      )}
+    {/* Exit button — rendered outside overflow container */}
+    {showExit && (
+      <button
+        onClick={() => setShowExitConfirm(true)}
+        style={{
+          position: "fixed",
+          bottom: "clamp(12px, 2vw, 20px)",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 200,
+          background: "rgba(40,40,40,0.8)",
+          border: "1px solid rgba(255,255,255,0.25)",
+          borderRadius: 20,
+          padding: "6px 16px",
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#bbb",
+          cursor: "pointer",
+          transition: "color 0.2s, border-color 0.2s",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "#bbb"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; }}
+      >
+        Exit
+      </button>
+    )}
 
-      {/* GUESS */}
-      {state.phase === "guess" && (
-        <motion.div
-          key={`guess-${state.currentRound}`}
-          className="flex flex-col items-center justify-center gap-4 px-6 min-h-[calc(100vh-3.5rem)] overflow-hidden"
-          {...fadeIn}
+    {/* Exit confirmation modal */}
+    {showExitConfirm && (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 300,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "rgba(0,0,0,0.7)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+        onClick={() => setShowExitConfirm(false)}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: "#1a1a1a",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 16,
+            padding: "28px 32px",
+            maxWidth: 320,
+            width: "90%",
+            textAlign: "center",
+          }}
         >
-          {isBlitz && state.timeRemainingMs !== null && (
-            <BlitzClock timeRemainingMs={state.timeRemainingMs} totalTimeMs={BLITZ_DURATION_MS} />
-          )}
-
-          <div className="text-center">
-            <motion.div
-              className="text-[var(--text-caption)] text-[var(--fg-muted)] mb-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
+          <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+            Quit game?
+          </p>
+          <p style={{ fontSize: 13, color: "#888", marginBottom: 24, lineHeight: 1.5 }}>
+            You&apos;ll lose all progress in this round.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            <button
+              onClick={() => { setShowExitConfirm(false); onExit?.(); }}
+              style={{
+                background: "none",
+                border: "1px solid rgba(239,68,68,0.4)",
+                borderRadius: 20,
+                padding: "8px 20px",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#ef4444",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.1)"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.6)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.4)"; }}
             >
-              Round {state.currentRound + 1} {!isBlitz && `/ ${state.totalRounds}`}
-            </motion.div>
-            <motion.h2
-              className="text-[var(--text-heading)] font-[800] tracking-tight"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
+              Quit
+            </button>
+            <button
+              onClick={() => setShowExitConfirm(false)}
+              style={{
+                background: "none",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 20,
+                padding: "8px 20px",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#fff",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
             >
-              {isGradient ? "Recreate the gradient" : "Recreate the color"}
-            </motion.h2>
+              Keep playing
+            </button>
           </div>
+        </div>
+      </div>
+    )}
 
-          {isGradient ? (
-            <DualHSBPicker
-              startValue={currentGuessStart}
-              endValue={currentGuessEnd}
-              onStartChange={setGuessStart}
-              onEndChange={setGuessEnd}
-            />
-          ) : (
-            <HSBColorPicker value={currentGuess} onChange={setGuess} />
-          )}
-
-          <Button onClick={handleSubmitGuess} size="lg">
-            Submit Guess
-          </Button>
-        </motion.div>
-      )}
-
-      {/* REVEAL */}
-      {state.phase === "reveal" && (
-        <motion.div
-          key={`reveal-${state.currentRound}`}
-          className="flex flex-col items-center gap-6 py-8 px-6"
-          {...fadeIn}
+    <div style={{ position: "relative", height: "100dvh", overflow: "hidden" }}>
+      {/* Persistent blitz clock overlay */}
+      {isBlitz && state.timeRemainingMs !== null && state.phase !== "summary" && (
+        <div
+          style={{
+            position: "fixed",
+            top: "clamp(16px, 2vw, 24px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 100,
+          }}
         >
-          {isBlitz && state.timeRemainingMs !== null && (
-            <BlitzClock timeRemainingMs={state.timeRemainingMs} totalTimeMs={BLITZ_DURATION_MS} />
-          )}
-
-          <motion.div
-            className="text-[var(--text-caption)] text-[var(--fg-muted)]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            Round {state.currentRound + 1} {!isBlitz && `/ ${state.totalRounds}`}
-          </motion.div>
-
-          {isGradient && currentGradientRound?.guessStart && currentGradientRound?.guessEnd ? (
-            <GradientComparison
-              targetStart={currentGradientRound.targetStart}
-              targetEnd={currentGradientRound.targetEnd}
-              guessStart={currentGradientRound.guessStart}
-              guessEnd={currentGradientRound.guessEnd}
-            />
-          ) : target && currentRoundData?.guess ? (
-            <ColorComparison target={target} guess={currentRoundData.guess} />
-          ) : null}
-
-          {(() => {
-            const score = isGradient ? currentGradientRound?.score : currentRoundData?.score;
-            return score !== null && score !== undefined ? (
-              <>
-                <ScoreDisplay score={score} />
-                <ScoreFeedback score={score} roundIndex={state.currentRound} />
-              </>
-            ) : null;
-          })()}
-
-          <Button onClick={handleNextRound} size="md">
-            {!isBlitz && state.currentRound + 1 >= state.totalRounds
-              ? "See Results"
-              : "Next Round"}
-          </Button>
-        </motion.div>
+          <BlitzClock
+            timeRemainingMs={state.timeRemainingMs}
+            totalTimeMs={BLITZ_DURATION_MS}
+          />
+        </div>
       )}
 
-      {/* SUMMARY */}
-      {state.phase === "summary" && results && (
-        <motion.div
-          key="summary"
-          className="flex flex-col items-center gap-10 py-12 px-6 max-w-lg mx-auto"
-          {...fadeIn}
-        >
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          >
-            <h2 className="text-[var(--text-heading)] font-[900] tracking-tight mb-1">
-              {isBlitz ? "Time\u2019s Up!" : "Game Over"}
-            </h2>
-            <p className="text-[var(--text-caption)] text-[var(--fg-muted)]">
-              {results.rounds.length} round{results.rounds.length !== 1 ? "s" : ""} completed
-            </p>
-          </motion.div>
+      <ScreenTransition phase={`${state.phase}-${state.currentRound}`}>
+        {/* MEMORIZE */}
+        {state.phase === "memorize" && (target || gradientTarget) && (
+          <MemorizeScreen
+            color={target ?? { h: 0, s: 0, b: 50 }}
+            round={state.currentRound + 1}
+            totalRounds={isBlitz ? state.currentRound + 1 : state.totalRounds}
+            timeMs={state.memorizeTimeMs}
+            totalTimeMs={state.memorizeTimeMs}
+            onComplete={handleMemorizeComplete}
+            gradient={
+              isGradient && gradientTarget
+                ? gradientTarget
+                : undefined
+            }
+          />
+        )}
 
-          {/* Stats */}
-          <motion.div
-            className={`grid ${isBlitz ? "grid-cols-3" : "grid-cols-1"} gap-6 text-center w-full max-w-sm`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div>
-              <div className="text-[var(--text-display)] font-[900] tabular-nums">
-                {results.rounds.length > 0
-                  ? Math.round(results.totalScore / results.rounds.length)
-                  : 0}%
-              </div>
-              <div className="text-[var(--text-caption)] text-[var(--fg-muted)] mt-1">
-                avg match
-              </div>
-            </div>
-            {isBlitz && (
-              <>
-                <div>
-                  <div className="text-[var(--text-display)] font-[900] tabular-nums">
-                    {Math.max(...results.rounds.map((r) => r.score ?? 0))}%
-                  </div>
-                  <div className="text-[var(--text-caption)] text-[var(--fg-muted)] mt-1">
-                    best round
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[var(--text-display)] font-[900] tabular-nums">
-                    {results.rounds.length > 0
-                      ? (results.rounds.reduce((s, r) => s + (r.timeMs ?? 0), 0) / results.rounds.length / 1000).toFixed(1)
-                      : 0}s
-                  </div>
-                  <div className="text-[var(--text-caption)] text-[var(--fg-muted)] mt-1">
-                    avg time
-                  </div>
-                </div>
-              </>
-            )}
-          </motion.div>
+        {/* GUESS */}
+        {state.phase === "guess" && (
+          <GuessScreen
+            round={state.currentRound + 1}
+            totalRounds={isBlitz ? state.currentRound + 1 : state.totalRounds}
+            guess={currentGuess}
+            onGuessChange={setGuess}
+            onSubmit={handleSubmitGuess}
+            isGradient={isGradient}
+            guessStart={currentGuessStart}
+            guessEnd={currentGuessEnd}
+            onGuessStartChange={setGuessStart}
+            onGuessEndChange={setGuessEnd}
+          />
+        )}
 
-          {/* Round breakdown */}
-          <motion.div
-            className="w-full space-y-2"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.06, delayChildren: 0.4 } },
-            }}
-          >
-            {isGradient && results.gradientRounds
-              ? results.gradientRounds.map((round, i) => (
-                  <motion.div
-                    key={i}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface)]"
-                    variants={{
-                      hidden: { opacity: 0, x: -20 },
-                      visible: { opacity: 1, x: 0 },
-                    }}
-                  >
-                    <span className="text-xs text-[var(--fg-subtle)] w-5 font-mono">{i + 1}</span>
-                    <div
-                      className="w-20 h-6 rounded-md border border-[var(--border)] shrink-0"
-                      style={{
-                        background: `linear-gradient(to right, ${hsbToHex(round.targetStart)}, ${hsbToHex(round.targetEnd)})`,
-                      }}
-                    />
-                    <span className="ml-auto text-sm font-[800] tabular-nums">{round.score}%</span>
-                  </motion.div>
-                ))
-              : results.rounds.map((round, i) => (
-                  <motion.div
-                    key={i}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-[var(--surface)]"
-                    variants={{
-                      hidden: { opacity: 0, x: -20 },
-                      visible: { opacity: 1, x: 0 },
-                    }}
-                  >
-                    <span className="text-xs text-[var(--fg-subtle)] w-5 font-mono">{i + 1}</span>
-                    <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-[var(--border)] shrink-0">
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          backgroundColor: hsbToHex(round.target),
-                          clipPath: "polygon(0 0, 100% 0, 0 100%)",
-                        }}
-                      />
-                      {round.guess && (
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            backgroundColor: hsbToHex(round.guess),
-                            clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
-                          }}
-                        />
-                      )}
-                    </div>
-                    <span className="ml-auto text-sm font-[800] tabular-nums">{round.score}%</span>
-                  </motion.div>
-                ))}
-          </motion.div>
+        {/* REVEAL */}
+        {state.phase === "reveal" && (
+          (() => {
+            const score = isGradient
+              ? currentGradientRound?.score
+              : currentRoundData?.score;
+            const isLastRound = !isBlitz && state.currentRound + 1 >= state.totalRounds;
 
-          {/* Score submission */}
-          <ScoreSubmitter results={results} />
+            if (isGradient && currentGradientRound?.guessStart && currentGradientRound?.guessEnd) {
+              return (
+                <ResultScreen
+                  target={currentGradientRound.targetStart}
+                  guess={currentGradientRound.guessStart}
+                  score={score ?? 0}
+                  round={state.currentRound + 1}
+                  totalRounds={state.totalRounds}
+                  onNext={handleNextRound}
+                  isGradient={true}
+                  targetStart={currentGradientRound.targetStart}
+                  targetEnd={currentGradientRound.targetEnd}
+                  guessStart={currentGradientRound.guessStart}
+                  guessEnd={currentGradientRound.guessEnd}
+                  isLastRound={isLastRound}
+                />
+              );
+            }
 
-          {/* Actions */}
-          <motion.div
-            className="flex gap-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-          >
-            <Button onClick={handlePlayAgain}>Play Again</Button>
-            <Button variant="secondary" onClick={() => (window.location.href = "/play")}>
-              Change Mode
-            </Button>
-          </motion.div>
-        </motion.div>
-      )}
+            if (target && currentRoundData?.guess) {
+              return (
+                <ResultScreen
+                  target={target}
+                  guess={currentRoundData.guess}
+                  score={score ?? 0}
+                  round={state.currentRound + 1}
+                  totalRounds={isBlitz ? state.currentRound + 1 : state.totalRounds}
+                  onNext={handleNextRound}
+                  isLastRound={isLastRound}
+                />
+              );
+            }
+
+            return null;
+          })()
+        )}
+
+        {/* SUMMARY */}
+        {state.phase === "summary" && results && (
+          <SummaryScreen
+            results={results}
+            mode={state.mode}
+            difficulty={state.difficulty}
+            onPlayAgain={handlePlayAgain}
+          />
+        )}
+      </ScreenTransition>
+    </div>
     </>
   );
 }

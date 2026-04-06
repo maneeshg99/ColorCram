@@ -1,18 +1,20 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { NumberSlide } from "@/components/design-system/NumberSlide";
 
 interface CountdownTimerProps {
   durationMs: number;
   onComplete: () => void;
   running: boolean;
+  label?: string;
 }
 
 export function CountdownTimer({
   durationMs,
   onComplete,
   running,
+  label,
 }: CountdownTimerProps) {
   const [remainingMs, setRemainingMs] = useState(durationMs);
   const completedRef = useRef(false);
@@ -44,82 +46,45 @@ export function CountdownTimer({
     return () => clearInterval(interval);
   }, [durationMs, running]);
 
-  const progress = remainingMs / durationMs;
-  const totalSeconds = Math.ceil(durationMs / 1000);
-  const isWarning = progress < 0.25;
-  const isCritical = progress < 0.12;
-
-  // Current second being depleted (0-indexed from left)
-  const elapsedMs = durationMs - remainingMs;
-  const currentSegIndex = Math.min(
-    totalSeconds - 1,
-    Math.floor(elapsedMs / 1000)
-  );
-  const segProgress = (elapsedMs % 1000) / 1000;
-
-  const barColor = isCritical
-    ? "var(--score-poor)"
-    : isWarning
-      ? "var(--score-good)"
-      : "var(--fg)";
-
   const displaySec = Math.floor(remainingMs / 1000);
-  const displayMs = Math.floor((remainingMs % 1000) / 10);
+  const displayCenti = Math.floor((remainingMs % 1000) / 10);
+  const timeStr = `${displaySec}.${displayCenti.toString().padStart(2, "0")}`;
+
+  const isWarning = remainingMs < 3000;
+  const isCritical = remainingMs < 1000;
+  const colorClass = isCritical
+    ? "text-red-500"
+    : isWarning
+      ? "text-yellow-500"
+      : "text-white";
 
   return (
-    <motion.div
-      className="flex flex-col items-center gap-4 w-full max-w-[360px]"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2, duration: 0.4 }}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 8,
+      }}
     >
-      <div className="flex gap-1 w-full">
-        {Array.from({ length: totalSeconds }, (_, i) => {
-          const isFullyDepleted = i < currentSegIndex;
-          const isDepleting = i === currentSegIndex;
-          const isFull = i > currentSegIndex;
-
-          const fillWidth = isFullyDepleted
-            ? 0
-            : isDepleting
-              ? 1 - segProgress
-              : 1;
-
-          return (
-            <div
-              key={i}
-              className="h-2 flex-1 rounded-full overflow-hidden flex justify-end"
-              style={{ backgroundColor: "var(--surface-elevated)" }}
-            >
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${fillWidth * 100}%`,
-                  backgroundColor: barColor,
-                  transition: isFull ? "none" : "width 30ms linear",
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      <motion.div
-        className="font-mono tabular-nums text-[var(--fg-muted)] flex items-baseline gap-0.5"
-        animate={isCritical ? { scale: [1, 1.05, 1] } : { scale: 1 }}
-        transition={
-          isCritical
-            ? { repeat: Infinity, duration: 0.6, ease: "easeInOut" }
-            : { duration: 0.2 }
-        }
+      <div className={`font-mono transition-colors duration-300 ${colorClass}`}
+        style={{ fontSize: "clamp(2rem, 6vw, 4rem)", fontWeight: 700 }}
       >
-        <span className="font-[700] text-lg" style={{ color: barColor }}>
-          {displaySec}
+        <NumberSlide value={timeStr} />
+      </div>
+      {label && (
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.2em",
+            color: "#adadad",
+            textTransform: "uppercase" as const,
+          }}
+        >
+          {label}
         </span>
-        <span className="text-xs opacity-60" style={{ color: barColor }}>
-          .{displayMs.toString().padStart(2, "0")}
-        </span>
-      </motion.div>
-    </motion.div>
+      )}
+    </div>
   );
 }

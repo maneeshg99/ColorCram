@@ -1,8 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
-import type { HSB } from "@colorcram/types";
-import { hsbToHex } from "@colorcram/color-utils";
+import { motion } from "motion/react";
+import type { HSB } from "@colorcram-v2/types";
+import { hsbToHex } from "@colorcram-v2/color-utils";
 import { getContrastColor } from "./ColorDisplay";
 
 interface ColorComparisonProps {
