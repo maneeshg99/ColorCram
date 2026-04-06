@@ -149,38 +149,90 @@ export function PreGameScreen({ mode, onStart }: PreGameScreenProps) {
             </button>
           </div>
 
-          {/* Expert warning popup */}
-          <AnimatePresence>
-            {showExpertWarning && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                transition={{ duration: 0.2 }}
-                className="w-72 p-4 bg-[#1a1a1a] border border-white/10 rounded-xl"
-              >
-                <p className="text-sm font-semibold text-white mb-1">Expert Mode</p>
-                <p className="text-xs text-[#adadad] mb-4 leading-relaxed italic">
-                  &ldquo;{EXPERT_WARNINGS[warningIdx]}&rdquo;
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => { playSound("click"); onStart("expert"); }}
-                    className="text-xs font-bold text-white px-3 py-1.5 border border-white/30 rounded-full hover:border-white/60 transition-colors"
-                  >
-                    Bring it on
-                  </button>
-                  <button
-                    onClick={() => { playSound("click"); setShowExpertWarning(false); }}
-                    className="text-xs text-[#666] hover:text-[#adadad] transition-colors px-3 py-1.5"
-                  >
-                    Maybe not
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
+      {/* Expert warning modal — fullscreen overlay */}
+      <AnimatePresence>
+        {showExpertWarning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 300,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.7)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+            }}
+            onClick={() => { playSound("click"); setShowExpertWarning(false); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#1a1a1a",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 16,
+                padding: "28px 32px",
+                maxWidth: 320,
+                width: "90%",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+                Expert Mode
+              </p>
+              <p style={{ fontSize: 13, color: "#888", marginBottom: 24, lineHeight: 1.5, fontStyle: "italic" }}>
+                &ldquo;{EXPERT_WARNINGS[warningIdx]}&rdquo;
+              </p>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                <button
+                  onClick={() => { playSound("click"); onStart("expert"); }}
+                  style={{
+                    background: "none",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: 20,
+                    padding: "8px 20px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#fff",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                >
+                  Bring it on
+                </button>
+                <button
+                  onClick={() => { playSound("click"); setShowExpertWarning(false); }}
+                  style={{
+                    background: "none",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: 20,
+                    padding: "8px 20px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#adadad",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                >
+                  Maybe not
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       ) : (
         /* Other modes: single GO button */
         <motion.button
