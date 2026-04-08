@@ -15,7 +15,6 @@ interface Profile {
   id: string;
   username: string;
   avatar_url: string | null;
-  role: string;
 }
 
 interface AuthContextValue {
@@ -52,21 +51,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
-      .select("id, username, avatar_url, role")
+      .select("id, username, avatar_url")
       .eq("id", userId)
       .single();
+    if (error) {
+      if (__DEV__) console.error("Failed to fetch profile:", error.message);
+      return;
+    }
     if (data) setProfile(data);
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      setLoading(false);
-    });
-
+    // Register listener FIRST to avoid missing events between getSession and subscribe
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -76,6 +74,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
       }
+      setLoading(false);
+    });
+
+    // Bootstrap: read cached session, then validate with server
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        // Validate the token server-side before trusting it
+        const { data: { user: validatedUser } } = await supabase.auth.getUser();
+        setUser(validatedUser ?? null);
+        if (validatedUser) fetchProfile(validatedUser.id);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -87,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
       });
-      return error ? error.message : null;
+      return error ? "Invalid email or password" : null;
     },
     []
   );
@@ -103,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
         options: { data: { username } },
       });
-      return error ? error.message : null;
+      return error ? "Could not create account. Please try again." : null;
     },
     []
   );
@@ -114,7 +126,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Generate a cryptographic nonce for security
       const rawNonce = Crypto.randomUUID();
       const hashedNonce = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
@@ -139,9 +150,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         nonce: rawNonce,
       });
 
-      if (error) return error.message;
+      if (error) return "Apple Sign In failed. Please try again.";
 
-      // If Apple provided a full name (first sign-in only), update the profile
       if (credential.fullName?.givenName) {
         const displayName = [
           credential.fullName.givenName,
@@ -150,29 +160,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .filter(Boolean)
           .join(" ");
 
-        // Get current user to update profile
         const {
           data: { user: currentUser },
         } = await supabase.auth.getUser();
         if (currentUser) {
-          await supabase
+          const { error: updateError } = await supabase
             .from("profiles")
             .update({ display_name: displayName })
             .eq("id", currentUser.id);
+          if (updateError && __DEV__) {
+            console.error("Failed to update display name:", updateError.message);
+          }
         }
       }
 
       return null;
     } catch (e: any) {
       if (e.code === "ERR_REQUEST_CANCELED") {
-        return null; // User cancelled — not an error
+        return null;
       }
-      return e.message || "Apple Sign In failed";
+      return "Apple Sign In failed. Please try again.";
     }
   }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    // Clear local state only after server-side sign-out succeeds
+    setUser(null);
     setProfile(null);
   }, []);
 

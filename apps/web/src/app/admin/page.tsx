@@ -16,19 +16,17 @@ interface AdminUser {
 }
 
 export default function AdminPage() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
 
-  const isAdmin = profile?.role === "admin";
-
   const fetchUsers = useCallback(async () => {
     const supabase = getSupabase();
     const { data, error } = await supabase.rpc("admin_get_users");
     if (error) {
-      setError(error.message);
+      setError("You do not have permission to access this page.");
       setLoading(false);
       return;
     }
@@ -36,14 +34,16 @@ export default function AdminPage() {
     setLoading(false);
   }, []);
 
+  // Server-gated: always attempt fetchUsers for authenticated users.
+  // The RPC itself checks admin role and returns "Unauthorized" for non-admins.
   useEffect(() => {
     if (authLoading) return;
-    if (!user || !isAdmin) {
+    if (!user) {
       setLoading(false);
       return;
     }
     fetchUsers();
-  }, [user, isAdmin, authLoading, fetchUsers]);
+  }, [user, authLoading, fetchUsers]);
 
   const handleRoleChange = async (targetId: string, newRole: string) => {
     const supabase = getSupabase();
@@ -52,7 +52,7 @@ export default function AdminPage() {
       new_role: newRole,
     });
     if (error) {
-      setActionMsg(`Error: ${error.message}`);
+      setActionMsg("Action failed. Please try again.");
     } else {
       setActionMsg(`Role updated to ${newRole}`);
       fetchUsers();
@@ -69,7 +69,7 @@ export default function AdminPage() {
       target_user_id: targetId,
     });
     if (error) {
-      setActionMsg(`Error: ${error.message}`);
+      setActionMsg("Action failed. Please try again.");
     } else {
       setActionMsg(`User "${username}" deleted`);
       fetchUsers();
@@ -80,10 +80,10 @@ export default function AdminPage() {
   const handleResetPassword = async (email: string) => {
     const supabase = getSupabase();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/admin`,
+      redirectTo: `${window.location.origin}/auth/reset-password`,
     });
     if (error) {
-      setActionMsg(`Error: ${error.message}`);
+      setActionMsg("Action failed. Please try again.");
     } else {
       setActionMsg(`Password reset email sent to ${email}`);
     }
@@ -99,13 +99,25 @@ export default function AdminPage() {
     );
   }
 
-  // Not logged in or not admin
-  if (!user || !isAdmin) {
+  // Not logged in
+  if (!user) {
     return (
       <div className="flex flex-col items-center py-24 gap-4">
         <h1 className="text-xl font-[800]">Access Denied</h1>
         <p className="text-sm text-[var(--fg-muted)]">
-          {!user ? "You must be signed in." : "Admin access required."}
+          You must be signed in.
+        </p>
+      </div>
+    );
+  }
+
+  // Error from RPC (includes "Unauthorized: admin access required" for non-admins)
+  if (error) {
+    return (
+      <div className="flex flex-col items-center py-24 gap-4">
+        <h1 className="text-xl font-[800]">Access Denied</h1>
+        <p className="text-sm text-[var(--fg-muted)]">
+          {error}
         </p>
       </div>
     );
@@ -152,8 +164,6 @@ export default function AdminPage() {
               />
             ))}
           </div>
-        ) : error ? (
-          <div className="text-sm text-[var(--score-poor)]">{error}</div>
         ) : (
           <div className="space-y-2">
             {/* Header */}

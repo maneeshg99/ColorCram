@@ -179,7 +179,7 @@ export function AuthModal() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-transparent border-0 border-b border-white/20 focus:border-white outline-none py-2 text-sm text-white placeholder:text-[#666] transition-colors duration-200"
                   placeholder="Password"
-                  minLength={6}
+                  minLength={8}
                   maxLength={128}
                   autoComplete={
                     tab === "signin" ? "current-password" : "new-password"

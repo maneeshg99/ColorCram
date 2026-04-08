@@ -18,7 +18,7 @@ export function ScoreSubmitter({ results }: ScoreSubmitterProps) {
   const [errorMsg, setErrorMsg] = useState("");
   const pendingRef = useRef(true);
 
-  const submitScore = async (userId: string) => {
+  const submitScore = async () => {
     if (!pendingRef.current) return;
     pendingRef.current = false;
     setStatus("submitting");
@@ -29,16 +29,29 @@ export function ScoreSubmitter({ results }: ScoreSubmitterProps) {
         ? Math.round(results.totalScore / results.rounds.length)
         : 0;
 
-    const { error } = await supabase.from("game_scores").insert({
-      user_id: userId,
-      mode: results.mode,
-      difficulty: results.difficulty,
-      total_score: results.totalScore,
-      avg_delta_e: results.avgDeltaE,
-      rounds_played: results.rounds.length,
-      avg_score: avgScore,
-      total_time_ms: results.totalTimeMs,
-      daily_challenge_id:
+    // Client-side plausibility checks (server should also enforce these)
+    if (
+      avgScore < 0 || avgScore > 100 ||
+      results.totalScore < 0 ||
+      results.totalTimeMs <= 0 ||
+      results.rounds.length <= 0 ||
+      results.avgDeltaE < 0
+    ) {
+      setStatus("error");
+      setErrorMsg("Invalid score data.");
+      pendingRef.current = true;
+      return;
+    }
+
+    const { error } = await supabase.rpc("submit_score", {
+      p_mode: results.mode,
+      p_difficulty: results.difficulty,
+      p_total_score: results.totalScore,
+      p_avg_delta_e: results.avgDeltaE,
+      p_rounds_played: results.rounds.length,
+      p_avg_score: avgScore,
+      p_total_time_ms: results.totalTimeMs,
+      p_daily_challenge_id:
         results.mode === "daily"
           ? new Date().toISOString().split("T")[0]
           : null,
@@ -48,7 +61,7 @@ export function ScoreSubmitter({ results }: ScoreSubmitterProps) {
       if (error.code === "23505") {
         setStatus("submitted");
       } else {
-        setErrorMsg(error.message);
+        setErrorMsg("Failed to save score. Please try again.");
         setStatus("error");
         pendingRef.current = true;
       }
@@ -60,7 +73,7 @@ export function ScoreSubmitter({ results }: ScoreSubmitterProps) {
   // Auto-submit when user signs in with pending results
   useEffect(() => {
     if (user && pendingRef.current && status === "idle") {
-      submitScore(user.id);
+      submitScore();
     }
   }, [user]);
 

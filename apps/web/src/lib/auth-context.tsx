@@ -9,12 +9,12 @@ import {
 } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabase } from "./supabase";
+import { validateEmail, validatePassword, validateUsername, sanitizeInput } from "@colorcram-v2/types";
 
 interface Profile {
   id: string;
   username: string;
   avatar_url: string | null;
-  role: string;
 }
 
 interface AuthContextValue {
@@ -53,27 +53,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // Fetch profile for a user
   const fetchProfile = useCallback(async (userId: string) => {
     const supabase = getSupabase();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
-      .select("id, username, avatar_url, role")
+      .select("id, username, avatar_url")
       .eq("id", userId)
       .single();
+    if (error) {
+      if (process.env.NODE_ENV === "development") console.error("Failed to fetch profile:", error.message);
+      return;
+    }
     if (data) setProfile(data);
   }, []);
 
-  // Listen for auth state changes
   useEffect(() => {
     const supabase = getSupabase();
 
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-      setLoading(false);
-    });
-
+    // Register listener FIRST to avoid missing events between getSession and subscribe
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
@@ -83,6 +80,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
       }
+      setLoading(false);
+    });
+
+    // Bootstrap: read cached session, then validate with server
+    supabase.auth.getSession().then(async ({ data: { session } }: { data: { session: any } }) => {
+      if (session?.user) {
+        const { data: { user: validatedUser } } = await supabase.auth.getUser();
+        setUser(validatedUser ?? null);
+        if (validatedUser) fetchProfile(validatedUser.id);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -90,12 +100,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<string | null> => {
+      const emailResult = validateEmail(sanitizeInput(email));
+      if (!emailResult.valid) return emailResult.error ?? "Invalid email";
+      const pwResult = validatePassword(password);
+      if (!pwResult.valid) return pwResult.error ?? "Invalid password";
+
       const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: sanitizeInput(email),
         password,
       });
-      if (error) return error.message;
+      if (error) return "Invalid email or password";
       setShowAuthModal(false);
       return null;
     },
@@ -108,13 +123,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: string,
       username: string
     ): Promise<string | null> => {
+      const emailResult = validateEmail(sanitizeInput(email));
+      if (!emailResult.valid) return emailResult.error ?? "Invalid email";
+      const pwResult = validatePassword(password);
+      if (!pwResult.valid) return pwResult.error ?? "Invalid password";
+      const usernameResult = validateUsername(sanitizeInput(username));
+      if (!usernameResult.valid) return usernameResult.error ?? "Invalid username";
+
       const supabase = getSupabase();
       const { error } = await supabase.auth.signUp({
-        email,
+        email: sanitizeInput(email),
         password,
-        options: { data: { username } },
+        options: { data: { username: sanitizeInput(username) } },
       });
-      if (error) return error.message;
+      if (error) return "Could not create account. Please try again.";
       setShowAuthModal(false);
       return null;
     },
@@ -124,6 +146,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     const supabase = getSupabase();
     await supabase.auth.signOut();
+    // Clear local state only after server-side sign-out succeeds
+    setUser(null);
     setProfile(null);
   }, []);
 
