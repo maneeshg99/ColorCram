@@ -76,31 +76,20 @@ function BlitzTimerText({
   const fontSize = size === "large" ? 24 : size === "memorize" ? 32 : 14;
   const centiSize = size === "large" ? 16 : size === "memorize" ? 20 : 10;
   return (
-    <View style={{ flexDirection: "row", alignItems: "baseline" }}>
-      <Text
-        style={{
-          fontSize,
-          fontWeight: "800",
-          fontFamily: "monospace",
-          color,
-          minWidth: fontSize * 1.4,
-          textAlign: "right",
-        }}
-      >
-        {sec}
-      </Text>
-      <Text
-        style={{
-          fontSize: centiSize,
-          fontWeight: "600",
-          fontFamily: "monospace",
-          color,
-          opacity: 0.7,
-        }}
-      >
+    <Text
+      style={{
+        fontSize,
+        fontWeight: "800",
+        fontFamily: "monospace",
+        color,
+        textAlign: "right",
+      }}
+    >
+      {sec}
+      <Text style={{ fontSize: centiSize, fontWeight: "600", opacity: 0.7 }}>
         .{centis}
       </Text>
-    </View>
+    </Text>
   );
 }
 

@@ -77,7 +77,7 @@ export function ResultScreen({
         backgroundColor: "#131313",
         display: "flex",
         flexDirection: "column",
-        padding: "clamp(16px, 3vw, 40px)",
+        padding: "clamp(12px, 2vw, 24px)",
       }}
     >
       {/* Top bar */}
@@ -86,7 +86,7 @@ export function ResultScreen({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          marginBottom: "clamp(16px, 3vw, 32px)",
+          marginBottom: "clamp(8px, 1.5vw, 16px)",
         }}
       >
         {/* Round indicator */}
@@ -160,8 +160,8 @@ export function ResultScreen({
               gap: "clamp(12px, 3vw, 24px)",
               alignItems: "center",
               justifyContent: "center",
-              width: "min(90vw, 500px)",
-              height: "min(55vh, 450px)",
+              width: "min(92vw, 900px)",
+              height: "min(70vh, 750px)",
             }}
           >
             {/* Target gradient */}
@@ -222,11 +222,11 @@ export function ResultScreen({
             </motion.div>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
             <div
               style={{
-                width: "min(80vw, 500px)",
-                height: "min(45vh, 360px)",
+                width: "min(92vw, 900px)",
+                height: "min(68vh, 750px)",
                 borderRadius: 24,
                 overflow: "hidden",
               }}
@@ -273,7 +273,7 @@ export function ResultScreen({
         style={{
           display: "flex",
           justifyContent: "flex-end",
-          paddingTop: "clamp(16px, 3vw, 32px)",
+          paddingTop: "clamp(8px, 1.5vw, 16px)",
         }}
       >
         <button

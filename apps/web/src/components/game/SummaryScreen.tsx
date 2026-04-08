@@ -7,7 +7,6 @@ import { hsbToHex } from "@colorcram-v2/color-utils";
 import { NumberSlide } from "@/components/design-system/NumberSlide";
 import { FoldReveal } from "@/components/design-system/FoldReveal";
 import { ScoreSubmitter } from "./ScoreSubmitter";
-import { createShareLink, getShareUrl } from "@/lib/share";
 
 interface SummaryScreenProps {
   results: GameResults;
@@ -52,19 +51,13 @@ export function SummaryScreen({
   const [shareStatus, setShareStatus] = useState<"idle" | "sharing" | "copied">("idle");
 
   const handleShare = useCallback(async () => {
-    setShareStatus("sharing");
-    const shareId = await createShareLink(results);
-    if (shareId) {
-      const url = getShareUrl(shareId);
-      const text = `${avgScore}% on ColorCram ${mode}. ${url}`;
-      await navigator.clipboard.writeText(text).catch(() => {});
-      setShareStatus("copied");
-      setTimeout(() => setShareStatus("idle"), 2000);
-    } else {
-      setShareStatus("idle");
-    }
+    const base = typeof window !== "undefined" ? window.location.origin : "https://colorcram.app";
+    const text = `I scored ${avgScore}% on ColorCram ${mode}. Can you beat it? ${base}`;
+    await navigator.clipboard.writeText(text).catch(() => {});
+    setShareStatus("copied");
+    setTimeout(() => setShareStatus("idle"), 2500);
     onShare?.();
-  }, [results, mode, avgScore, onShare]);
+  }, [mode, avgScore, onShare]);
 
   const rounds = isGradient && results.gradientRounds
     ? results.gradientRounds
@@ -240,21 +233,21 @@ export function SummaryScreen({
             </button>
             <button
               onClick={handleShare}
-              disabled={shareStatus === "sharing"}
               style={{
-                background: "none",
-                border: "none",
-                cursor: shareStatus === "sharing" ? "wait" : "pointer",
-                fontSize: 15,
+                background: shareStatus === "copied" ? "rgba(20,184,97,0.1)" : "none",
+                border: `1px solid ${shareStatus === "copied" ? "#14b861" : "rgba(255,255,255,0.25)"}`,
+                borderRadius: 20,
+                padding: "8px 20px",
+                cursor: "pointer",
+                fontSize: 14,
                 fontWeight: 600,
-                color: shareStatus === "copied" ? "#14b861" : "#adadad",
-                padding: 0,
-                transition: "all 0.2s",
+                color: shareStatus === "copied" ? "#14b861" : "#ffffff",
+                transition: "all 0.3s",
               }}
-              onMouseEnter={(e) => { if (shareStatus === "idle") e.currentTarget.style.opacity = "0.7"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseEnter={(e) => { if (shareStatus !== "copied") { e.currentTarget.style.borderColor = "rgba(255,255,255,0.5)"; } }}
+              onMouseLeave={(e) => { if (shareStatus !== "copied") { e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; } }}
             >
-              {shareStatus === "copied" ? "Link Copied!" : shareStatus === "sharing" ? "..." : "Challenge a Friend"}
+              {shareStatus === "copied" ? "✓ Link Copied!" : "Challenge a Friend"}
             </button>
           </motion.div>
         </div>

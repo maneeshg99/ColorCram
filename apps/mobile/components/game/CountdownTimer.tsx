@@ -107,14 +107,12 @@ export function CountdownTimer({
         })}
       </View>
 
-      <View style={styles.timeRow}>
-        <Text style={[styles.timeSec, { color: barColor }]}>
-          {displaySec}
-        </Text>
+      <Text style={[styles.timeSec, { color: barColor }]}>
+        {displaySec}
         <Text style={[styles.timeMs, { color: barColor, opacity: 0.6 }]}>
           .{displayMs.toString().padStart(2, "0")}
         </Text>
-      </View>
+      </Text>
     </View>
   );
 }
@@ -143,14 +141,11 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 3,
   },
-  timeRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-  },
   timeSec: {
     fontSize: 18,
     fontWeight: "700",
     fontFamily: "monospace",
+    textAlign: "center",
   },
   timeMs: {
     fontSize: 12,
