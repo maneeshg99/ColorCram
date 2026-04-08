@@ -48,7 +48,6 @@ export function CountdownTimer({
 
   const displaySec = Math.floor(remainingMs / 1000);
   const displayCenti = Math.floor((remainingMs % 1000) / 10);
-  const timeStr = `${displaySec}.${displayCenti.toString().padStart(2, "0")}`;
 
   const isWarning = remainingMs < 3000;
   const isCritical = remainingMs < 1000;
@@ -70,7 +69,10 @@ export function CountdownTimer({
       <div className={`font-mono transition-colors duration-300 ${colorClass}`}
         style={{ fontSize: "clamp(2rem, 6vw, 4rem)", fontWeight: 700 }}
       >
-        <NumberSlide value={timeStr} />
+        <span style={{ display: "inline-flex", alignItems: "center" }}>
+          <NumberSlide value={displaySec.toString()} />
+          <span style={{ lineHeight: "1.15em" }}>.{displayCenti.toString().padStart(2, "0")}</span>
+        </span>
       </div>
       {label && (
         <span

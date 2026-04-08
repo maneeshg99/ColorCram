@@ -11,15 +11,13 @@ function SlideChar({ char, index }: { char: string; index: number }) {
   return (
     <span
       style={{
-        display: "inline-block",
-        width: char === "%" ? "0.75em" : char === "." ? "0.35em" : "0.6em",
-        height: "1.15em",
-        overflow: "hidden",
         position: "relative",
-        textAlign: "center",
+        width: char === "%" ? "0.75em" : char === "." ? "0.35em" : "0.6em",
+        overflow: "hidden",
+        flexShrink: 0,
       }}
     >
-      <AnimatePresence mode="popLayout" initial={false}>
+      <AnimatePresence initial={false}>
         <motion.span
           key={`${index}-${char}`}
           initial={{ y: "100%", opacity: 0 }}
@@ -30,11 +28,12 @@ function SlideChar({ char, index }: { char: string; index: number }) {
             ease: [0.16, 1, 0.3, 1],
           }}
           style={{
+            position: "absolute",
+            inset: 0,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            position: "absolute",
-            inset: 0,
+            lineHeight: 1,
           }}
         >
           {char}
@@ -52,8 +51,11 @@ export function NumberSlide({ value, className }: NumberSlideProps) {
       className={className}
       style={{
         display: "inline-flex",
-        alignItems: "center",
+        alignItems: "stretch",
         fontVariantNumeric: "tabular-nums",
+        height: "1.15em",
+        lineHeight: 1,
+        overflow: "hidden",
       }}
       aria-label={value}
     >

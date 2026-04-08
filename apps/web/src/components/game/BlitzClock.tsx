@@ -21,7 +21,7 @@ export function BlitzClock({ timeRemainingMs, totalTimeMs }: BlitzClockProps) {
       ? "#eab308"
       : "#ffffff";
 
-  const timeStr = `${seconds}.${ms.toString().padStart(2, "0")}`;
+  const centi = ms.toString().padStart(2, "0");
 
   // SVG ring
   const size = 90;
@@ -88,7 +88,10 @@ export function BlitzClock({ timeRemainingMs, totalTimeMs }: BlitzClockProps) {
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            <NumberSlide value={timeStr} />
+            <span style={{ display: "inline-flex", alignItems: "center" }}>
+              <NumberSlide value={seconds.toString()} />
+              <span style={{ lineHeight: "1.15em" }}>.{centi}</span>
+            </span>
           </div>
         </div>
       </div>

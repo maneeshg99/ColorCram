@@ -97,7 +97,6 @@ export function MemorizeScreen({
 
   const displaySec = Math.floor(remainingMs / 1000);
   const displayCenti = Math.floor((remainingMs % 1000) / 10);
-  const timeStr = `${displaySec}.${displayCenti.toString().padStart(2, "0")}`;
 
   return (
     <motion.div
@@ -163,7 +162,10 @@ export function MemorizeScreen({
               textAlign: "right",
             }}
           >
-            <NumberSlide value={timeStr} />
+            <span style={{ display: "inline-flex", alignItems: "center" }}>
+              <NumberSlide value={displaySec.toString()} />
+              <span style={{ lineHeight: "1.15em" }}>.{displayCenti.toString().padStart(2, "0")}</span>
+            </span>
           </div>
           <span
             style={{
