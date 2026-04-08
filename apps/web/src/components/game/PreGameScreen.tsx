@@ -131,7 +131,7 @@ export function PreGameScreen({ mode, onStart }: PreGameScreenProps) {
               className="flex flex-col items-center gap-2"
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
             >
-              <RainbowRing size={72}>
+              <RainbowRing size={72} spinning>
                 <PlayIcon />
               </RainbowRing>
               <span className="text-sm font-bold text-white tracking-wide">Easy</span>
@@ -143,7 +143,7 @@ export function PreGameScreen({ mode, onStart }: PreGameScreenProps) {
               className="flex flex-col items-center gap-2"
               style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
             >
-              <RainbowRing size={72}>
+              <RainbowRing size={72} spinning>
                 <PlayIcon />
               </RainbowRing>
               <span className="text-sm font-bold text-white tracking-wide">Expert</span>

@@ -222,18 +222,45 @@ export function ResultScreen({
             </motion.div>
           </div>
         ) : (
-          <div
-            style={{
-              width: "min(80vw, 500px)",
-              height: "min(50vh, 400px)",
-              borderRadius: 24,
-              overflow: "hidden",
-            }}
-          >
-            <DiagonalReveal
-              targetColor={targetHex}
-              guessColor={guessHex}
-            />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <div
+              style={{
+                width: "min(80vw, 500px)",
+                height: "min(45vh, 360px)",
+                borderRadius: 24,
+                overflow: "hidden",
+              }}
+            >
+              <DiagonalReveal
+                targetColor={targetHex}
+                guessColor={guessHex}
+              />
+            </div>
+            {/* HSB Breakdown */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              style={{
+                display: "flex",
+                gap: "clamp(24px, 4vw, 48px)",
+                fontFamily: "monospace",
+                fontSize: 13,
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "#666", letterSpacing: "0.1em", textTransform: "uppercase" }}>Target</span>
+                <span style={{ color: "#adadad" }}>H: {Math.round(target.h)}°</span>
+                <span style={{ color: "#adadad" }}>S: {Math.round(target.s)}%</span>
+                <span style={{ color: "#adadad" }}>B: {Math.round(target.b)}%</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "#666", letterSpacing: "0.1em", textTransform: "uppercase" }}>Guess</span>
+                <span style={{ color: "#adadad" }}>H: {Math.round(guess.h)}°</span>
+                <span style={{ color: "#adadad" }}>S: {Math.round(guess.s)}%</span>
+                <span style={{ color: "#adadad" }}>B: {Math.round(guess.b)}%</span>
+              </div>
+            </motion.div>
           </div>
         )}
       </div>

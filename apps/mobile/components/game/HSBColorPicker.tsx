@@ -5,35 +5,34 @@ import {
   StyleSheet,
   PanResponder,
   LayoutChangeEvent,
+  Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { HSB } from "@colorcram-v2/types";
 import { hsbToHex } from "@colorcram-v2/color-utils";
 import { Colors } from "@/constants/theme";
 
-const STRIP_HEIGHT = 260;
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const STRIP_HEIGHT = Math.min(SCREEN_HEIGHT * 0.42, 340);
 const STRIP_WIDTH = 56;
 const THUMB_HEIGHT = 6;
 
 interface HSBColorPickerProps {
   value: HSB;
   onChange: (hsb: HSB) => void;
+  rightContent?: React.ReactNode;
 }
 
 interface StripProps {
   label: string;
   valueLabel: string;
   colors: string[];
-  position: number; // 0-1 normalized
+  position: number;
   onDrag: (position: number) => void;
 }
 
 function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
-  // Track the strip's absolute Y position on screen so we can use pageY
-  // instead of locationY — this prevents the "two bars" bug where locationY
-  // changes reference frame when the finger moves over the thumb.
   const stripPageY = useRef(0);
-
   const onDragRef = useRef(onDrag);
   onDragRef.current = onDrag;
 
@@ -52,16 +51,6 @@ function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
     })
   ).current;
 
-  const onLayout = useCallback((e: LayoutChangeEvent) => {
-    // Measure after layout to get the absolute Y on screen
-    (e.target as any).measureInWindow?.(
-      (_x: number, y: number) => {
-        stripPageY.current = y;
-      }
-    );
-  }, []);
-
-  // Also re-measure when the view reference reports layout
   const handleViewLayout = useCallback((e: LayoutChangeEvent) => {
     e.target.measure?.(
       (_x: number, _y: number, _w: number, _h: number, _px: number, pageY: number) => {
@@ -72,7 +61,6 @@ function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
     );
   }, []);
 
-  // Clamp thumb position within bounds
   const thumbTop = Math.max(
     0,
     Math.min(STRIP_HEIGHT - THUMB_HEIGHT, position * STRIP_HEIGHT - THUMB_HEIGHT / 2)
@@ -81,13 +69,11 @@ function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
   return (
     <View style={styles.stripContainer}>
       <Text style={styles.stripLabel}>{label}</Text>
-      {/* Outer wrapper for touch area — no overflow hidden so thumb is visible */}
       <View
         style={styles.stripTouchArea}
         onLayout={handleViewLayout}
         {...panResponder.panHandlers}
       >
-        {/* Inner gradient with overflow hidden + borderRadius */}
         <View style={styles.stripGradientClip}>
           <LinearGradient
             colors={colors as any}
@@ -96,7 +82,6 @@ function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
             end={{ x: 0.5, y: 1 }}
           />
         </View>
-        {/* Thumb sits on top, not clipped */}
         <View
           style={[styles.thumb, { top: thumbTop }]}
           pointerEvents="none"
@@ -107,7 +92,7 @@ function Strip({ label, valueLabel, colors, position, onDrag }: StripProps) {
   );
 }
 
-export function HSBColorPicker({ value, onChange }: HSBColorPickerProps) {
+export function HSBColorPicker({ value, onChange, rightContent }: HSBColorPickerProps) {
   const hex = hsbToHex(value);
 
   const hueColors = [
@@ -124,6 +109,16 @@ export function HSBColorPicker({ value, onChange }: HSBColorPickerProps) {
 
   return (
     <View style={styles.container}>
+      {/* Top row: preview circle + hex + submit button */}
+      <View style={styles.topRow}>
+        <View style={[styles.previewCircle, { backgroundColor: hex }]} />
+        <View style={styles.topRowRight}>
+          <Text style={styles.previewHex}>{hex}</Text>
+          {rightContent}
+        </View>
+      </View>
+
+      {/* Strips */}
       <View style={styles.strips}>
         <Strip
           label="H"
@@ -147,17 +142,6 @@ export function HSBColorPicker({ value, onChange }: HSBColorPickerProps) {
           onDrag={(norm) => onChange({ ...value, b: Math.round((1 - norm) * 100) })}
         />
       </View>
-
-      <View style={styles.preview}>
-        <View style={[styles.previewSwatch, { backgroundColor: hex }]} />
-        <View>
-          <Text style={styles.previewHex}>{hex}</Text>
-          <Text style={styles.previewValues}>
-            H {Math.round(value.h)}° · S {Math.round(value.s)}% · B{" "}
-            {Math.round(value.b)}%
-          </Text>
-        </View>
-      </View>
     </View>
   );
 }
@@ -165,8 +149,11 @@ export function HSBColorPicker({ value, onChange }: HSBColorPickerProps) {
 const c = Colors.dark;
 
 const styles = StyleSheet.create({
-  container: { alignItems: "center", gap: 16 },
-  strips: { flexDirection: "row", gap: 20 },
+  container: {
+    alignItems: "center",
+    gap: 16,
+  },
+  strips: { flexDirection: "row", gap: 16 },
   stripContainer: { alignItems: "center", gap: 6 },
   stripLabel: {
     fontSize: 10,
@@ -176,7 +163,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   stripTouchArea: {
-    width: STRIP_WIDTH + 12, // extra touch padding
+    width: STRIP_WIDTH + 12,
     height: STRIP_HEIGHT,
     position: "relative",
     alignItems: "center",
@@ -209,28 +196,24 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     color: c.fgMuted,
   },
-  preview: {
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 16,
   },
-  previewSwatch: {
-    width: 64,
-    height: 64,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: c.border,
+  topRowRight: {
+    alignItems: "center",
+    gap: 8,
+  },
+  previewCircle: {
+    width: 144,
+    height: 144,
+    borderRadius: 72,
   },
   previewHex: {
-    fontSize: 16,
-    fontWeight: "700",
-    fontFamily: "monospace",
-    color: c.fg,
-  },
-  previewValues: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: "monospace",
     color: c.fgMuted,
-    marginTop: 2,
+    letterSpacing: 0.5,
   },
 });

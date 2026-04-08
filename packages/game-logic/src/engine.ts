@@ -12,6 +12,15 @@ import type {
 import { DIFFICULTY_CONFIGS, BLITZ_DURATION_MS, BLITZ_MEMORIZE_MS } from "./difficulty";
 import { calculateDeltaE, deltaEToScore, calculateScoreWithSpeedBonus } from "./scoring";
 
+/** Clamp HSB values to valid ranges to prevent out-of-bounds inputs. */
+function clampHSB(hsb: HSB): HSB {
+  return {
+    h: Math.max(0, Math.min(360, hsb.h)),
+    s: Math.max(0, Math.min(100, hsb.s)),
+    b: Math.max(0, Math.min(100, hsb.b)),
+  };
+}
+
 /**
  * Create a new game in idle state.
  */
@@ -20,6 +29,9 @@ export function createGame(
   difficulty: Difficulty,
   seed?: string
 ): GameState {
+  if (!(difficulty in DIFFICULTY_CONFIGS)) {
+    throw new Error(`Invalid difficulty: ${difficulty}`);
+  }
   const config = DIFFICULTY_CONFIGS[difficulty];
   const isBlitz = mode === "blitz";
   const isGradient = mode === "gradient";
@@ -98,6 +110,7 @@ export function startGuess(state: GameState): GameState {
 export function submitGuess(state: GameState, guess: HSB): GameState {
   if (state.phase !== "guess") return state;
 
+  guess = clampHSB(guess);
   const round = state.rounds[state.currentRound];
   const deltaE = calculateDeltaE(round.target, guess);
   const timeMs = state.guessStartTime ? Date.now() - state.guessStartTime : 0;
@@ -137,6 +150,8 @@ export function submitGradientGuess(
 ): GameState {
   if (state.phase !== "guess") return state;
 
+  guessStart = clampHSB(guessStart);
+  guessEnd = clampHSB(guessEnd);
   const round = state.gradientRounds[state.currentRound];
   const deltaEStart = calculateDeltaE(round.targetStart, guessStart);
   const deltaEEnd = calculateDeltaE(round.targetEnd, guessEnd);

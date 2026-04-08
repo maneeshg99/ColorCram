@@ -34,33 +34,17 @@ export function GradientComparison({
           end={{ x: 1, y: 0.5 }}
           style={[styles.bar, { width: BAR_WIDTH }]}
         />
-        <View style={[styles.hexRow, { width: BAR_WIDTH }]}>
-          <Text style={[styles.hex, { color: c.fgMuted }]}>
-            {hsbToHex(targetStart)}
-          </Text>
-          <Text style={[styles.hex, { color: c.fgMuted }]}>
-            {hsbToHex(targetEnd)}
-          </Text>
-        </View>
       </View>
 
       {/* Guess */}
       <View style={styles.section}>
-        <Text style={[styles.label, { color: c.fgMuted }]}>YOUR GUESS</Text>
+        <Text style={[styles.label, { color: c.fgMuted }]}>YOURS</Text>
         <LinearGradient
           colors={[hsbToHex(guessStart), hsbToHex(guessEnd)] as any}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={[styles.bar, { width: BAR_WIDTH }]}
         />
-        <View style={[styles.hexRow, { width: BAR_WIDTH }]}>
-          <Text style={[styles.hex, { color: c.fgMuted }]}>
-            {hsbToHex(guessStart)}
-          </Text>
-          <Text style={[styles.hex, { color: c.fgMuted }]}>
-            {hsbToHex(guessEnd)}
-          </Text>
-        </View>
       </View>
     </View>
   );
@@ -69,32 +53,20 @@ export function GradientComparison({
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    gap: 16,
-    marginVertical: 8,
+    gap: 20,
   },
   section: {
     alignItems: "flex-start",
+    gap: 8,
   },
   label: {
-    fontSize: 9,
-    fontWeight: "700",
-    letterSpacing: 2,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 1.5,
     textTransform: "uppercase",
-    marginBottom: 6,
   },
   bar: {
-    height: 72,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-  },
-  hexRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  hex: {
-    fontSize: 11,
-    fontFamily: "monospace",
+    height: 80,
+    borderRadius: 20,
   },
 });

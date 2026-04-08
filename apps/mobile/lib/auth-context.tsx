@@ -9,7 +9,11 @@ import { Platform } from "react-native";
 import type { User } from "@supabase/supabase-js";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Crypto from "expo-crypto";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "./supabase";
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface Profile {
   id: string;
@@ -28,6 +32,7 @@ interface AuthContextValue {
     username: string
   ) => Promise<string | null>;
   signInWithApple: () => Promise<string | null>;
+  signInWithGoogle: () => Promise<string | null>;
   signOut: () => Promise<void>;
 }
 
@@ -38,6 +43,7 @@ const AuthContext = createContext<AuthContextValue>({
   signIn: async () => null,
   signUp: async () => null,
   signInWithApple: async () => null,
+  signInWithGoogle: async () => null,
   signOut: async () => {},
 });
 
@@ -183,6 +189,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const signInWithGoogle = useCallback(async (): Promise<string | null> => {
+    try {
+      const redirectTo = makeRedirectUri();
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error || !data.url) {
+        return "Google Sign In failed. Please try again.";
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        redirectTo
+      );
+
+      if (result.type === "success") {
+        const url = new URL(result.url);
+        // Extract tokens from the URL fragment
+        const params = new URLSearchParams(url.hash.substring(1));
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+
+        if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (sessionError) return "Google Sign In failed. Please try again.";
+          return null;
+        }
+      }
+
+      if (result.type === "cancel" || result.type === "dismiss") {
+        return null;
+      }
+
+      return "Google Sign In failed. Please try again.";
+    } catch (e: any) {
+      return "Google Sign In failed. Please try again.";
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     // Clear local state only after server-side sign-out succeeds
@@ -192,7 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signIn, signUp, signInWithApple, signOut }}
+      value={{ user, profile, loading, signIn, signUp, signInWithApple, signInWithGoogle, signOut }}
     >
       {children}
     </AuthContext.Provider>

@@ -6,13 +6,12 @@ import { Colors } from "@/constants/theme";
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "ghost";
   size?: "sm" | "md" | "lg";
 }
 
 export function Button({ title, onPress, variant = "primary", size = "md" }: ButtonProps) {
   const c = Colors.dark;
-  const isPrimary = variant === "primary";
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -29,23 +28,34 @@ export function Button({ title, onPress, variant = "primary", size = "md" }: But
     : size === "sm" ? { fontSize: 13 }
     : { fontSize: 14 };
 
+  const variantStyle: ViewStyle =
+    variant === "primary"
+      ? { backgroundColor: c.accent }
+      : variant === "secondary"
+      ? { borderWidth: 1, borderColor: c.border }
+      : {};
+
+  const textColor =
+    variant === "primary" ? c.bg
+    : variant === "ghost" ? c.fgMuted
+    : c.fg;
+
   return (
     <Pressable
       onPress={handlePress}
       style={({ pressed }) => [
         styles.base,
-        sizeStyle,
-        isPrimary
-          ? { backgroundColor: c.accent }
-          : { borderWidth: 1, borderColor: c.border },
-        pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
+        variant !== "ghost" && sizeStyle,
+        variant === "ghost" && { paddingVertical: 8 },
+        variantStyle,
+        pressed && { opacity: 0.7, transform: [{ scale: 0.97 }] },
       ]}
     >
       <Text
         style={[
           styles.text,
           textSize,
-          { color: isPrimary ? c.bg : c.fg },
+          { color: textColor },
         ]}
       >
         {title}
@@ -55,6 +65,6 @@ export function Button({ title, onPress, variant = "primary", size = "md" }: But
 }
 
 const styles = StyleSheet.create({
-  base: { borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  base: { borderRadius: 8, alignItems: "center", justifyContent: "center" },
   text: { fontWeight: "700" },
 });

@@ -1,12 +1,12 @@
 export const Colors = {
   dark: {
-    bg: "#000000",
+    bg: "#131313",
     fg: "#ffffff",
-    fgMuted: "#737373",
-    fgSubtle: "#525252",
-    surface: "#0a0a0a",
-    surfaceElevated: "#141414",
-    border: "#1f1f1f",
+    fgMuted: "#adadad",
+    fgSubtle: "#666666",
+    surface: "#1f1f1f",
+    surfaceElevated: "#2a2a2a",
+    border: "#2a2a2a",
     accent: "#ffffff",
   },
   light: {
@@ -20,18 +20,16 @@ export const Colors = {
     accent: "#000000",
   },
   score: {
-    perfect: "#22c55e",
-    great: "#84cc16",
-    good: "#eab308",
-    fair: "#f97316",
-    poor: "#ef4444",
+    perfect: "#14b861",
+    great: "#ffe103",
+    good: "#ff9500",
+    poor: "#ff3b3b",
   },
 };
 
 export function getScoreColor(score: number): string {
-  if (score >= 97) return Colors.score.perfect;
-  if (score >= 90) return Colors.score.great;
-  if (score >= 70) return Colors.score.good;
-  if (score >= 40) return Colors.score.fair;
+  if (score >= 90) return Colors.score.perfect;
+  if (score >= 70) return Colors.score.great;
+  if (score >= 40) return Colors.score.good;
   return Colors.score.poor;
 }

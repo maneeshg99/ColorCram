@@ -1,148 +1,170 @@
-import { View, Text, Pressable, StyleSheet, Alert, ScrollView } from "react-native";
+import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import MaskedView from "@react-native-masked-view/masked-view";
 import { Colors } from "@/constants/theme";
+import { RainbowRing } from "@/components/ui/RainbowRing";
 
-export const APP_VERSION = "0.5.0";
+export const APP_VERSION = "1.0.0";
 
-const EXPERT_WARNINGS = [
-  "Your confidence is inspiring. Your accuracy? We'll see.",
-  "Bold move. Hope your cones are warmed up.",
-  "Expert mode doesn't grade on a curve. Just saying.",
-  "5 rounds. 2 seconds each. No mercy.",
-  "You sure? The colors don't get easier, the timer gets shorter.",
-  "Most people regret this. Just so you know.",
-  "The leaderboard remembers everything.",
-  "Statistically, you will be humbled.",
+const modes = [
+  {
+    id: "classic",
+    label: "Classic",
+    description: "Memorize. Guess. Repeat.",
+    route: "/game/classic",
+  },
+  {
+    id: "daily",
+    label: "Daily",
+    description: "Same colors. Everyone. Every day.",
+    route: "/game/daily",
+  },
+  {
+    id: "blitz",
+    label: "Blitz",
+    description: "60 seconds. As many as you can.",
+    route: "/game/blitz",
+  },
+  {
+    id: "gradient",
+    label: "Gradient",
+    description: "Two colors. One smooth blend.",
+    route: "/game/gradient",
+  },
 ];
 
-let warningIdx = 0;
+function PlayIcon() {
+  return (
+    <View style={styles.playTriangleWrap}>
+      <View style={styles.playTriangle} />
+    </View>
+  );
+}
 
 export default function PlayTab() {
   const router = useRouter();
   const c = Colors.dark;
 
-  const handleExpert = () => {
-    const msg = EXPERT_WARNINGS[warningIdx % EXPERT_WARNINGS.length];
-    warningIdx++;
-    Alert.alert("Expert Mode", `"${msg}"`, [
-      { text: "Maybe not", style: "cancel" },
-      {
-        text: "Bring it on",
-        onPress: () =>
-          router.push("/game/classic?difficulty=expert" as any),
-      },
-    ]);
-  };
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.title, { color: c.fg }]}>
-          Color<Text style={{ opacity: 0.4 }}>Cram</Text>
-        </Text>
-        <Text style={[styles.subtitle, { color: c.fgMuted }]}>
-          Memorize colors. Recreate them from memory.
-        </Text>
-
-        <View style={styles.modes}>
-          <ModeCard
-            title="Classic"
-            description="Memorize and recreate at your own pace"
-            onPress={() => null}
-            buttons={
-              <View style={styles.diffRow}>
-                <Pressable
-                  style={[styles.diffBtn, { borderColor: c.border }]}
-                  onPress={() =>
-                    router.push("/game/classic?difficulty=easy" as any)
-                  }
-                >
-                  <Text style={[styles.diffText, { color: c.fg }]}>Easy</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.diffBtn, { borderColor: c.border }]}
-                  onPress={handleExpert}
-                >
-                  <Text style={[styles.diffText, { color: c.fg }]}>Expert</Text>
-                </Pressable>
-              </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Title — stacked like web, "color" has rainbow gradient */}
+        <View style={styles.titleBlock}>
+          <MaskedView
+            style={{ alignSelf: "flex-start" }}
+            maskElement={
+              <Text style={[styles.titleLine, { color: "#000" }]}>color</Text>
             }
-          />
-          <ModeCard
-            title="Daily"
-            description="Same colors for everyone. One shot."
-            onPress={() => router.push("/game/daily" as any)}
-          />
-          <ModeCard
-            title="Blitz"
-            description="60 seconds. As many as you can."
-            onPress={() => router.push("/game/blitz" as any)}
-          />
-          <ModeCard
-            title="Gradient"
-            description="Recreate gradients, not just flats"
-            onPress={() => router.push("/game/gradient" as any)}
-          />
+          >
+            <LinearGradient
+              colors={[
+                "#ff0000",
+                "#ff8800",
+                "#ffff00",
+                "#00ff00",
+                "#0088ff",
+                "#8800ff",
+                "#ff0088",
+              ]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+            >
+              <Text style={[styles.titleLine, { opacity: 0 }]}>color</Text>
+            </LinearGradient>
+          </MaskedView>
+          <Text style={[styles.titleLine, { color: c.fgMuted }]}>cram</Text>
         </View>
 
-        <Text style={[styles.versionText, { color: c.fgMuted }]}>
-          ColorCram v{APP_VERSION}
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+        {/* Mode list */}
+        <View style={styles.modes}>
+          {modes.map((mode) => (
+            <Pressable
+              key={mode.id}
+              style={({ pressed }) => [
+                styles.modeRow,
+                pressed && { opacity: 0.6 },
+              ]}
+              onPress={() => router.push(mode.route as any)}
+            >
+              <RainbowRing size={56} spinning>
+                <PlayIcon />
+              </RainbowRing>
+              <View style={styles.modeText}>
+                <Text style={[styles.modeLabel, { color: c.fg }]}>
+                  {mode.label}
+                </Text>
+                <Text style={[styles.modeDesc, { color: c.fgSubtle }]}>
+                  {mode.description}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
 
-function ModeCard({
-  title,
-  description,
-  onPress,
-  buttons,
-}: {
-  title: string;
-  description: string;
-  onPress: () => void;
-  buttons?: React.ReactNode;
-}) {
-  const c = Colors.dark;
-  return (
-    <Pressable
-      style={[styles.card, { borderColor: c.border }]}
-      onPress={buttons ? undefined : onPress}
-    >
-      <Text style={[styles.cardTitle, { color: c.fg }]}>{title}</Text>
-      <Text style={[styles.cardDesc, { color: c.fgMuted }]}>{description}</Text>
-      {buttons}
-    </Pressable>
+      </ScrollView>
+
+      {/* Version — bottom left corner */}
+      <Text style={[styles.versionText, { color: c.fgSubtle }]}>
+        v{APP_VERSION}
+      </Text>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24 },
-  title: { fontSize: 32, fontWeight: "900", letterSpacing: -1 },
-  subtitle: { fontSize: 14, marginTop: 8, marginBottom: 28 },
-  modes: { gap: 12 },
-  card: {
-    padding: 18,
-    borderRadius: 16,
-    borderWidth: 1,
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 80,
+    paddingBottom: 32,
   },
-  cardTitle: { fontSize: 18, fontWeight: "800", marginBottom: 4 },
-  cardDesc: { fontSize: 13 },
-  diffRow: { flexDirection: "row", gap: 8, marginTop: 12 },
-  diffBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
+  titleBlock: { marginBottom: 48 },
+  titleLine: {
+    fontSize: 64,
+    fontWeight: "900",
+    letterSpacing: -3,
+    lineHeight: 62,
   },
-  diffText: { fontSize: 13, fontWeight: "600" },
+  modes: { gap: 28 },
+  modeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 18,
+  },
+  playTriangleWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  playTriangle: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 12,
+    borderTopWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftColor: "#ffffff",
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
+    marginLeft: 2,
+  },
+  modeText: { flex: 1 },
+  modeLabel: {
+    fontSize: 19,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  modeDesc: {
+    fontSize: 14,
+    marginTop: 3,
+  },
   versionText: {
-    fontSize: 11,
-    textAlign: "center",
-    marginTop: 32,
-    opacity: 0.5,
+    position: "absolute",
+    bottom: 16,
+    left: 24,
+    fontSize: 10,
   },
 });

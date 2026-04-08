@@ -22,6 +22,8 @@ import { CountdownTimer } from "./CountdownTimer";
 import { ScoreFeedback } from "./ScoreFeedback";
 import { Button } from "@/components/ui/Button";
 import { RainbowRing } from "@/components/ui/RainbowRing";
+import { Share } from "react-native";
+import { createShareLink, getShareUrl } from "@/lib/share";
 import { hsbToHex, hsbToRgb } from "@colorcram-v2/color-utils";
 import { BLITZ_DURATION_MS } from "@colorcram-v2/game-logic";
 
@@ -118,6 +120,34 @@ function getRankText(avgScore: number): string {
   if (avgScore >= 50) return "Getting There";
   return "Keep Practicing";
 }
+
+/** HSB breakdown display — shows H: S: B: for target vs guess */
+function HSBBreakdown({ target, guess }: { target: HSB; guess: HSB }) {
+  const c = Colors.dark;
+  return (
+    <View style={hsbStyles.container}>
+      <View style={hsbStyles.column}>
+        <Text style={hsbStyles.label}>TARGET</Text>
+        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>H: {Math.round(target.h)}°</Text>
+        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>S: {Math.round(target.s)}%</Text>
+        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>B: {Math.round(target.b)}%</Text>
+      </View>
+      <View style={hsbStyles.column}>
+        <Text style={hsbStyles.label}>GUESS</Text>
+        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>H: {Math.round(guess.h)}°</Text>
+        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>S: {Math.round(guess.s)}%</Text>
+        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>B: {Math.round(guess.b)}%</Text>
+      </View>
+    </View>
+  );
+}
+
+const hsbStyles = StyleSheet.create({
+  container: { flexDirection: "row", gap: 40, marginTop: 12 },
+  column: { gap: 3 },
+  label: { fontSize: 10, fontWeight: "700", color: "#666", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 2 },
+  value: { fontSize: 13, fontFamily: "monospace" },
+});
 
 /** Diagonal split comparison square */
 function ColorComparison({ target, guess }: { target: HSB; guess: HSB }) {
@@ -696,9 +726,10 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
           </View>
         </View>
 
-        {/* Diagonal comparison centered */}
+        {/* Diagonal comparison centered + HSB breakdown */}
         <View style={styles.revealCenter}>
           <ColorComparison target={target} guess={roundData.guess} />
+          <HSBBreakdown target={target} guess={roundData.guess} />
         </View>
 
         {/* Bottom: Next text button */}
@@ -849,6 +880,20 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
           <View style={styles.actionsRow}>
             <Pressable onPress={handlePlayAgain} hitSlop={8}>
               <Text style={styles.actionTextPrimary}>Play Again</Text>
+            </Pressable>
+            <Pressable
+              onPress={async () => {
+                const shareId = await createShareLink(results);
+                if (shareId) {
+                  const url = getShareUrl(shareId);
+                  Share.share({
+                    message: `${avgScore}% on ColorCram ${results.mode}. Can you beat it? ${url}`,
+                  });
+                }
+              }}
+              hitSlop={8}
+            >
+              <Text style={styles.actionTextSecondary}>Challenge a Friend</Text>
             </Pressable>
             <Pressable onPress={() => router.back()} hitSlop={8}>
               <Text style={styles.actionTextSecondary}>Menu</Text>

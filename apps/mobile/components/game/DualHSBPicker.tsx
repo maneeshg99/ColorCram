@@ -11,6 +11,7 @@ interface DualHSBPickerProps {
   endValue: HSB;
   onStartChange: (hsb: HSB) => void;
   onEndChange: (hsb: HSB) => void;
+  rightContent?: React.ReactNode;
 }
 
 export function DualHSBPicker({
@@ -18,6 +19,7 @@ export function DualHSBPicker({
   endValue,
   onStartChange,
   onEndChange,
+  rightContent,
 }: DualHSBPickerProps) {
   const [activeTab, setActiveTab] = useState<"start" | "end">("start");
   const activeValue = activeTab === "start" ? startValue : endValue;
@@ -85,8 +87,12 @@ export function DualHSBPicker({
         style={styles.gradientBar}
       />
 
-      {/* HSB Picker for active color */}
-      <HSBColorPicker value={activeValue} onChange={activeOnChange} />
+      {/* HSB Picker for active color — pass rightContent through */}
+      <HSBColorPicker
+        value={activeValue}
+        onChange={activeOnChange}
+        rightContent={rightContent}
+      />
     </View>
   );
 }
@@ -94,7 +100,7 @@ export function DualHSBPicker({
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    gap: 12,
+    gap: 10,
   },
   tabs: {
     flexDirection: "row",
@@ -116,9 +122,9 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   gradientBar: {
-    width: 220,
-    height: 36,
-    borderRadius: 10,
+    width: 330,
+    height: 54,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.dark.border,
   },

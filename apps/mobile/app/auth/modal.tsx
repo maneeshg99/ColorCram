@@ -23,7 +23,7 @@ import {
 
 export default function AuthModal() {
   const router = useRouter();
-  const { signIn, signUp, signInWithApple } = useAuth();
+  const { signIn, signUp, signInWithApple, signInWithGoogle } = useAuth();
   const c = Colors.dark;
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -32,9 +32,22 @@ export default function AuthModal() {
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
 
   const handleSubmit = async () => {
     setError(null);
+
+    // Brute-force protection: lock out after 5 consecutive failures
+    if (lockedUntil && Date.now() < lockedUntil) {
+      const secondsLeft = Math.ceil((lockedUntil - Date.now()) / 1000);
+      setError(`Too many failed attempts. Try again in ${secondsLeft}s.`);
+      return;
+    }
+    if (lockedUntil && Date.now() >= lockedUntil) {
+      setLockedUntil(null);
+      setFailedAttempts(0);
+    }
 
     // Validate inputs
     const emailCheck = validateEmail(email);
@@ -68,8 +81,17 @@ export default function AuthModal() {
 
     setLoading(false);
     if (err) {
-      setError(err);
+      const newCount = failedAttempts + 1;
+      setFailedAttempts(newCount);
+      if (newCount >= 5) {
+        setLockedUntil(Date.now() + 30000);
+        setError("Too many failed attempts. Try again in 30s.");
+      } else {
+        setError(err);
+      }
     } else {
+      setFailedAttempts(0);
+      setLockedUntil(null);
       router.back();
     }
   };
@@ -120,13 +142,28 @@ export default function AuthModal() {
           />
         )}
 
-        {Platform.OS === "ios" && (
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
-            <Text style={[styles.dividerText, { color: c.fgMuted }]}>or</Text>
-            <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
-          </View>
-        )}
+        {/* Google Sign In button (all platforms) */}
+        <Pressable
+          onPress={async () => {
+            setError(null);
+            setLoading(true);
+            const err = await signInWithGoogle();
+            setLoading(false);
+            if (err) setError(err);
+            else router.back();
+          }}
+          style={[styles.googleBtn, { borderColor: c.border }]}
+        >
+          <Text style={[styles.googleBtnText, { color: c.fg }]}>
+            Continue with Google
+          </Text>
+        </Pressable>
+
+        <View style={styles.dividerRow}>
+          <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
+          <Text style={[styles.dividerText, { color: c.fgMuted }]}>or</Text>
+          <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
+        </View>
 
         {mode === "signup" && (
           <View>
@@ -231,6 +268,18 @@ const styles = StyleSheet.create({
   appleBtn: {
     height: 48,
     width: "100%",
+  },
+  googleBtn: {
+    height: 48,
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  googleBtnText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
   dividerRow: {
     flexDirection: "row",

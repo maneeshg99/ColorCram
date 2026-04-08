@@ -59,7 +59,7 @@ export function GuessScreen({
       style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
       whileTap={{ scale: 0.95 }}
     >
-      <RainbowRing size={64} spinning={goHovered}>
+      <RainbowRing size={64} spinning>
         <span style={{ fontSize: 12, fontWeight: 800, color: "#ffffff", letterSpacing: "0.08em" }}>
           Submit
         </span>

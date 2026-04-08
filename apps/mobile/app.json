@@ -2,7 +2,7 @@
   "expo": {
     "name": "ColorCram",
     "slug": "colorcram",
-    "version": "0.5.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "colorcram",
@@ -23,7 +23,9 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-secure-store",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true

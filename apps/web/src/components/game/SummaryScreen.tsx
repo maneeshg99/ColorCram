@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { motion } from "motion/react";
 import type { GameResults, GameMode, Difficulty } from "@colorcram-v2/types";
 import { hsbToHex } from "@colorcram-v2/color-utils";
 import { NumberSlide } from "@/components/design-system/NumberSlide";
 import { FoldReveal } from "@/components/design-system/FoldReveal";
 import { ScoreSubmitter } from "./ScoreSubmitter";
+import { createShareLink, getShareUrl } from "@/lib/share";
 
 interface SummaryScreenProps {
   results: GameResults;
@@ -48,21 +49,22 @@ export function SummaryScreen({
   const isGradient = mode === "gradient";
   const isBlitz = mode === "blitz";
 
-  const handleShare = useCallback(() => {
-    const lines = [
-      `ColorCram ${mode} (${difficulty})`,
-      `Score: ${avgScore}%`,
-      "",
-      ...(isGradient && results.gradientRounds
-        ? results.gradientRounds.map((r, i) => `R${i + 1}: ${r.score}%`)
-        : results.rounds.map((r, i) => `R${i + 1}: ${r.score}%`)),
-      "",
-      "colorcram.com",
-    ];
-    const text = lines.join("\n");
-    navigator.clipboard.writeText(text).catch(() => {});
+  const [shareStatus, setShareStatus] = useState<"idle" | "sharing" | "copied">("idle");
+
+  const handleShare = useCallback(async () => {
+    setShareStatus("sharing");
+    const shareId = await createShareLink(results);
+    if (shareId) {
+      const url = getShareUrl(shareId);
+      const text = `${avgScore}% on ColorCram ${mode}. ${url}`;
+      await navigator.clipboard.writeText(text).catch(() => {});
+      setShareStatus("copied");
+      setTimeout(() => setShareStatus("idle"), 2000);
+    } else {
+      setShareStatus("idle");
+    }
     onShare?.();
-  }, [results, mode, difficulty, avgScore, isGradient, onShare]);
+  }, [results, mode, avgScore, onShare]);
 
   const rounds = isGradient && results.gradientRounds
     ? results.gradientRounds
@@ -238,20 +240,21 @@ export function SummaryScreen({
             </button>
             <button
               onClick={handleShare}
+              disabled={shareStatus === "sharing"}
               style={{
                 background: "none",
                 border: "none",
-                cursor: "pointer",
+                cursor: shareStatus === "sharing" ? "wait" : "pointer",
                 fontSize: 15,
                 fontWeight: 600,
-                color: "#adadad",
+                color: shareStatus === "copied" ? "#14b861" : "#adadad",
                 padding: 0,
-                transition: "opacity 0.2s",
+                transition: "all 0.2s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }}
+              onMouseEnter={(e) => { if (shareStatus === "idle") e.currentTarget.style.opacity = "0.7"; }}
               onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
             >
-              Share
+              {shareStatus === "copied" ? "Link Copied!" : shareStatus === "sharing" ? "..." : "Challenge a Friend"}
             </button>
           </motion.div>
         </div>

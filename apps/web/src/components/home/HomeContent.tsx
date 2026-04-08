@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ObsidianText } from "@/components/design-system/ObsidianText";
+
 import { RainbowRing } from "@/components/design-system/RainbowRing";
 import { playSound } from "@/lib/sounds";
 
@@ -101,18 +101,21 @@ export function HomeContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            <ObsidianText aberration className="block leading-none font-[900] tracking-tighter text-white cursor-default">
-              <span
-                style={{
-                  fontSize: "clamp(3.5rem, 10vw, 8rem)",
-                  fontWeight: 900,
-                  display: "block",
-                  lineHeight: 0.9,
-                }}
-              >
-                color
-              </span>
-            </ObsidianText>
+            <span
+              style={{
+                fontSize: "clamp(3.5rem, 10vw, 8rem)",
+                fontWeight: 900,
+                display: "block",
+                lineHeight: 0.9,
+                background: "linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0088)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                cursor: "default",
+              }}
+            >
+              color
+            </span>
           </motion.div>
 
           <motion.div
@@ -158,7 +161,7 @@ export function HomeContent() {
                 onMouseEnter={() => playSound("hover")}
                 className="flex items-center gap-5 group"
               >
-                <RainbowRing size={56}>
+                <RainbowRing size={56} spinning>
                   <PlayIcon />
                 </RainbowRing>
                 <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-4">
@@ -177,7 +180,7 @@ export function HomeContent() {
 
       {/* Version — bottom left */}
       <div className="fixed bottom-4 left-5 z-50">
-        <span className="text-[10px] text-[#666]">v0.5.0</span>
+        <span className="text-[10px] text-[#666]">v1.0</span>
       </div>
 
       {/* Mute — bottom right */}
