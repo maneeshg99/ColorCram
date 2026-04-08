@@ -12,7 +12,7 @@ function SlideChar({ char, index }: { char: string; index: number }) {
     <span
       style={{
         position: "relative",
-        width: char === "%" ? "0.75em" : char === "." ? "0.35em" : "0.6em",
+        width: char === "%" ? "1em" : char === "." ? "0.35em" : "0.6em",
         overflow: "hidden",
         flexShrink: 0,
       }}

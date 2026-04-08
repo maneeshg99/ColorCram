@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import type { HSB } from "@colorcram-v2/types";
 import { hsbToHex } from "@colorcram-v2/color-utils";
 import { DiagonalReveal } from "@/components/design-system/DiagonalReveal";
@@ -89,20 +90,44 @@ export function ResultScreen({
           marginBottom: "clamp(8px, 1.5vw, 16px)",
         }}
       >
-        {/* Round indicator */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          style={{
-            fontSize: 13,
-            fontWeight: 500,
-            color: "#adadad",
-            letterSpacing: "0.05em",
-          }}
-        >
-          {round} / {totalRounds}
-        </motion.div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {/* Home button */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <Link
+              href="/"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#777",
+                textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "#777"; }}
+            >
+              ← Home
+            </Link>
+          </motion.div>
+
+          {/* Round indicator */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#adadad",
+              letterSpacing: "0.05em",
+            }}
+          >
+            {round} / {totalRounds}
+          </motion.div>
+        </div>
 
         {/* Score */}
         <motion.div
