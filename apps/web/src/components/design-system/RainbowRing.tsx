@@ -21,6 +21,8 @@ export function RainbowRing({
     <motion.div
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
+      animate={{ scale: isHovered ? 1.08 : 1 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
       style={{
         width: size,
         height: size,
@@ -45,20 +47,21 @@ export function RainbowRing({
           animation: isSpinning ? "rainbow-spin 2s linear infinite" : "none",
         }}
       />
-      {/* Inner disc */}
-      <div
+      {/* Inner disc — fades to reveal gradient on hover */}
+      <motion.div
+        animate={{ backgroundColor: isHovered ? "rgba(19, 19, 19, 0.25)" : "rgba(19, 19, 19, 1)" }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         style={{
           position: "absolute",
           inset: 2,
           borderRadius: "50%",
-          backgroundColor: "#131313",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
         {children}
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
