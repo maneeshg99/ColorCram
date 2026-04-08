@@ -159,6 +159,8 @@ export function MemorizeScreen({
               fontWeight: 700,
               color: textColor,
               lineHeight: 1,
+              minWidth: "4.5ch",
+              textAlign: "right",
             }}
           >
             <NumberSlide value={timeStr} />

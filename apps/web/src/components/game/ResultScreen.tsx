@@ -123,6 +123,8 @@ export function ResultScreen({
               lineHeight: 1,
               fontVariantNumeric: "tabular-nums",
               textShadow: `0 0 60px ${scoreColor}40`,
+              minWidth: "4ch",
+              textAlign: "right",
             }}
           >
             <NumberSlide value={`${Math.round(score)}%`} />
