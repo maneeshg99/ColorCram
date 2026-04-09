@@ -109,11 +109,19 @@ export function HSBColorPicker({ value, onChange, rightContent }: HSBColorPicker
 
   return (
     <View style={styles.container}>
-      {/* Top row: preview circle + hex + submit button */}
+      {/* Top row: preview circle + HSB values */}
       <View style={styles.topRow}>
         <View style={[styles.previewCircle, { backgroundColor: hex }]} />
         <View style={styles.topRowRight}>
-          <Text style={styles.previewHex}>{hex}</Text>
+          <Text style={styles.previewHsb}>
+            <Text style={styles.hsbLabel}>H: </Text>{Math.round(value.h)}°
+          </Text>
+          <Text style={styles.previewHsb}>
+            <Text style={styles.hsbLabel}>S: </Text>{Math.round(value.s)}%
+          </Text>
+          <Text style={styles.previewHsb}>
+            <Text style={styles.hsbLabel}>B: </Text>{Math.round(value.b)}%
+          </Text>
           {rightContent}
         </View>
       </View>
@@ -153,14 +161,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
   },
-  strips: { flexDirection: "row", gap: 16 },
-  stripContainer: { alignItems: "center", gap: 6 },
+  strips: { flexDirection: "row", gap: 16, alignSelf: "center" },
+  stripContainer: { alignItems: "center", gap: 6, width: STRIP_WIDTH + 12 },
   stripLabel: {
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 2,
     color: c.fgMuted,
     textTransform: "uppercase",
+    minWidth: STRIP_WIDTH + 12,
+    textAlign: "center",
   },
   stripTouchArea: {
     width: STRIP_WIDTH + 12,
@@ -195,6 +205,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "monospace",
     color: c.fgMuted,
+    minWidth: STRIP_WIDTH + 12,
+    textAlign: "center",
   },
   topRow: {
     flexDirection: "row",
@@ -202,18 +214,21 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   topRowRight: {
-    alignItems: "center",
-    gap: 8,
+    alignItems: "flex-start",
+    gap: 4,
   },
   previewCircle: {
     width: 144,
     height: 144,
     borderRadius: 72,
   },
-  previewHex: {
-    fontSize: 13,
+  previewHsb: {
+    fontSize: 14,
     fontFamily: "monospace",
     color: c.fgMuted,
-    letterSpacing: 0.5,
+  },
+  hsbLabel: {
+    fontWeight: "700",
+    color: c.fg,
   },
 });

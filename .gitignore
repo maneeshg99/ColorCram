@@ -27,7 +27,7 @@ Thumbs.db
 *.mobileprovision
 
 # Build config with potential secrets
-eas.json
+# eas.json - committed (secrets should use env vars)
 google-services.json
 GoogleService-Info.plist
 sentry.properties

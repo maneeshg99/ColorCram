@@ -8,30 +8,25 @@ import {
   Pressable,
   Modal,
 } from "react-native";
-import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { useGameStore } from "@/hooks/useGame";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { HSBColorPicker } from "./HSBColorPicker";
 import { DualHSBPicker } from "./DualHSBPicker";
+import { GradientDisplay } from "./GradientDisplay";
 import { GradientComparison } from "./GradientComparison";
 import { CountdownTimer } from "./CountdownTimer";
 import { ScoreFeedback } from "./ScoreFeedback";
 import { Button } from "@/components/ui/Button";
-import { RainbowRing } from "@/components/ui/RainbowRing";
-import { Share } from "react-native";
-import { createShareLink, getShareUrl } from "@/lib/share";
 import { hsbToHex, hsbToRgb } from "@colorcram-v2/color-utils";
 import { BLITZ_DURATION_MS } from "@colorcram-v2/game-logic";
-
-const DEFAULT_GUESS: HSB = { h: 180, s: 50, b: 50 };
 import { Colors, getScoreColor } from "@/constants/theme";
 import type { GameMode, Difficulty, HSB, GameResults } from "@colorcram-v2/types";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const COLOR_SWATCH_SIZE = Math.min(SCREEN_WIDTH - 48, SCREEN_HEIGHT * 0.45);
 
 interface GameBoardProps {
   mode: GameMode;
@@ -51,92 +46,12 @@ function contrastColor(hsb: HSB): string {
   return getLuminance(hsb) > 0.35 ? "#000" : "#fff";
 }
 
-function contrastColorAlpha(hsb: HSB, alpha: number): string {
-  const isLight = getLuminance(hsb) > 0.35;
-  return isLight ? `rgba(0,0,0,${alpha})` : `rgba(255,255,255,${alpha})`;
+/** Format blitz time as ss.ms consistently */
+function formatBlitzTime(ms: number): string {
+  const sec = Math.floor(ms / 1000);
+  const centis = String(Math.floor((ms % 1000) / 10)).padStart(2, "0");
+  return `${sec}.${centis}`;
 }
-
-function formatBlitzTime(ms: number): { sec: string; centis: string } {
-  const s = Math.floor(ms / 1000);
-  const c = String(Math.floor((ms % 1000) / 10)).padStart(2, "0");
-  return { sec: String(s), centis: c };
-}
-
-/** Fixed-width blitz timer display that doesn't jump around */
-function BlitzTimerText({
-  ms,
-  size,
-  color,
-}: {
-  ms: number;
-  size: "large" | "small" | "memorize";
-  color: string;
-}) {
-  const { sec, centis } = formatBlitzTime(ms);
-  const fontSize = size === "large" ? 24 : size === "memorize" ? 32 : 14;
-  const centiSize = size === "large" ? 16 : size === "memorize" ? 20 : 10;
-  return (
-    <Text
-      style={{
-        fontSize,
-        fontWeight: "800",
-        fontFamily: "monospace",
-        color,
-        textAlign: "right",
-      }}
-    >
-      {sec}
-      <Text style={{ fontSize: centiSize, fontWeight: "600", opacity: 0.7 }}>
-        .{centis}
-      </Text>
-    </Text>
-  );
-}
-
-function getFeedback(score: number): string {
-  if (score >= 97) return "Perfect";
-  if (score >= 90) return "Almost perfect";
-  if (score >= 70) return "Good eye";
-  if (score >= 40) return "Keep practicing";
-  return "Way off";
-}
-
-function getRankText(avgScore: number): string {
-  if (avgScore >= 97) return "Chromatic Savant";
-  if (avgScore >= 90) return "Color Master";
-  if (avgScore >= 80) return "Sharp Eye";
-  if (avgScore >= 70) return "Keen Observer";
-  if (avgScore >= 50) return "Getting There";
-  return "Keep Practicing";
-}
-
-/** HSB breakdown display — shows H: S: B: for target vs guess */
-function HSBBreakdown({ target, guess }: { target: HSB; guess: HSB }) {
-  const c = Colors.dark;
-  return (
-    <View style={hsbStyles.container}>
-      <View style={hsbStyles.column}>
-        <Text style={hsbStyles.label}>TARGET</Text>
-        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>H: {Math.round(target.h)}°</Text>
-        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>S: {Math.round(target.s)}%</Text>
-        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>B: {Math.round(target.b)}%</Text>
-      </View>
-      <View style={hsbStyles.column}>
-        <Text style={hsbStyles.label}>GUESS</Text>
-        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>H: {Math.round(guess.h)}°</Text>
-        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>S: {Math.round(guess.s)}%</Text>
-        <Text style={[hsbStyles.value, { color: c.fgMuted }]}>B: {Math.round(guess.b)}%</Text>
-      </View>
-    </View>
-  );
-}
-
-const hsbStyles = StyleSheet.create({
-  container: { flexDirection: "row", gap: 40, marginTop: 12 },
-  column: { gap: 3 },
-  label: { fontSize: 10, fontWeight: "700", color: "#666", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 2 },
-  value: { fontSize: 13, fontFamily: "monospace" },
-});
 
 /** Diagonal split comparison square */
 function ColorComparison({ target, guess }: { target: HSB; guess: HSB }) {
@@ -144,7 +59,7 @@ function ColorComparison({ target, guess }: { target: HSB; guess: HSB }) {
   const guessHex = hsbToHex(guess);
   const targetText = contrastColor(target);
   const guessText = contrastColor(guess);
-  const size = Math.min(SCREEN_WIDTH - 64, 320);
+  const size = SCREEN_WIDTH - 80;
 
   return (
     <View style={[styles.comparisonBox, { width: size, height: size }]}>
@@ -161,6 +76,7 @@ function ColorComparison({ target, guess }: { target: HSB; guess: HSB }) {
           },
         ]}
       />
+      {/* Diagonal line */}
       <View
         style={[
           StyleSheet.absoluteFill,
@@ -191,18 +107,22 @@ function ColorComparison({ target, guess }: { target: HSB; guess: HSB }) {
       <View style={styles.comparisonLabels}>
         <View style={styles.comparisonTopLeft}>
           <Text style={[styles.compLabel, { color: targetText, opacity: 0.6 }]}>TARGET</Text>
-          <Text style={[styles.compHex, { color: targetText, opacity: 0.8 }]}>{targetHex}</Text>
+          <Text style={[styles.compHsb, { color: targetText, opacity: 0.8 }]}>H: {Math.round(target.h)}°</Text>
+          <Text style={[styles.compHsb, { color: targetText, opacity: 0.8 }]}>S: {Math.round(target.s)}%</Text>
+          <Text style={[styles.compHsb, { color: targetText, opacity: 0.8 }]}>B: {Math.round(target.b)}%</Text>
         </View>
         <View style={styles.comparisonBottomRight}>
           <Text style={[styles.compLabel, { color: guessText, opacity: 0.6 }]}>GUESS</Text>
-          <Text style={[styles.compHex, { color: guessText, opacity: 0.8 }]}>{guessHex}</Text>
+          <Text style={[styles.compHsb, { color: guessText, opacity: 0.8 }]}>H: {Math.round(guess.h)}°</Text>
+          <Text style={[styles.compHsb, { color: guessText, opacity: 0.8 }]}>S: {Math.round(guess.s)}%</Text>
+          <Text style={[styles.compHsb, { color: guessText, opacity: 0.8 }]}>B: {Math.round(guess.b)}%</Text>
         </View>
       </View>
     </View>
   );
 }
 
-/** Exit confirmation modal — web-style with pill buttons */
+/** Exit confirmation modal */
 function ExitModal({
   visible,
   onCancel,
@@ -212,30 +132,70 @@ function ExitModal({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const c = Colors.dark;
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <Pressable style={styles.modalOverlay} onPress={onCancel}>
-        <View style={styles.modalBox} onStartShouldSetResponder={() => true}>
-          <Text style={styles.modalTitle}>Quit game?</Text>
-          <Text style={styles.modalBody}>
-            You'll lose all progress in this round.
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalBox, { backgroundColor: c.surface }]}>
+          <Text style={[styles.modalTitle, { color: c.fg }]}>Exit Game?</Text>
+          <Text style={[styles.modalBody, { color: c.fgMuted }]}>
+            You'll lose all progress for this game.
           </Text>
           <View style={styles.modalActions}>
             <Pressable
-              onPress={onConfirm}
-              style={styles.modalBtnQuit}
+              onPress={onCancel}
+              style={[styles.modalBtn, { borderColor: c.border, borderWidth: 1 }]}
             >
-              <Text style={[styles.modalBtnText, { color: "#ef4444" }]}>Quit</Text>
+              <Text style={[styles.modalBtnText, { color: c.fg }]}>Cancel</Text>
             </Pressable>
             <Pressable
-              onPress={onCancel}
-              style={styles.modalBtnKeep}
+              onPress={onConfirm}
+              style={[styles.modalBtn, { backgroundColor: Colors.score.poor }]}
             >
-              <Text style={[styles.modalBtnText, { color: "#fff" }]}>Keep playing</Text>
+              <Text style={[styles.modalBtnText, { color: "#fff" }]}>Exit</Text>
             </Pressable>
           </View>
         </View>
-      </Pressable>
+      </View>
+    </Modal>
+  );
+}
+
+/** End color confirmation modal */
+function EndColorModal({
+  visible,
+  onGoBack,
+  onContinue,
+}: {
+  visible: boolean;
+  onGoBack: () => void;
+  onContinue: () => void;
+}) {
+  const c = Colors.dark;
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalBox, { backgroundColor: c.surface }]}>
+          <Text style={[styles.modalTitle, { color: c.fg }]}>Are you sure you want to submit?</Text>
+          <Text style={[styles.modalBody, { color: c.fgMuted }]}>
+            You haven't chosen an End Color.
+          </Text>
+          <View style={styles.modalActions}>
+            <Pressable
+              onPress={onGoBack}
+              style={[styles.modalBtn, { borderColor: c.border, borderWidth: 1 }]}
+            >
+              <Text style={[styles.modalBtnText, { color: c.fg }]}>Go Back</Text>
+            </Pressable>
+            <Pressable
+              onPress={onContinue}
+              style={[styles.modalBtn, { backgroundColor: Colors.score.poor }]}
+            >
+              <Text style={[styles.modalBtnText, { color: "#fff" }]}>Continue</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -257,28 +217,18 @@ function ScoreSubmitter({ results }: { results: GameResults }) {
         ? Math.round(results.totalScore / results.rounds.length)
         : 0;
 
-    // Client-side plausibility checks (server should also enforce these)
-    if (
-      avgScore < 0 || avgScore > 100 ||
-      results.totalScore < 0 ||
-      results.totalTimeMs <= 0 ||
-      results.rounds.length <= 0 ||
-      results.avgDeltaE < 0
-    ) {
-      setStatus("error");
-      return;
-    }
-
     supabase
-      .rpc("submit_score", {
-        p_mode: results.mode,
-        p_difficulty: results.difficulty,
-        p_total_score: results.totalScore,
-        p_avg_delta_e: results.avgDeltaE,
-        p_rounds_played: results.rounds.length,
-        p_avg_score: avgScore,
-        p_total_time_ms: results.totalTimeMs,
-        p_daily_challenge_id:
+      .from("game_scores")
+      .insert({
+        user_id: user.id,
+        mode: results.mode,
+        difficulty: results.difficulty,
+        total_score: results.totalScore,
+        avg_delta_e: results.avgDeltaE,
+        rounds_played: results.rounds.length,
+        avg_score: avgScore,
+        total_time_ms: results.totalTimeMs,
+        daily_challenge_id:
           results.mode === "daily"
             ? new Date().toISOString().split("T")[0]
             : null,
@@ -313,7 +263,7 @@ function ScoreSubmitter({ results }: { results: GameResults }) {
   if (status === "submitted") {
     return (
       <Text style={{ color: c.fgMuted, fontSize: 13, textAlign: "center" }}>
-        Saved to leaderboard
+        ✓ Saved to leaderboard
       </Text>
     );
   }
@@ -352,12 +302,14 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
   const initialized = useRef(false);
   const blitzStartRef = useRef<number | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
-  const [showEndColorWarning, setShowEndColorWarning] = useState(false);
+  const [showEndColorModal, setShowEndColorModal] = useState(false);
+  const endColorChanged = useRef(false);
 
   const c = Colors.dark;
   const isBlitz = mode === "blitz";
   const isGradient = mode === "gradient";
 
+  // Initialize game
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
@@ -368,6 +320,7 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
     }
   }, [mode, difficulty, seed]);
 
+  // Blitz timer
   useEffect(() => {
     if (!isBlitz || !state) return;
     if (state.phase === "idle" || state.phase === "summary") return;
@@ -376,23 +329,23 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
     const interval = setInterval(() => {
       if (blitzStartRef.current === null) return;
       tickBlitz(Date.now() - blitzStartRef.current);
-    }, 33);
+    }, 100);
     return () => clearInterval(interval);
   }, [isBlitz, state?.phase]);
 
   const handleMemorizeComplete = useCallback(() => {
+    endColorChanged.current = false;
     beginGuess();
   }, [beginGuess]);
 
-  const isEndColorDefault = currentGuessEnd &&
-    currentGuessEnd.h === DEFAULT_GUESS.h &&
-    currentGuessEnd.s === DEFAULT_GUESS.s &&
-    currentGuessEnd.b === DEFAULT_GUESS.b;
+  const handleSetGuessEnd = useCallback((hsb: HSB) => {
+    endColorChanged.current = true;
+    setGuessEnd(hsb);
+  }, [setGuessEnd]);
 
   const handleSubmit = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (isGradient && isEndColorDefault) {
-      setShowEndColorWarning(true);
+    if (isGradient && !endColorChanged.current) {
+      setShowEndColorModal(true);
       return;
     }
     if (isGradient) {
@@ -400,7 +353,12 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
     } else {
       confirmGuess();
     }
-  }, [isGradient, isEndColorDefault, confirmGuess, confirmGradientGuess]);
+  }, [isGradient, confirmGuess, confirmGradientGuess]);
+
+  const handleForceSubmitGradient = useCallback(() => {
+    setShowEndColorModal(false);
+    confirmGradientGuess();
+  }, [confirmGradientGuess]);
 
   const handleNext = useCallback(() => {
     advance();
@@ -414,6 +372,7 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
   const handlePlayAgain = useCallback(() => {
     blitzStartRef.current = null;
     initialized.current = false;
+    endColorChanged.current = false;
     newGame(mode, difficulty, seed);
     setTimeout(() => {
       initialized.current = true;
@@ -434,459 +393,330 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
   const roundData = state.rounds[state.currentRound];
   const gradientRoundData = isGradient ? state.gradientRounds?.[state.currentRound] : null;
 
-  const showExit = state.phase !== "summary" && state.phase !== "idle";
+  // Blitz timer component — used on all blitz screens
+  const blitzTimerDisplay =
+    isBlitz && state.timeRemainingMs != null ? (
+      <Text
+        style={[
+          styles.blitzTimer,
+          {
+            color:
+              state.timeRemainingMs < 10000 ? Colors.score.poor : c.fg,
+          },
+        ]}
+      >
+        {formatBlitzTime(state.timeRemainingMs)}
+      </Text>
+    ) : null;
 
-  // ── MEMORIZE PHASE ──
-  // Web-style: full-screen color fill, round top-left, timer top-right, "MEMORIZE" label
+  // Exit button
+  const exitButton = (
+    <Pressable
+      onPress={() => setShowExitModal(true)}
+      style={styles.exitBtn}
+      hitSlop={12}
+    >
+      <Text style={styles.exitBtnText}>✕ Exit</Text>
+    </Pressable>
+  );
+
+  // MEMORIZE PHASE
   if (state.phase === "memorize" && (target || gradientTarget)) {
-    const contrastRef = isGradient && gradientTarget
-      ? {
-          h: (gradientTarget.start.h + gradientTarget.end.h) / 2,
-          s: (gradientTarget.start.s + gradientTarget.end.s) / 2,
-          b: (gradientTarget.start.b + gradientTarget.end.b) / 2,
-        }
-      : target!;
-
-    const textColor = contrastColor(contrastRef);
-    const mutedColor = contrastColorAlpha(contrastRef, 0.5);
-
-    const content = (
-      <>
+    return (
+      <SafeAreaView style={[styles.fullScreen, { backgroundColor: c.bg }]}>
+        {exitButton}
         <ExitModal
           visible={showExitModal}
           onCancel={() => setShowExitModal(false)}
           onConfirm={handleExit}
         />
+        <View style={styles.memorizeContent}>
+          {isGradient && gradientTarget ? (
+            <GradientDisplay
+              startColor={gradientTarget.start}
+              endColor={gradientTarget.end}
+            />
+          ) : target ? (
+            <View
+              style={[
+                styles.memorizeSwatch,
+                {
+                  backgroundColor: hsbToHex(target),
+                  width: COLOR_SWATCH_SIZE,
+                  height: COLOR_SWATCH_SIZE,
+                },
+              ]}
+            >
+              <Text style={[styles.memorizeLabel, { color: contrastColor(target), opacity: 0.5 }]}>
+                MEMORIZE
+              </Text>
+            </View>
+          ) : null}
 
-        {/* Top bar: round left, timer right */}
-        <SafeAreaView style={styles.memorizeTopBar} edges={["top"]}>
-          <Text style={[styles.memorizeRound, { color: mutedColor }]}>
-            {state.currentRound + 1} / {isBlitz ? state.currentRound + 1 : state.totalRounds}
+          <Text style={[styles.roundTextSmall, { color: c.fgMuted }]}>
+            Round {state.currentRound + 1} {!isBlitz && `/ ${state.totalRounds}`}
           </Text>
 
-          <View style={styles.memorizeTimerBlock}>
-            {isBlitz && state.timeRemainingMs != null && (
-              <View style={{ marginBottom: 8 }}>
-                <BlitzTimerText ms={state.timeRemainingMs} size="memorize" color={textColor} />
-              </View>
-            )}
-            <CountdownTimer
-              durationMs={state.memorizeTimeMs}
-              onComplete={handleMemorizeComplete}
-              running={true}
-              color={textColor}
-            />
-            <Text style={[styles.memorizeSubLabel, { color: mutedColor }]}>
-              MEMORIZE
-            </Text>
-          </View>
-        </SafeAreaView>
+          {blitzTimerDisplay}
 
-        {/* Exit button — bottom center floating pill */}
-        {showExit && (
-          <Pressable
-            onPress={() => setShowExitModal(true)}
-            style={styles.exitPill}
-            hitSlop={12}
-          >
-            <Text style={styles.exitPillText}>Exit</Text>
-          </Pressable>
-        )}
-      </>
-    );
-
-    if (isGradient && gradientTarget) {
-      return (
-        <LinearGradient
-          colors={[hsbToHex(gradientTarget.start), hsbToHex(gradientTarget.end)] as any}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.fullScreen}
-        >
-          {content}
-        </LinearGradient>
-      );
-    }
-
-    return (
-      <View style={[styles.fullScreen, { backgroundColor: hsbToHex(target!) }]}>
-        {content}
-      </View>
+          <CountdownTimer
+            durationMs={state.memorizeTimeMs}
+            onComplete={handleMemorizeComplete}
+            running={true}
+            color={c.fg}
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 
-  // ── GUESS PHASE ──
-  // Web-style: round top-left, "GUESS" top-right, picker+preview+submit centered, non-scrollable
+  // GUESS PHASE
   if (state.phase === "guess") {
-    const submitButton = (
-      <Pressable onPress={handleSubmit}>
-        <RainbowRing size={84} spinning>
-          <Text style={styles.submitRingText}>Submit</Text>
-        </RainbowRing>
-      </Pressable>
-    );
-
     return (
       <SafeAreaView style={[styles.fullScreen, { backgroundColor: c.bg }]}>
+        {exitButton}
         <ExitModal
           visible={showExitModal}
           onCancel={() => setShowExitModal(false)}
           onConfirm={handleExit}
         />
-
-        {/* End color warning modal */}
-        <Modal visible={showEndColorWarning} transparent animationType="fade">
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setShowEndColorWarning(false)}
-          >
-            <View style={styles.modalBox} onStartShouldSetResponder={() => true}>
-              <Text style={styles.modalTitle}>Are you sure?</Text>
-              <Text style={styles.modalBody}>
-                You haven't chosen an End Color.
-              </Text>
-              <View style={styles.modalActions}>
-                <Pressable
-                  onPress={() => {
-                    setShowEndColorWarning(false);
-                    if (isGradient) confirmGradientGuess();
-                    else confirmGuess();
-                  }}
-                  style={styles.modalBtnKeep}
-                >
-                  <Text style={[styles.modalBtnText, { color: "#fff" }]}>Submit anyway</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setShowEndColorWarning(false)}
-                  style={styles.modalBtnKeep}
-                >
-                  <Text style={[styles.modalBtnText, { color: "#adadad" }]}>Go back</Text>
-                </Pressable>
-              </View>
-            </View>
-          </Pressable>
-        </Modal>
-
-        {/* Top bar */}
-        <View style={styles.topBar}>
-          <Text style={[styles.topBarLeft, { color: c.fgMuted }]}>
-            {state.currentRound + 1} / {isBlitz ? state.currentRound + 1 : state.totalRounds}
-          </Text>
-          <View style={{ alignItems: "flex-end" }}>
-            {isBlitz && state.timeRemainingMs != null && (
-              <BlitzTimerText
-                ms={state.timeRemainingMs}
-                size="large"
-                color={state.timeRemainingMs < 10000 ? Colors.score.poor : c.fg}
-              />
-            )}
-            <Text style={[styles.topBarRight, { color: c.fg }]}>GUESS</Text>
-          </View>
-        </View>
-
-        {/* Picker centered — fixed, not scrollable */}
+        {isGradient && (
+          <EndColorModal
+            visible={showEndColorModal}
+            onGoBack={() => setShowEndColorModal(false)}
+            onContinue={handleForceSubmitGradient}
+          />
+        )}
         <View style={styles.guessContent}>
+          {blitzTimerDisplay}
+          <Text style={[styles.roundTextSmall, { color: c.fgMuted }]}>
+            Round {state.currentRound + 1}{" "}
+            {!isBlitz && `/ ${state.totalRounds}`}
+          </Text>
+          <Text style={[styles.heading, { color: c.fg }]}>
+            {isGradient ? "Recreate the gradient" : "Recreate the color"}
+          </Text>
           {isGradient ? (
             <DualHSBPicker
               startValue={currentGuessStart}
               endValue={currentGuessEnd}
               onStartChange={setGuessStart}
-              onEndChange={setGuessEnd}
-              rightContent={submitButton}
+              onEndChange={handleSetGuessEnd}
             />
           ) : (
-            <HSBColorPicker
-              value={currentGuess}
-              onChange={setGuess}
-              rightContent={submitButton}
-            />
+            <HSBColorPicker value={currentGuess} onChange={setGuess} />
           )}
+          <Button title="Submit Guess" onPress={handleSubmit} size="lg" />
         </View>
-
-        {showExit && (
-          <Pressable
-            onPress={() => setShowExitModal(true)}
-            style={styles.exitPill}
-            hitSlop={12}
-          >
-            <Text style={styles.exitPillText}>Exit</Text>
-          </Pressable>
-        )}
       </SafeAreaView>
     );
   }
 
-  // ── REVEAL PHASE — gradient ──
+  // REVEAL PHASE — gradient
   if (state.phase === "reveal" && isGradient && gradientRoundData) {
     const score = gradientRoundData.score ?? 0;
     const scoreColor = getScoreColor(score);
-    const isLastRound = state.currentRound + 1 >= state.totalRounds;
 
     return (
       <SafeAreaView style={[styles.fullScreen, { backgroundColor: c.bg }]}>
+        {exitButton}
         <ExitModal
           visible={showExitModal}
           onCancel={() => setShowExitModal(false)}
           onConfirm={handleExit}
         />
-
-        {/* Top bar: round left, score right */}
-        <View style={styles.topBar}>
-          <Text style={[styles.topBarLeft, { color: c.fgMuted }]}>
-            {state.currentRound + 1} / {state.totalRounds}
+        <ScrollView contentContainerStyle={styles.revealContent}>
+          <Text style={[styles.roundTextSmall, { color: c.fgMuted }]}>
+            Round {state.currentRound + 1} / {state.totalRounds}
           </Text>
-          <View style={{ alignItems: "flex-end" }}>
-            <Text style={[styles.revealScore, { color: scoreColor }]}>
-              {score}%
-            </Text>
-            <Text style={[styles.revealFeedback, { color: c.fgMuted }]}>
-              {getFeedback(score)}
-            </Text>
-          </View>
-        </View>
 
-        {/* Gradient comparison centered */}
-        <View style={styles.revealCenter}>
           <GradientComparison
             targetStart={gradientRoundData.targetStart}
             targetEnd={gradientRoundData.targetEnd}
             guessStart={gradientRoundData.guessStart ?? { h: 0, s: 0, b: 0 }}
             guessEnd={gradientRoundData.guessEnd ?? { h: 0, s: 0, b: 0 }}
           />
-        </View>
 
-        {/* Bottom: Next text button */}
-        <View style={styles.bottomBar}>
-          <Pressable onPress={handleNext} hitSlop={12}>
-            <Text style={styles.nextText}>
-              {isLastRound ? "See Results" : "Next"} →
-            </Text>
-          </Pressable>
-        </View>
+          <Text style={[styles.scoreText, { color: scoreColor }]}>
+            {score}%
+          </Text>
+          <Text style={[styles.matchLabel, { color: c.fgMuted }]}>match</Text>
+          <ScoreFeedback score={score} roundIndex={state.currentRound} />
 
-        {showExit && (
-          <Pressable
-            onPress={() => setShowExitModal(true)}
-            style={styles.exitPill}
-            hitSlop={12}
-          >
-            <Text style={styles.exitPillText}>Exit</Text>
-          </Pressable>
-        )}
+          <View style={{ marginTop: 16 }}>
+            <Button
+              title={
+                state.currentRound + 1 >= state.totalRounds
+                  ? "See Results"
+                  : "Next Round"
+              }
+              onPress={handleNext}
+            />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
 
-  // ── REVEAL PHASE — standard ──
+  // REVEAL PHASE — standard
   if (state.phase === "reveal" && target && roundData?.guess) {
     const score = roundData.score ?? 0;
     const scoreColor = getScoreColor(score);
-    const isLastRound = !isBlitz && state.currentRound + 1 >= state.totalRounds;
 
     return (
       <SafeAreaView style={[styles.fullScreen, { backgroundColor: c.bg }]}>
+        {exitButton}
         <ExitModal
           visible={showExitModal}
           onCancel={() => setShowExitModal(false)}
           onConfirm={handleExit}
         />
+        <View style={styles.revealContent}>
+          {blitzTimerDisplay}
+          <Text style={[styles.roundTextSmall, { color: c.fgMuted }]}>
+            Round {state.currentRound + 1}{" "}
+            {!isBlitz && `/ ${state.totalRounds}`}
+          </Text>
 
-        {/* Top bar: round left, score right */}
-        <View style={styles.topBar}>
-          <View>
-            <Text style={[styles.topBarLeft, { color: c.fgMuted }]}>
-              {state.currentRound + 1} / {isBlitz ? state.currentRound + 1 : state.totalRounds}
-            </Text>
-            {isBlitz && state.timeRemainingMs != null && (
-              <BlitzTimerText
-                ms={state.timeRemainingMs}
-                size="small"
-                color={state.timeRemainingMs < 10000 ? Colors.score.poor : c.fgMuted}
-              />
-            )}
-          </View>
-          <View style={{ alignItems: "flex-end" }}>
-            <Text style={[styles.revealScore, { color: scoreColor }]}>
-              {score}%
-            </Text>
-            <Text style={[styles.revealFeedback, { color: c.fgMuted }]}>
-              {getFeedback(score)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Diagonal comparison centered + HSB breakdown */}
-        <View style={styles.revealCenter}>
           <ColorComparison target={target} guess={roundData.guess} />
-          <HSBBreakdown target={target} guess={roundData.guess} />
-        </View>
 
-        {/* Bottom: Next text button */}
-        <View style={styles.bottomBar}>
-          <Pressable onPress={handleNext} hitSlop={12}>
-            <Text style={styles.nextText}>
-              {isLastRound ? "See Results" : "Next"} →
-            </Text>
-          </Pressable>
-        </View>
+          <Text style={[styles.scoreText, { color: scoreColor }]}>
+            {score}%
+          </Text>
+          <Text style={[styles.matchLabel, { color: c.fgMuted }]}>match</Text>
+          <ScoreFeedback score={score} roundIndex={state.currentRound} />
 
-        {showExit && (
-          <Pressable
-            onPress={() => setShowExitModal(true)}
-            style={styles.exitPill}
-            hitSlop={12}
-          >
-            <Text style={styles.exitPillText}>Exit</Text>
-          </Pressable>
-        )}
+          <View style={{ marginTop: 16 }}>
+            <Button
+              title={
+                !isBlitz && state.currentRound + 1 >= state.totalRounds
+                  ? "See Results"
+                  : "Next Round"
+              }
+              onPress={handleNext}
+            />
+          </View>
+        </View>
       </SafeAreaView>
     );
   }
 
-  // ── SUMMARY PHASE ──
-  // Web-style: title + round count, massive score with rank, round rows with dividers, text-style actions
+  // SUMMARY PHASE
   if (state.phase === "summary" && results) {
     const avgScore =
       results.rounds.length > 0
         ? Math.round(results.totalScore / results.rounds.length)
         : 0;
-    const scoreColor = getScoreColor(avgScore);
-    const rankText = getRankText(avgScore);
-
-    const rounds = isGradient && results.gradientRounds
-      ? results.gradientRounds
-      : results.rounds;
 
     return (
       <SafeAreaView style={[styles.fullScreen, { backgroundColor: c.bg }]}>
         <ScrollView contentContainerStyle={styles.summaryContent}>
-          {/* Title line */}
-          <Text style={[styles.summarySubtitle, { color: c.fgMuted }]}>
-            {isBlitz ? "Time's Up" : "Game Over"} · {results.rounds.length} round
-            {results.rounds.length !== 1 ? "s" : ""}
+          <Text style={[styles.heading, { color: c.fg }]}>
+            {isBlitz ? "Time\u2019s Up!" : "Game Over"}
+          </Text>
+          <Text style={[styles.roundTextSmall, { color: c.fgMuted }]}>
+            {results.rounds.length} round
+            {results.rounds.length !== 1 ? "s" : ""} completed
           </Text>
 
-          {/* Massive score */}
-          <Text style={[styles.bigScore, { color: scoreColor }]}>
-            {avgScore}%
-          </Text>
-          <Text style={[styles.rankText, { color: c.fgMuted }]}>
-            {rankText}
+          <Text style={[styles.bigScore, { color: c.fg }]}>{avgScore}%</Text>
+          <Text style={[styles.matchLabel, { color: c.fgMuted }]}>
+            avg match
           </Text>
 
-          {/* Blitz stats */}
-          {isBlitz && (
-            <View style={styles.blitzStats}>
-              <View style={styles.blitzStat}>
-                <Text style={[styles.blitzStatValue, { color: c.fg }]}>
-                  {Math.max(...results.rounds.map((r) => r.score ?? 0))}%
-                </Text>
-                <Text style={[styles.blitzStatLabel, { color: c.fgMuted }]}>
-                  best round
-                </Text>
-              </View>
-              <View style={styles.blitzStat}>
-                <Text style={[styles.blitzStatValue, { color: c.fg }]}>
-                  {results.rounds.length > 0
-                    ? (
-                        results.rounds.reduce((s, r) => s + (r.timeMs ?? 0), 0) /
-                        results.rounds.length /
-                        1000
-                      ).toFixed(1)
-                    : 0}
-                  s
-                </Text>
-                <Text style={[styles.blitzStatLabel, { color: c.fgMuted }]}>
-                  avg time
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {/* Score submitter */}
-          <ScoreSubmitter results={results} />
-
-          {/* Round breakdown with dividers */}
+          {/* Round breakdown */}
           <View style={styles.roundList}>
-            {rounds.map((round, i) => {
-              const roundScore = round.score ?? 0;
-              const rColor = getScoreColor(roundScore);
-
-              return (
-                <View
-                  key={i}
-                  style={[
-                    styles.roundRow,
-                    i < rounds.length - 1 && styles.roundRowBorder,
-                  ]}
-                >
-                  <Text style={[styles.roundNum, { color: "rgba(255,255,255,0.3)" }]}>
-                    {i + 1}
-                  </Text>
-
-                  {/* Color circles or gradient bar */}
-                  {isGradient && "targetStart" in round ? (
-                    <LinearGradient
-                      colors={[
-                        hsbToHex((round as any).targetStart),
-                        hsbToHex((round as any).targetEnd),
-                      ] as any}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 1, y: 0.5 }}
-                      style={styles.miniGradientBar}
-                    />
-                  ) : (
-                    <View style={styles.roundColors}>
-                      <View
-                        style={[
-                          styles.miniCircle,
-                          { backgroundColor: hsbToHex((round as any).target) },
-                        ]}
-                      />
-                      {"guess" in round && (round as any).guess && (
+            {isGradient && results.gradientRounds
+              ? results.gradientRounds.map((round, i) => {
+                  const roundScore = round.score ?? 0;
+                  return (
+                    <View
+                      key={i}
+                      style={[styles.roundRow, { backgroundColor: c.surface }]}
+                    >
+                      <Text style={[styles.roundNum, { color: c.fgSubtle }]}>
+                        {i + 1}
+                      </Text>
+                      <View style={styles.roundColors}>
                         <View
                           style={[
-                            styles.miniCircle,
+                            styles.miniSwatch,
+                            { backgroundColor: hsbToHex(round.targetStart) },
+                          ]}
+                        />
+                        <View
+                          style={[
+                            styles.miniSwatch,
                             {
-                              backgroundColor: hsbToHex((round as any).guess),
-                              marginLeft: 6,
+                              backgroundColor: hsbToHex(round.targetEnd),
+                              marginLeft: -8,
                             },
                           ]}
                         />
-                      )}
+                      </View>
+                      <Text
+                        style={[
+                          styles.roundScore,
+                          { color: getScoreColor(roundScore) },
+                        ]}
+                      >
+                        {roundScore}%
+                      </Text>
                     </View>
-                  )}
-
-                  <Text style={[styles.roundScore, { color: rColor }]}>
-                    {roundScore}%
-                  </Text>
-                </View>
-              );
-            })}
+                  );
+                })
+              : results.rounds.map((round, i) => {
+                  const roundScore = round.score ?? 0;
+                  return (
+                    <View
+                      key={i}
+                      style={[styles.roundRow, { backgroundColor: c.surface }]}
+                    >
+                      <Text style={[styles.roundNum, { color: c.fgSubtle }]}>
+                        {i + 1}
+                      </Text>
+                      <View style={styles.roundColors}>
+                        <View
+                          style={[
+                            styles.miniSwatch,
+                            { backgroundColor: hsbToHex(round.target) },
+                          ]}
+                        />
+                        {round.guess && (
+                          <View
+                            style={[
+                              styles.miniSwatch,
+                              {
+                                backgroundColor: hsbToHex(round.guess),
+                                marginLeft: -8,
+                              },
+                            ]}
+                          />
+                        )}
+                      </View>
+                      <Text
+                        style={[
+                          styles.roundScore,
+                          { color: getScoreColor(roundScore) },
+                        ]}
+                      >
+                        {roundScore}%
+                      </Text>
+                    </View>
+                  );
+                })}
           </View>
 
-          {/* Text-style action buttons like web */}
-          <View style={styles.actionsRow}>
-            <Pressable onPress={handlePlayAgain} hitSlop={8}>
-              <Text style={styles.actionTextPrimary}>Play Again</Text>
-            </Pressable>
-            <Pressable
-              onPress={async () => {
-                const shareId = await createShareLink(results);
-                if (shareId) {
-                  const url = getShareUrl(shareId);
-                  Share.share({
-                    message: `${avgScore}% on ColorCram ${results.mode}. Can you beat it? ${url}`,
-                  });
-                }
-              }}
-              hitSlop={8}
-            >
-              <Text style={styles.actionTextSecondary}>Challenge a Friend</Text>
-            </Pressable>
-            <Pressable onPress={() => router.back()} hitSlop={8}>
-              <Text style={styles.actionTextSecondary}>Menu</Text>
-            </Pressable>
+          {/* Score submission */}
+          <ScoreSubmitter results={results} />
+
+          <View style={styles.actions}>
+            <Button title="Play Again" onPress={handlePlayAgain} />
+            <Button
+              title="Back to Menu"
+              variant="secondary"
+              onPress={() => router.back()}
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -899,123 +729,82 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
 const styles = StyleSheet.create({
   fullScreen: { flex: 1 },
 
-  // ── Top bar (shared between guess/reveal) ──
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 12,
+  // Exit button
+  exitBtn: {
+    position: "absolute",
+    top: 56,
+    left: 16,
+    zIndex: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.1)",
   },
-  topBarLeft: {
+  exitBtnText: {
+    color: Colors.dark.fgMuted,
     fontSize: 13,
-    fontWeight: "500",
-    letterSpacing: 0.5,
+    fontWeight: "600",
   },
-  topBarRight: {
-    fontSize: 22,
+
+  // Memorize
+  memorizeContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 24,
+  },
+  memorizeSwatch: {
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  memorizeLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 4,
+    textTransform: "uppercase",
+  },
+
+  // Shared
+  roundTextSmall: { fontSize: 13, marginBottom: 2 },
+  heading: {
+    fontSize: 24,
     fontWeight: "800",
     letterSpacing: -0.5,
+    marginBottom: 8,
+  },
+  blitzTimer: {
+    fontSize: 24,
+    fontWeight: "800",
+    fontFamily: "monospace",
+    textAlign: "center",
   },
 
-  // ── Bottom bar ──
-  bottomBar: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    paddingTop: 16,
-  },
-  nextText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#ffffff",
-    letterSpacing: 0.3,
-    paddingVertical: 12,
-  },
-
-  // ── Exit pill (bottom center, web-style) ──
-  exitPill: {
-    position: "absolute",
-    bottom: 16,
-    left: "50%",
-    transform: [{ translateX: -30 }],
-    zIndex: 200,
-    backgroundColor: "rgba(40,40,40,0.8)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-  },
-  exitPillText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#bbb",
-  },
-
-  // ── Memorize phase (full-screen color) ──
-  memorizeTopBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingHorizontal: 24,
-    paddingTop: 16,
-  },
-  memorizeRound: {
-    fontSize: 13,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    marginTop: 4,
-  },
-  memorizeTimerBlock: {
-    alignItems: "flex-end",
-  },
-  memorizeSubLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 3,
-    textTransform: "uppercase",
-    marginTop: 8,
-  },
-
-  // (blitz timer styles are inline in BlitzTimerText component)
-
-  // ── Guess ──
+  // Guess
   guessContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 12,
-  },
-  submitRingText: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#ffffff",
-    letterSpacing: 0.8,
+    gap: 12,
+    paddingHorizontal: 20,
   },
 
-  // ── Reveal ──
-  revealCenter: {
+  // Reveal
+  revealContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 16,
-  },
-  revealScore: {
-    fontSize: 48,
-    fontWeight: "900",
-    lineHeight: 48,
-  },
-  revealFeedback: {
-    fontSize: 14,
-    fontWeight: "500",
-    marginTop: 4,
+    gap: 8,
+    paddingHorizontal: 20,
   },
   comparisonBox: {
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    marginVertical: 8,
   },
   comparisonLabels: { ...StyleSheet.absoluteFillObject },
   comparisonTopLeft: { position: "absolute", top: 16, left: 16 },
@@ -1031,102 +820,40 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: "uppercase",
   },
-  compHex: { fontSize: 11, fontFamily: "monospace", marginTop: 2 },
+  compHsb: { fontSize: 11, fontFamily: "monospace", marginTop: 1 },
+  scoreText: { fontSize: 48, fontWeight: "900" },
+  matchLabel: { fontSize: 13 },
 
-  // ── Summary ──
+  // Summary
   summaryContent: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    gap: 4,
   },
-  summarySubtitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    marginBottom: 16,
-  },
-  bigScore: {
-    fontSize: 64,
-    fontWeight: "900",
-    lineHeight: 64,
-  },
-  rankText: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 8,
-    letterSpacing: -0.3,
-  },
-  blitzStats: {
-    flexDirection: "row",
-    gap: 32,
-    marginTop: 20,
-  },
-  blitzStat: {},
-  blitzStatValue: {
-    fontSize: 24,
-    fontWeight: "800",
-  },
-  blitzStatLabel: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  roundList: {
-    width: "100%",
-    marginTop: 24,
-  },
+  bigScore: { fontSize: 52, fontWeight: "900", marginTop: 8 },
+  roundList: { width: "100%", gap: 8, marginTop: 12 },
   roundRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    paddingVertical: 14,
-  },
-  roundRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.06)",
-  },
-  roundNum: {
-    fontSize: 12,
-    fontFamily: "monospace",
-    width: 20,
-  },
-  roundColors: {
-    flexDirection: "row",
-    flex: 1,
-  },
-  miniCircle: {
-    width: 24,
-    height: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 12,
+    gap: 12,
   },
-  miniGradientBar: {
-    width: 48,
-    height: 24,
-    borderRadius: 6,
-    flex: 1,
-    maxWidth: 48,
+  roundNum: { fontSize: 16, fontWeight: "700", fontFamily: "monospace", width: 24 },
+  roundColors: { flexDirection: "row", flex: 1 },
+  miniSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
   },
-  roundScore: {
-    fontSize: 15,
-    fontWeight: "800",
-    marginLeft: "auto",
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 24,
-    marginTop: 24,
-  },
-  actionTextPrimary: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#ffffff",
-  },
-  actionTextSecondary: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#adadad",
-  },
+  roundScore: { fontSize: 18, fontWeight: "800", fontFamily: "monospace" },
+  actions: { gap: 10, marginTop: 16, width: "100%" },
 
-  // ── Exit modal (web-style) ──
+  // Exit modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
@@ -1136,47 +863,19 @@ const styles = StyleSheet.create({
   },
   modalBox: {
     width: "100%",
-    maxWidth: 320,
-    backgroundColor: "#1a1a1a",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
     borderRadius: 16,
-    padding: 28,
+    padding: 24,
     alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#fff",
-    marginBottom: 8,
-  },
-  modalBody: {
-    fontSize: 13,
-    color: "#888",
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  modalActions: {
-    flexDirection: "row",
     gap: 12,
   },
-  modalBtnQuit: {
-    borderWidth: 1,
-    borderColor: "rgba(239,68,68,0.4)",
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+  modalTitle: { fontSize: 18, fontWeight: "800" },
+  modalBody: { fontSize: 14, textAlign: "center" },
+  modalActions: { flexDirection: "row", gap: 12, marginTop: 8 },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
   },
-  modalBtnKeep: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  modalBtnText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
+  modalBtnText: { fontSize: 14, fontWeight: "700" },
 });

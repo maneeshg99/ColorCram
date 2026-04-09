@@ -4,22 +4,28 @@
     "slug": "colorcram",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-1024.png",
     "scheme": "colorcram",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
+      "image": "./assets/icon-1024.png",
+      "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.colorcram.app"
+      "bundleIdentifier": "com.colorcram.app",
+      "buildNumber": "1",
+      "infoPlist": {}
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-1024.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.colorcram.app"
+      "package": "com.colorcram.app",
+      "versionCode": 1
     },
     "plugins": [
       "expo-router",

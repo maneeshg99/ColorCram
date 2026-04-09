@@ -11,7 +11,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import * as AppleAuthentication from "expo-apple-authentication";
+let AppleAuthentication: typeof import("expo-apple-authentication") | null = null;
+try {
+  AppleAuthentication = require("expo-apple-authentication");
+} catch {
+  // Native module not available in Expo Go — Apple button hidden
+}
 import { useAuth } from "@/lib/auth-context";
 import { Colors } from "@/constants/theme";
 import {
@@ -127,8 +132,8 @@ export default function AuthModal() {
           {mode === "signin" ? "Sign In" : "Create Account"}
         </Text>
 
-        {/* Apple Sign In button (iOS only) */}
-        {Platform.OS === "ios" && (
+        {/* Apple Sign In button (iOS only, requires native module) */}
+        {Platform.OS === "ios" && AppleAuthentication && (
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={
               mode === "signin"
