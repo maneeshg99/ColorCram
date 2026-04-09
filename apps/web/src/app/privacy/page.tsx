@@ -7,202 +7,239 @@ export const metadata: Metadata = {
     "Privacy Policy for ColorCram - learn how we collect, use, and protect your data.",
 };
 
+function Section({
+  number,
+  title,
+  children,
+}: {
+  number: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      className="rounded-2xl border border-[var(--border)] p-6 sm:p-8"
+      style={{ backgroundColor: "var(--surface)" }}
+    >
+      <div className="flex items-baseline gap-3 mb-4">
+        <span
+          className="text-xs font-black tracking-widest uppercase"
+          style={{ color: "var(--fg-subtle)" }}
+        >
+          {number}
+        </span>
+        <h2 className="text-lg font-black tracking-tight">{title}</h2>
+      </div>
+      <div
+        className="text-sm leading-relaxed space-y-3"
+        style={{ color: "var(--fg-muted)" }}
+      >
+        {children}
+      </div>
+    </section>
+  );
+}
+
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-[#131313] text-white">
-      <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: "var(--bg)",
+        color: "var(--fg)",
+        fontFamily: "var(--font-sans)",
+      }}
+    >
+      <div className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-[#adadad] hover:text-white transition-colors duration-200 mb-10"
+          className="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase mb-12 transition-colors duration-200"
+          style={{ color: "var(--fg-subtle)" }}
         >
-          &larr; Back to Home
+          <span>&larr;</span>
+          <span>Home</span>
         </Link>
 
-        <h1 className="text-4xl font-black tracking-tight mb-2">
-          Privacy Policy
-        </h1>
-        <p className="text-[#adadad] text-sm mb-12">
-          Effective Date: April 9, 2026
-        </p>
+        <div className="mb-12">
+          <h1
+            className="font-black tracking-tight mb-2"
+            style={{ fontSize: "var(--text-headline)" }}
+          >
+            Privacy Policy
+          </h1>
+          <p
+            className="text-sm font-bold tracking-wide"
+            style={{ color: "var(--fg-subtle)" }}
+          >
+            Effective April 9, 2026
+          </p>
+        </div>
 
-        <div className="space-y-10 text-[#d4d4d4] leading-relaxed">
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              1. Introduction
-            </h2>
+        <div className="space-y-4">
+          <Section number="01" title="Introduction">
             <p>
-              Welcome to ColorCram (&quot;we,&quot; &quot;us,&quot; or
-              &quot;our&quot;). ColorCram is a color guessing game available at{" "}
+              ColorCram is a color guessing game available at{" "}
               <a
                 href="https://colorcram.app"
-                className="text-white underline underline-offset-2 hover:text-[#adadad] transition-colors"
+                className="underline underline-offset-2 transition-colors duration-200 hover:text-white"
+                style={{ color: "var(--fg)" }}
               >
                 colorcram.app
-              </a>
-              . This Privacy Policy explains how we collect, use, and protect
-              your information when you use our service.
+              </a>{" "}
+              and on iOS. This policy explains how we handle your information.
             </p>
-          </section>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              2. Information We Collect
-            </h2>
-            <p className="mb-3">
-              We collect minimal information necessary to provide our service:
-            </p>
-            <ul className="list-disc list-inside space-y-1.5 pl-2">
-              <li>
-                <span className="font-semibold text-white">
-                  Account information:
-                </span>{" "}
-                Email address and username when you create an account.
-              </li>
-              <li>
-                <span className="font-semibold text-white">Game data:</span>{" "}
-                Your game scores, statistics, and gameplay history.
-              </li>
-              <li>
-                <span className="font-semibold text-white">
-                  Authentication data:
-                </span>{" "}
-                Information provided by Google or Apple when you sign in through
-                those services.
-              </li>
-            </ul>
-          </section>
+          <Section number="02" title="Information We Collect">
+            <div className="space-y-2">
+              <div className="flex items-start gap-3">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-white/40 shrink-0" />
+                <p>
+                  <span className="text-white font-semibold">Account info</span>{" "}
+                  &mdash; email address and username when you create an account.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-white/40 shrink-0" />
+                <p>
+                  <span className="text-white font-semibold">Game data</span>{" "}
+                  &mdash; scores, statistics, and gameplay history.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-white/40 shrink-0" />
+                <p>
+                  <span className="text-white font-semibold">
+                    Auth provider data
+                  </span>{" "}
+                  &mdash; limited profile info from Google or Apple when you sign
+                  in.
+                </p>
+              </div>
+            </div>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              3. Authentication
-            </h2>
+          <Section number="03" title="Authentication">
             <p>
               ColorCram supports sign-in via Google and Apple through Supabase
-              Auth. When you authenticate using these providers, we receive
-              limited profile information (such as your name and email address)
-              as permitted by the provider and your privacy settings. We do not
-              receive or store your passwords from these services.
+              Auth. We receive limited profile information as permitted by the
+              provider. We never receive or store your passwords from these
+              services.
             </p>
-          </section>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              4. How We Use Your Information
-            </h2>
-            <ul className="list-disc list-inside space-y-1.5 pl-2">
-              <li>To provide and maintain the ColorCram service.</li>
-              <li>To manage your account and authenticate your identity.</li>
-              <li>
-                To track and display game scores and leaderboard standings.
-              </li>
-              <li>To improve and optimize the game experience.</li>
-            </ul>
-          </section>
+          <Section number="04" title="How We Use Your Information">
+            <div className="space-y-2">
+              <div className="flex items-start gap-3">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-white/40 shrink-0" />
+                <p>To provide and maintain the ColorCram service.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-white/40 shrink-0" />
+                <p>To manage your account and authenticate your identity.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-white/40 shrink-0" />
+                <p>To track and display scores and leaderboard standings.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-white/40 shrink-0" />
+                <p>To improve and optimize the game experience.</p>
+              </div>
+            </div>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              5. Data Sharing and Selling
-            </h2>
+          <Section number="05" title="Data Sharing">
             <p>
-              We do <span className="font-bold text-white">not</span> sell,
+              We do <span className="text-white font-bold">not</span> sell,
               rent, or trade your personal information to third parties. Your
-              data is only used for operating ColorCram.
+              data is only used to operate ColorCram.
             </p>
-          </section>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              6. Data Storage and Security
-            </h2>
+          <Section number="06" title="Data Storage & Security">
             <p>
               Your data is stored securely using Supabase, which provides
               enterprise-grade security including encryption at rest and in
-              transit. We take reasonable measures to protect your information,
-              but no method of electronic storage is 100% secure.
+              transit. No method of electronic storage is 100% secure, but we
+              take reasonable measures to protect your information.
             </p>
-          </section>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">7. Cookies</h2>
+          <Section number="07" title="Cookies">
             <p>
-              ColorCram uses minimal cookies, limited to authentication tokens
-              required to keep you signed in. We do not use tracking cookies,
-              advertising cookies, or any third-party analytics cookies.
+              ColorCram uses minimal cookies limited to authentication tokens
+              that keep you signed in. We do not use tracking, advertising, or
+              third-party analytics cookies.
             </p>
-          </section>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              8. Children&apos;s Privacy
-            </h2>
+          <Section number="08" title="Children's Privacy">
             <p>
-              ColorCram is not directed at children under the age of 13. We do
-              not knowingly collect personal information from children under 13.
-              If you believe a child under 13 has provided us with personal
-              information, please contact us and we will promptly delete it.
+              ColorCram is not directed at children under 13. We do not knowingly
+              collect personal information from children under 13. If you believe
+              a child has provided us with personal information, please contact
+              us.
             </p>
-          </section>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              9. Data Deletion
-            </h2>
+          <Section number="09" title="Data Deletion">
             <p>
-              You have the right to request deletion of your account and all
-              associated data. To request account deletion, please contact us at{" "}
+              You may request deletion of your account and all associated data by
+              emailing{" "}
               <a
                 href="mailto:maneesh.gogineni@gmail.com"
-                className="text-white underline underline-offset-2 hover:text-[#adadad] transition-colors"
+                className="underline underline-offset-2 transition-colors duration-200 hover:text-white"
+                style={{ color: "var(--fg)" }}
               >
                 maneesh.gogineni@gmail.com
               </a>{" "}
-              with the subject line &quot;Account Deletion Request.&quot; We
-              will process your request within 30 days.
+              with the subject &ldquo;Account Deletion Request.&rdquo; We will
+              process your request within 30 days.
             </p>
-          </section>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              10. Changes to This Policy
-            </h2>
+          <Section number="10" title="Changes to This Policy">
             <p>
-              We may update this Privacy Policy from time to time. Any changes
-              will be posted on this page with an updated effective date. Your
-              continued use of ColorCram after changes are posted constitutes
-              your acceptance of the revised policy.
+              We may update this policy from time to time. Changes will be posted
+              on this page with an updated effective date. Continued use of
+              ColorCram after changes constitutes acceptance.
             </p>
-          </section>
+          </Section>
 
-          <section>
-            <h2 className="text-xl font-bold text-white mb-3">
-              11. Contact Us
-            </h2>
-            <p>
-              If you have any questions or concerns about this Privacy Policy,
-              please contact:
-            </p>
-            <div className="mt-3 pl-2">
+          <Section number="11" title="Contact">
+            <p>Questions about this Privacy Policy? Reach out:</p>
+            <div className="mt-2 space-y-1">
               <p className="text-white font-semibold">Maneesh Gogineni</p>
               <p>
-                Email:{" "}
                 <a
                   href="mailto:maneesh.gogineni@gmail.com"
-                  className="text-white underline underline-offset-2 hover:text-[#adadad] transition-colors"
+                  className="underline underline-offset-2 transition-colors duration-200 hover:text-white"
+                  style={{ color: "var(--fg)" }}
                 >
                   maneesh.gogineni@gmail.com
                 </a>
               </p>
-              <p>
-                Website:{" "}
-                <a
-                  href="https://colorcram.app"
-                  className="text-white underline underline-offset-2 hover:text-[#adadad] transition-colors"
-                >
-                  colorcram.app
-                </a>
-              </p>
             </div>
-          </section>
+          </Section>
+        </div>
+
+        <div
+          className="mt-12 flex items-center gap-6 text-xs font-bold tracking-widest uppercase"
+          style={{ color: "var(--fg-subtle)" }}
+        >
+          <Link
+            href="/support"
+            className="hover:text-[var(--fg-muted)] transition-colors duration-200"
+          >
+            Support
+          </Link>
+          <Link
+            href="/"
+            className="hover:text-[var(--fg-muted)] transition-colors duration-200"
+          >
+            Home
+          </Link>
         </div>
       </div>
     </div>

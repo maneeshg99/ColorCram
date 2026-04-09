@@ -16,13 +16,29 @@ export default function HomePage() {
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <Link
-          href="/leaderboard"
-          className="text-sm font-black text-[#adadad] hover:text-white transition-colors duration-200 tracking-widest uppercase"
-          style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
-        >
-          Leaderboard
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link
+            href="/leaderboard"
+            className="text-sm font-black text-[#adadad] hover:text-white transition-colors duration-200 tracking-widest uppercase"
+            style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+          >
+            Leaderboard
+          </Link>
+          <Link
+            href="/support"
+            className="text-xs font-bold text-[#666] hover:text-[#adadad] transition-colors duration-200 tracking-wide uppercase"
+            style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+          >
+            Support
+          </Link>
+          <Link
+            href="/privacy"
+            className="text-xs font-bold text-[#666] hover:text-[#adadad] transition-colors duration-200 tracking-wide uppercase"
+            style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+          >
+            Privacy
+          </Link>
+        </div>
         <AuthButton />
       </div>
 

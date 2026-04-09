@@ -7,131 +7,166 @@ export const metadata: Metadata = {
     "Get help with ColorCram - FAQs, account support, and contact information.",
 };
 
+function FaqItem({
+  question,
+  answer,
+}: {
+  question: string;
+  answer: React.ReactNode;
+}) {
+  return (
+    <div
+      className="rounded-2xl border border-[var(--border)] p-6 sm:p-8"
+      style={{ backgroundColor: "var(--surface)" }}
+    >
+      <h3 className="text-sm font-black tracking-tight mb-3">{question}</h3>
+      <p
+        className="text-sm leading-relaxed"
+        style={{ color: "var(--fg-muted)" }}
+      >
+        {answer}
+      </p>
+    </div>
+  );
+}
+
 export default function SupportPage() {
   return (
-    <div className="min-h-screen bg-[#131313] text-white">
-      <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: "var(--bg)",
+        color: "var(--fg)",
+        fontFamily: "var(--font-sans)",
+      }}
+    >
+      <div className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-[#adadad] hover:text-white transition-colors duration-200 mb-10"
+          className="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase mb-12 transition-colors duration-200"
+          style={{ color: "var(--fg-subtle)" }}
         >
-          &larr; Back to Home
+          <span>&larr;</span>
+          <span>Home</span>
         </Link>
 
-        <h1 className="text-4xl font-black tracking-tight mb-4">Support</h1>
-        <p className="text-[#adadad] text-lg mb-12 leading-relaxed">
-          Need help with ColorCram? Check the frequently asked questions below
-          or reach out to us directly.
-        </p>
+        <div className="mb-12">
+          <h1
+            className="font-black tracking-tight mb-3"
+            style={{ fontSize: "var(--text-headline)" }}
+          >
+            Support
+          </h1>
+          <p
+            className="text-sm leading-relaxed max-w-lg"
+            style={{ color: "var(--fg-muted)" }}
+          >
+            Need help with ColorCram? Check the frequently asked questions below
+            or reach out directly.
+          </p>
+        </div>
 
-        <div className="space-y-12">
-          {/* FAQ Section */}
-          <section>
-            <h2 className="text-2xl font-bold mb-6">
-              Frequently Asked Questions
-            </h2>
+        {/* FAQ */}
+        <div className="mb-12">
+          <h2
+            className="text-xs font-black tracking-widest uppercase mb-5"
+            style={{ color: "var(--fg-subtle)" }}
+          >
+            FAQ
+          </h2>
 
-            <div className="space-y-6">
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
-                <h3 className="text-lg font-bold mb-2">
-                  How do I play ColorCram?
-                </h3>
-                <p className="text-[#d4d4d4] leading-relaxed">
-                  ColorCram tests your color memory. You are shown a target
-                  color for a brief period, then you recreate it from memory
-                  using the color picker. The closer your guess is to the
-                  original color, the higher your score. Choose from multiple
-                  game modes including Classic, Blitz, Gradient, and Daily
-                  Challenge.
-                </p>
-              </div>
+          <div className="space-y-3">
+            <FaqItem
+              question="How do I play ColorCram?"
+              answer="You're shown a target color briefly, then recreate it from memory using the HSB color picker. The closer your guess, the higher your score. Choose from Classic, Blitz, Gradient, and Daily Challenge modes."
+            />
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
-                <h3 className="text-lg font-bold mb-2">
-                  Do I need an account to play?
-                </h3>
-                <p className="text-[#d4d4d4] leading-relaxed">
-                  No, you can play ColorCram without an account. However,
-                  creating an account allows you to save your scores, appear on
-                  the leaderboard, and track your progress over time. You can
-                  sign in with Google or Apple.
-                </p>
-              </div>
+            <FaqItem
+              question="Do I need an account to play?"
+              answer="No — you can play without an account. Creating one lets you save scores, appear on the leaderboard, and track your progress. Sign in with Google or Apple."
+            />
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
-                <h3 className="text-lg font-bold mb-2">
-                  I am having trouble signing in. What should I do?
-                </h3>
-                <p className="text-[#d4d4d4] leading-relaxed">
-                  Try the following steps: clear your browser cookies and cache,
-                  make sure third-party cookies are not blocked for our site, and
-                  try signing in with a different browser. If the issue persists,
-                  contact us at the email below with details about the problem.
-                </p>
-              </div>
+            <FaqItem
+              question="I'm having trouble signing in"
+              answer={
+                <>
+                  Try clearing your browser cookies and cache, make sure
+                  third-party cookies aren&apos;t blocked, or try a different
+                  browser. If the issue persists, contact us at the email below.
+                </>
+              }
+            />
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
-                <h3 className="text-lg font-bold mb-2">
-                  How do I delete my account and data?
-                </h3>
-                <p className="text-[#d4d4d4] leading-relaxed">
-                  To request account deletion, send an email to{" "}
+            <FaqItem
+              question="How do I delete my account?"
+              answer={
+                <>
+                  Email{" "}
                   <a
                     href="mailto:maneesh.gogineni@gmail.com"
-                    className="text-white underline underline-offset-2 hover:text-[#adadad] transition-colors"
+                    className="underline underline-offset-2 transition-colors duration-200 hover:text-white"
+                    style={{ color: "var(--fg)" }}
                   >
                     maneesh.gogineni@gmail.com
                   </a>{" "}
-                  with the subject line &quot;Account Deletion Request&quot; and
-                  include the email address associated with your account. We will
-                  process your request within 30 days.
-                </p>
-              </div>
+                  with the subject &ldquo;Account Deletion Request&rdquo; and
+                  include your account email. We&apos;ll process it within 30
+                  days.
+                </>
+              }
+            />
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
-                <h3 className="text-lg font-bold mb-2">
-                  My score did not save. What happened?
-                </h3>
-                <p className="text-[#d4d4d4] leading-relaxed">
-                  Scores are only saved when you are signed in. If you played as
-                  a guest, your scores will not be recorded to the leaderboard.
-                  Make sure you are signed in before starting a game to ensure
-                  your scores are saved.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Contact Section */}
-          <section className="rounded-xl border border-white/10 bg-white/[0.03] p-8">
-            <h2 className="text-2xl font-bold mb-3">Still Need Help?</h2>
-            <p className="text-[#d4d4d4] leading-relaxed mb-4">
-              If your question is not answered above, feel free to reach out
-              directly. We will do our best to respond within 48 hours.
-            </p>
-            <a
-              href="mailto:maneesh.gogineni@gmail.com"
-              className="inline-flex items-center gap-2 rounded-lg bg-white text-[#131313] px-5 py-2.5 text-sm font-bold hover:bg-[#e0e0e0] transition-colors duration-200"
-            >
-              Contact Support
-            </a>
-          </section>
-
-          {/* Links */}
-          <div className="flex items-center gap-6 text-sm text-[#adadad]">
-            <Link
-              href="/privacy"
-              className="hover:text-white transition-colors duration-200 underline underline-offset-2"
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              href="/"
-              className="hover:text-white transition-colors duration-200 underline underline-offset-2"
-            >
-              Home
-            </Link>
+            <FaqItem
+              question="My score didn't save"
+              answer="Scores are only saved when you're signed in. Make sure you're logged in before starting a game to ensure your scores are recorded to the leaderboard."
+            />
           </div>
+        </div>
+
+        {/* Contact */}
+        <div
+          className="rounded-2xl border border-[var(--border)] p-6 sm:p-8"
+          style={{ backgroundColor: "var(--surface)" }}
+        >
+          <h2 className="text-lg font-black tracking-tight mb-2">
+            Still need help?
+          </h2>
+          <p
+            className="text-sm leading-relaxed mb-5"
+            style={{ color: "var(--fg-muted)" }}
+          >
+            If your question isn&apos;t answered above, reach out directly.
+            We&apos;ll do our best to respond within 48 hours.
+          </p>
+          <a
+            href="mailto:maneesh.gogineni@gmail.com"
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 hover:opacity-80"
+            style={{
+              backgroundColor: "var(--fg)",
+              color: "var(--bg)",
+            }}
+          >
+            Contact Support
+          </a>
+        </div>
+
+        {/* Footer links */}
+        <div
+          className="mt-12 flex items-center gap-6 text-xs font-bold tracking-widest uppercase"
+          style={{ color: "var(--fg-subtle)" }}
+        >
+          <Link
+            href="/privacy"
+            className="hover:text-[var(--fg-muted)] transition-colors duration-200"
+          >
+            Privacy
+          </Link>
+          <Link
+            href="/"
+            className="hover:text-[var(--fg-muted)] transition-colors duration-200"
+          >
+            Home
+          </Link>
         </div>
       </div>
     </div>
