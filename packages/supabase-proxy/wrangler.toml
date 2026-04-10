@@ -1,0 +1,10 @@
+name = "supabase-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+SUPABASE_HOST = "ghoovgxokmpqhsunwadc.supabase.co"
+
+routes = [
+  { pattern = "api.colorcram.app", custom_domain = true }
+]

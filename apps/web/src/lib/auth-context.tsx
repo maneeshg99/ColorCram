@@ -64,7 +64,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .eq("id", userId)
       .single();
     if (error) {
-      if (process.env.NODE_ENV === "development") console.error("Failed to fetch profile:", error.message);
+      if (error.code === "PGRST116") {
+        // Profile doesn't exist — account was deleted but session lingers
+        setProfile(null);
+        setUser(null);
+        await supabase.auth.signOut();
+      } else if (process.env.NODE_ENV === "development") {
+        console.error("Failed to fetch profile:", error.message);
+      }
       return;
     }
     if (data) setProfile(data);
