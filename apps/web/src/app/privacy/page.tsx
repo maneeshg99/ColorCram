@@ -17,10 +17,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section
-      className="rounded-2xl border border-[var(--border)] p-6 sm:p-8"
-      style={{ backgroundColor: "var(--surface)" }}
-    >
+    <div style={{ paddingTop: 12, paddingBottom: 12 }}>
       <div className="flex items-baseline gap-3 mb-4">
         <span
           className="text-xs font-black tracking-widest uppercase"
@@ -31,12 +28,12 @@ function Section({
         <h2 className="text-lg font-black tracking-tight">{title}</h2>
       </div>
       <div
-        className="text-sm leading-relaxed space-y-3"
+        className="text-sm leading-loose space-y-3 pl-9"
         style={{ color: "var(--fg-muted)" }}
       >
         {children}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -75,7 +72,7 @@ export default function PrivacyPolicyPage() {
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div>
           <Section number="01" title="Introduction">
             <p>
               ColorCram is a color guessing game available at{" "}
@@ -226,7 +223,7 @@ export default function PrivacyPolicyPage() {
         </div>
 
         <div
-          className="mt-12 flex items-center gap-6 text-xs font-bold tracking-widest uppercase"
+          className="pt-8 flex items-center gap-6 text-xs font-bold tracking-widest uppercase"
           style={{ color: "var(--fg-subtle)" }}
         >
           <Link

@@ -8,24 +8,31 @@ export const metadata: Metadata = {
 };
 
 function FaqItem({
+  number,
   question,
   answer,
 }: {
+  number: string;
   question: string;
   answer: React.ReactNode;
 }) {
   return (
-    <div
-      className="rounded-2xl border border-[var(--border)] p-6 sm:p-8"
-      style={{ backgroundColor: "var(--surface)" }}
-    >
-      <h3 className="text-sm font-black tracking-tight mb-3">{question}</h3>
-      <p
-        className="text-sm leading-relaxed"
+    <div style={{ paddingTop: 12, paddingBottom: 12 }}>
+      <div className="flex items-baseline gap-3 mb-4">
+        <span
+          className="text-xs font-black tracking-widest uppercase"
+          style={{ color: "var(--fg-subtle)" }}
+        >
+          {number}
+        </span>
+        <h3 className="text-lg font-black tracking-tight">{question}</h3>
+      </div>
+      <div
+        className="text-sm leading-loose pl-9"
         style={{ color: "var(--fg-muted)" }}
       >
         {answer}
-      </p>
+      </div>
     </div>
   );
 }
@@ -52,88 +59,83 @@ export default function SupportPage() {
 
         <div className="mb-12">
           <h1
-            className="font-black tracking-tight mb-3"
+            className="font-black tracking-tight mb-2"
             style={{ fontSize: "var(--text-headline)" }}
           >
             Support
           </h1>
           <p
-            className="text-sm leading-relaxed max-w-lg"
-            style={{ color: "var(--fg-muted)" }}
+            className="text-sm font-bold tracking-wide"
+            style={{ color: "var(--fg-subtle)" }}
           >
-            Need help with ColorCram? Check the frequently asked questions below
-            or reach out directly.
+            Need help with ColorCram? Check the FAQs below or reach out
+            directly.
           </p>
         </div>
 
-        {/* FAQ */}
-        <div className="mb-12">
-          <h2
-            className="text-xs font-black tracking-widest uppercase mb-5"
-            style={{ color: "var(--fg-subtle)" }}
-          >
-            FAQ
-          </h2>
+        <div>
+          <FaqItem
+            number="01"
+            question="How do I play?"
+            answer="You're shown a target color briefly, then recreate it from memory using the HSB color picker. The closer your guess, the higher your score. Choose from Classic, Blitz, Gradient, and Daily Challenge modes."
+          />
 
-          <div className="space-y-3">
-            <FaqItem
-              question="How do I play ColorCram?"
-              answer="You're shown a target color briefly, then recreate it from memory using the HSB color picker. The closer your guess, the higher your score. Choose from Classic, Blitz, Gradient, and Daily Challenge modes."
-            />
+          <FaqItem
+            number="02"
+            question="Do I need an account?"
+            answer="No — you can play without an account. Creating one lets you save scores, appear on the leaderboard, and track your progress. Sign in with Google or Apple."
+          />
 
-            <FaqItem
-              question="Do I need an account to play?"
-              answer="No — you can play without an account. Creating one lets you save scores, appear on the leaderboard, and track your progress. Sign in with Google or Apple."
-            />
+          <FaqItem
+            number="03"
+            question="Trouble signing in?"
+            answer={
+              <>
+                Try clearing your browser cookies and cache, make sure
+                third-party cookies aren&apos;t blocked, or try a different
+                browser. If the issue persists, contact us at the email below.
+              </>
+            }
+          />
 
-            <FaqItem
-              question="I'm having trouble signing in"
-              answer={
-                <>
-                  Try clearing your browser cookies and cache, make sure
-                  third-party cookies aren&apos;t blocked, or try a different
-                  browser. If the issue persists, contact us at the email below.
-                </>
-              }
-            />
+          <FaqItem
+            number="04"
+            question="How do I delete my account?"
+            answer={
+              <>
+                When signed in, click &ldquo;delete account&rdquo; in the
+                navigation bar. This will permanently remove your account and
+                all associated data. You can also email{" "}
+                <a
+                  href="mailto:support@colorcram.app"
+                  className="underline underline-offset-2 transition-colors duration-200 hover:text-white"
+                  style={{ color: "var(--fg)" }}
+                >
+                  support@colorcram.app
+                </a>{" "}
+                with the subject &ldquo;Account Deletion Request&rdquo; and
+                we&apos;ll process it within 30 days.
+              </>
+            }
+          />
 
-            <FaqItem
-              question="How do I delete my account?"
-              answer={
-                <>
-                  When signed in, click &ldquo;delete account&rdquo; in the
-                  navigation bar. This will permanently remove your account and
-                  all associated data. You can also email{" "}
-                  <a
-                    href="mailto:support@colorcram.app"
-                    className="underline underline-offset-2 transition-colors duration-200 hover:text-white"
-                    style={{ color: "var(--fg)" }}
-                  >
-                    support@colorcram.app
-                  </a>{" "}
-                  with the subject &ldquo;Account Deletion Request&rdquo; and
-                  we&apos;ll process it within 30 days.
-                </>
-              }
-            />
-
-            <FaqItem
-              question="My score didn't save"
-              answer="Scores are only saved when you're signed in. Make sure you're logged in before starting a game to ensure your scores are recorded to the leaderboard."
-            />
-          </div>
+          <FaqItem
+            number="05"
+            question="My score didn't save"
+            answer="Scores are only saved when you're signed in. Make sure you're logged in before starting a game to ensure your scores are recorded to the leaderboard."
+          />
         </div>
 
         {/* Contact */}
-        <div
-          className="rounded-2xl border border-[var(--border)] p-6 sm:p-8"
-          style={{ backgroundColor: "var(--surface)" }}
-        >
-          <h2 className="text-lg font-black tracking-tight mb-2">
-            Still need help?
+        <div className="mt-16 mb-12">
+          <h2
+            className="text-xs font-black tracking-widest uppercase mb-6"
+            style={{ color: "var(--fg-subtle)" }}
+          >
+            Contact
           </h2>
           <p
-            className="text-sm leading-relaxed mb-5"
+            className="text-sm leading-loose mb-6"
             style={{ color: "var(--fg-muted)" }}
           >
             If your question isn&apos;t answered above, reach out directly.
@@ -141,19 +143,17 @@ export default function SupportPage() {
           </p>
           <a
             href="mailto:support@colorcram.app"
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 hover:opacity-80"
-            style={{
-              backgroundColor: "var(--fg)",
-              color: "var(--bg)",
-            }}
+            className="inline-flex items-center gap-2 text-xs font-black tracking-widest uppercase transition-colors duration-200 hover:text-[var(--fg)]"
+            style={{ color: "var(--fg-muted)" }}
           >
-            Contact Support
+            <span>support@colorcram.app</span>
+            <span>&rarr;</span>
           </a>
         </div>
 
         {/* Footer links */}
         <div
-          className="mt-12 flex items-center gap-6 text-xs font-bold tracking-widest uppercase"
+          className="pt-8 flex items-center gap-6 text-xs font-bold tracking-widest uppercase"
           style={{ color: "var(--fg-subtle)" }}
         >
           <Link
