@@ -6,6 +6,8 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  Alert,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -22,7 +24,8 @@ interface GameStat {
 }
 
 export default function ProfileTab() {
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut, deleteAccount } = useAuth();
+  const [deleting, setDeleting] = useState(false);
   const router = useRouter();
   const c = Colors.dark;
 
@@ -83,6 +86,24 @@ export default function ProfileTab() {
             title="Sign In / Sign Up"
             onPress={() => router.push("/auth/modal")}
           />
+          <View style={styles.linksSection}>
+            <Pressable
+              onPress={() => Linking.openURL("https://colorcram.app/privacy")}
+              style={styles.linkRow}
+            >
+              <Text style={[styles.linkText, { color: c.fgMuted }]}>
+                Privacy Policy
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => Linking.openURL("https://colorcram.app/support")}
+              style={styles.linkRow}
+            >
+              <Text style={[styles.linkText, { color: c.fgMuted }]}>
+                Support
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -160,6 +181,63 @@ export default function ProfileTab() {
         <View style={{ marginTop: 32 }}>
           <Button title="Sign Out" variant="secondary" onPress={signOut} />
         </View>
+
+        {/* Links */}
+        <View style={styles.linksSection}>
+          <Pressable
+            onPress={() => Linking.openURL("https://colorcram.app/privacy")}
+            style={styles.linkRow}
+          >
+            <Text style={[styles.linkText, { color: c.fgMuted }]}>
+              Privacy Policy
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => Linking.openURL("https://colorcram.app/support")}
+            style={styles.linkRow}
+          >
+            <Text style={[styles.linkText, { color: c.fgMuted }]}>
+              Support
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Delete account */}
+        <View style={{ marginTop: 16 }}>
+          <Pressable
+            onPress={() => {
+              Alert.alert(
+                "Delete Account",
+                "This will permanently delete your account and all your data including scores and game history. This action cannot be undone.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                      setDeleting(true);
+                      const err = await deleteAccount();
+                      setDeleting(false);
+                      if (err) {
+                        Alert.alert("Error", err);
+                      }
+                    },
+                  },
+                ]
+              );
+            }}
+            disabled={deleting}
+            style={({ pressed }) => ({
+              opacity: pressed || deleting ? 0.5 : 1,
+              alignItems: "center",
+              paddingVertical: 12,
+            })}
+          >
+            <Text style={{ color: "#ff3b3b", fontSize: 13, fontWeight: "600" }}>
+              {deleting ? "Deleting..." : "Delete Account"}
+            </Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -212,4 +290,7 @@ const styles = StyleSheet.create({
   statMode: { fontSize: 14, fontWeight: "700" },
   statDifficulty: { fontSize: 12, marginTop: 2 },
   statScore: { fontSize: 18, fontWeight: "900", fontFamily: "monospace" },
+  linksSection: { marginTop: 24, alignItems: "center", gap: 12 },
+  linkRow: { paddingVertical: 4 },
+  linkText: { fontSize: 13, textDecorationLine: "underline" },
 });

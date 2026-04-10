@@ -16,7 +16,7 @@ interface AdminUser {
 }
 
 export default function AdminPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +106,18 @@ export default function AdminPage() {
         <h1 className="text-xl font-[800]">Access Denied</h1>
         <p className="text-sm text-[var(--fg-muted)]">
           You must be signed in.
+        </p>
+      </div>
+    );
+  }
+
+  // Not an admin
+  if (profile && profile.role !== "admin") {
+    return (
+      <div className="flex flex-col items-center py-24 gap-4">
+        <h1 className="text-xl font-[800]">Access Denied</h1>
+        <p className="text-sm text-[var(--fg-muted)]">
+          You do not have permission to access this page.
         </p>
       </div>
     );

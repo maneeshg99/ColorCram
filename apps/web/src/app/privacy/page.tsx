@@ -185,17 +185,18 @@ export default function PrivacyPolicyPage() {
 
           <Section number="09" title="Data Deletion">
             <p>
-              You may request deletion of your account and all associated data by
-              emailing{" "}
+              You can delete your account and all associated data at any time
+              using the &ldquo;delete account&rdquo; option available when signed
+              in. Alternatively, you may email{" "}
               <a
-                href="mailto:maneesh.gogineni@gmail.com"
+                href="mailto:support@colorcram.app"
                 className="underline underline-offset-2 transition-colors duration-200 hover:text-white"
                 style={{ color: "var(--fg)" }}
               >
-                maneesh.gogineni@gmail.com
+                support@colorcram.app
               </a>{" "}
-              with the subject &ldquo;Account Deletion Request.&rdquo; We will
-              process your request within 30 days.
+              with the subject &ldquo;Account Deletion Request&rdquo; and we
+              will process it within 30 days.
             </p>
           </Section>
 
@@ -213,11 +214,11 @@ export default function PrivacyPolicyPage() {
               <p className="text-white font-semibold">Maneesh Gogineni</p>
               <p>
                 <a
-                  href="mailto:maneesh.gogineni@gmail.com"
+                  href="mailto:support@colorcram.app"
                   className="underline underline-offset-2 transition-colors duration-200 hover:text-white"
                   style={{ color: "var(--fg)" }}
                 >
-                  maneesh.gogineni@gmail.com
+                  support@colorcram.app
                 </a>
               </p>
             </div>

@@ -31,6 +31,7 @@ interface AuthContextValue {
     username: string
   ) => Promise<string | null>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -42,6 +43,7 @@ const AuthContext = createContext<AuthContextValue>({
   signIn: async () => null,
   signUp: async () => null,
   signOut: async () => {},
+  deleteAccount: async () => null,
 });
 
 export function useAuth() {
@@ -152,6 +154,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
   }, []);
 
+  const deleteAccount = useCallback(async (): Promise<string | null> => {
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.rpc("delete_own_account");
+      if (error) return error.message;
+      // Clear local state after successful deletion
+      setUser(null);
+      setProfile(null);
+      await supabase.auth.signOut();
+      return null;
+    } catch (e: any) {
+      return e.message || "Failed to delete account";
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -163,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        deleteAccount,
       }}
     >
       {children}

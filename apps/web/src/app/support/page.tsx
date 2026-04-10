@@ -101,17 +101,18 @@ export default function SupportPage() {
               question="How do I delete my account?"
               answer={
                 <>
-                  Email{" "}
+                  When signed in, click &ldquo;delete account&rdquo; in the
+                  navigation bar. This will permanently remove your account and
+                  all associated data. You can also email{" "}
                   <a
-                    href="mailto:maneesh.gogineni@gmail.com"
+                    href="mailto:support@colorcram.app"
                     className="underline underline-offset-2 transition-colors duration-200 hover:text-white"
                     style={{ color: "var(--fg)" }}
                   >
-                    maneesh.gogineni@gmail.com
+                    support@colorcram.app
                   </a>{" "}
                   with the subject &ldquo;Account Deletion Request&rdquo; and
-                  include your account email. We&apos;ll process it within 30
-                  days.
+                  we&apos;ll process it within 30 days.
                 </>
               }
             />
@@ -139,7 +140,7 @@ export default function SupportPage() {
             We&apos;ll do our best to respond within 48 hours.
           </p>
           <a
-            href="mailto:maneesh.gogineni@gmail.com"
+            href="mailto:support@colorcram.app"
             className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200 hover:opacity-80"
             style={{
               backgroundColor: "var(--fg)",

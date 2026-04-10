@@ -7,7 +7,6 @@ import React, {
 } from "react";
 import { Platform } from "react-native";
 import type { User } from "@supabase/supabase-js";
-import * as AppleAuthentication from "expo-apple-authentication";
 import * as Crypto from "expo-crypto";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
@@ -35,6 +34,7 @@ interface AuthContextValue {
   signInWithApple: () => Promise<string | null>;
   signInWithGoogle: () => Promise<string | null>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -46,6 +46,7 @@ const AuthContext = createContext<AuthContextValue>({
   signInWithApple: async () => null,
   signInWithGoogle: async () => null,
   signOut: async () => {},
+  deleteAccount: async () => null,
 });
 
 export function useAuth() {
@@ -120,6 +121,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      const AppleAuthentication = require("expo-apple-authentication");
+
       const rawNonce = Crypto.randomUUID();
       const hashedNonce = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
@@ -228,9 +231,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
   }, []);
 
+  const deleteAccount = useCallback(async (): Promise<string | null> => {
+    try {
+      const { error } = await supabase.rpc("delete_own_account");
+      if (error) return error.message;
+      // Clear local state after successful deletion
+      setUser(null);
+      setProfile(null);
+      await supabase.auth.signOut();
+      return null;
+    } catch (e: any) {
+      return e.message || "Failed to delete account";
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signIn, signUp, signInWithApple, signInWithGoogle, signOut }}
+      value={{ user, profile, loading, signIn, signUp, signInWithApple, signInWithGoogle, signOut, deleteAccount }}
     >
       {children}
     </AuthContext.Provider>
