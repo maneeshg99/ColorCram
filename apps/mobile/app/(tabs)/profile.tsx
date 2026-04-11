@@ -38,10 +38,10 @@ export default function ProfileTab() {
       return;
     }
     setStatsLoading(true);
-    supabase
+    (supabase
       .from("game_scores")
       .select("mode, difficulty, avg_score")
-      .eq("user_id", user.id)
+      .eq("user_id", user.id) as unknown as Promise<{ data: any[] | null }>)
       .then(({ data }) => {
         if (!data) {
           setStatsLoading(false);
@@ -69,6 +69,9 @@ export default function ProfileTab() {
         );
         result.sort((a, b) => b.best_avg_score - a.best_avg_score);
         setStats(result);
+        setStatsLoading(false);
+      })
+      .catch(() => {
         setStatsLoading(false);
       });
   }, [user]);

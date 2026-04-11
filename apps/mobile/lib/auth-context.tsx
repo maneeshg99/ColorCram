@@ -59,11 +59,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("id, username, avatar_url, role")
       .eq("id", userId)
       .single();
+    if (error) {
+      if (error.code === "PGRST116") {
+        // Profile doesn't exist — account was deleted but session lingers
+        setProfile(null);
+        setUser(null);
+        await supabase.auth.signOut();
+      }
+      return;
+    }
     if (data) setProfile(data);
   }, []);
 
