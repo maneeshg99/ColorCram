@@ -67,17 +67,33 @@ export default {
       responseHeaders.set(key, value);
     }
 
-    // Rewrite Location header on redirects so the browser stays on the proxy
+    // Rewrite Location header on redirects — but only when the redirect
+    // target itself is the Supabase host.  Don't rewrite redirects to
+    // external OAuth providers (Google, Apple, etc.) because the
+    // redirect_uri query param inside those URLs must stay as the real
+    // Supabase callback URL that's registered in the provider's console.
     if (
       upstreamResponse.status >= 300 &&
       upstreamResponse.status < 400 &&
       responseHeaders.has("Location")
     ) {
       const location = responseHeaders.get("Location")!;
-      responseHeaders.set(
-        "Location",
-        location.replace(env.SUPABASE_HOST, PROXY_HOST),
-      );
+      try {
+        const locUrl = new URL(location);
+        if (locUrl.hostname === env.SUPABASE_HOST) {
+          responseHeaders.set(
+            "Location",
+            location.replaceAll(env.SUPABASE_HOST, PROXY_HOST),
+          );
+        }
+        // External redirects (Google, Apple OAuth) are left untouched
+      } catch {
+        // If Location isn't a valid URL, do a simple replace as fallback
+        responseHeaders.set(
+          "Location",
+          location.replaceAll(env.SUPABASE_HOST, PROXY_HOST),
+        );
+      }
     }
 
     return new Response(upstreamResponse.body, {
