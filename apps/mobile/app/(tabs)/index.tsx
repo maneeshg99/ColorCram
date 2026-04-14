@@ -108,6 +108,19 @@ export default function PlayTab() {
 
       </ScrollView>
 
+      {/* How to Play */}
+      <Pressable
+        onPress={() => router.push("/onboarding" as any)}
+        style={({ pressed }) => [
+          styles.howToPlayButton,
+          pressed && { opacity: 0.5 },
+        ]}
+      >
+        <Text style={[styles.howToPlayText, { color: c.fgSubtle }]}>
+          How to Play
+        </Text>
+      </Pressable>
+
       {/* Version — bottom left corner */}
       <Text style={[styles.versionText, { color: c.fgSubtle }]}>
         v{APP_VERSION}
@@ -160,6 +173,19 @@ const styles = StyleSheet.create({
   modeDesc: {
     fontSize: 14,
     marginTop: 3,
+  },
+  howToPlayButton: {
+    position: "absolute",
+    bottom: 30,
+    alignSelf: "center",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  howToPlayText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   versionText: {
     position: "absolute",

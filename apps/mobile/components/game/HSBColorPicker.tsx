@@ -114,13 +114,13 @@ export function HSBColorPicker({ value, onChange, rightContent }: HSBColorPicker
         <View style={[styles.previewCircle, { backgroundColor: hex }]} />
         <View style={styles.topRowRight}>
           <Text style={styles.previewHsb}>
-            <Text style={styles.hsbLabel}>H: </Text>{Math.round(value.h)}°
+            <Text style={styles.hsbLabel}>H: </Text>{String(Math.round(value.h)).padStart(3, " ")}°
           </Text>
           <Text style={styles.previewHsb}>
-            <Text style={styles.hsbLabel}>S: </Text>{Math.round(value.s)}%
+            <Text style={styles.hsbLabel}>S: </Text>{String(Math.round(value.s)).padStart(3, " ")}%
           </Text>
           <Text style={styles.previewHsb}>
-            <Text style={styles.hsbLabel}>B: </Text>{Math.round(value.b)}%
+            <Text style={styles.hsbLabel}>B: </Text>{String(Math.round(value.b)).padStart(3, " ")}%
           </Text>
           {rightContent}
         </View>
@@ -212,10 +212,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
+    alignSelf: "stretch",
+    justifyContent: "center",
   },
   topRowRight: {
     alignItems: "flex-start",
     gap: 4,
+    minWidth: 80,
   },
   previewCircle: {
     width: 144,
