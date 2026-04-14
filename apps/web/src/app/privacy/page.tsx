@@ -207,8 +207,7 @@ export default function PrivacyPolicyPage() {
 
           <Section number="11" title="Contact">
             <p>Questions about this Privacy Policy? Reach out:</p>
-            <div className="mt-2 space-y-1">
-              <p className="text-white font-semibold">Maneesh Gogineni</p>
+            <div className="mt-2">
               <p>
                 <a
                   href="mailto:support@colorcram.app"
