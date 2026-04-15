@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/Button";
 import { getSupabase } from "@/lib/supabase";
+import { validatePassword } from "@colorcram-v2/types";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -24,8 +25,10 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 8) {
-      setErrorMsg("Password must be at least 8 characters");
+    setErrorMsg("");
+    const pwCheck = validatePassword(password);
+    if (!pwCheck.valid) {
+      setErrorMsg(pwCheck.error ?? "Invalid password");
       return;
     }
     setStatus("loading");

@@ -35,6 +35,7 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<string | null>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<string | null>;
+  resetPassword: (email: string) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -47,6 +48,7 @@ const AuthContext = createContext<AuthContextValue>({
   signInWithGoogle: async () => null,
   signOut: async () => {},
   deleteAccount: async () => null,
+  resetPassword: async () => null,
 });
 
 export function useAuth() {
@@ -254,9 +256,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const resetPassword = useCallback(
+    async (email: string): Promise<string | null> => {
+      try {
+        // Mobile reset flow uses the web reset page as the redirect target.
+        // Email link opens the user's mobile browser; they set a new password
+        // there, then come back to the app and sign in.
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: "https://colorcram.app/auth/reset-password",
+        });
+        // Always return success regardless of whether the email exists,
+        // to prevent account enumeration. UI shows generic success message.
+        if (error && __DEV__) {
+          console.warn("resetPasswordForEmail error:", error.message);
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
+
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signIn, signUp, signInWithApple, signInWithGoogle, signOut, deleteAccount }}
+      value={{
+        user,
+        profile,
+        loading,
+        signIn,
+        signUp,
+        signInWithApple,
+        signInWithGoogle,
+        signOut,
+        deleteAccount,
+        resetPassword,
+      }}
     >
       {children}
     </AuthContext.Provider>

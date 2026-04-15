@@ -32,6 +32,7 @@ interface AuthContextValue {
   ) => Promise<string | null>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<string | null>;
+  resetPassword: (email: string) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -44,6 +45,7 @@ const AuthContext = createContext<AuthContextValue>({
   signUp: async () => null,
   signOut: async () => {},
   deleteAccount: async () => null,
+  resetPassword: async () => null,
 });
 
 export function useAuth() {
@@ -176,6 +178,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const resetPassword = useCallback(
+    async (email: string): Promise<string | null> => {
+      const emailResult = validateEmail(sanitizeInput(email));
+      if (!emailResult.valid) return emailResult.error ?? "Invalid email";
+
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        sanitizeInput(email),
+        {
+          redirectTo: `${window.location.origin}/auth/reset-password`,
+        }
+      );
+      // We always return null (success) regardless of whether the email exists,
+      // so we don't leak account enumeration. The UI shows a generic
+      // "if an account exists, we've sent a reset link" message.
+      if (error && process.env.NODE_ENV === "development") {
+        console.warn("resetPasswordForEmail error:", error.message);
+      }
+      return null;
+    },
+    []
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -188,6 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signOut,
         deleteAccount,
+        resetPassword,
       }}
     >
       {children}

@@ -28,10 +28,10 @@ import {
 
 export default function AuthModal() {
   const router = useRouter();
-  const { signIn, signUp, signInWithApple, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithApple, signInWithGoogle, resetPassword } = useAuth();
   const c = Colors.dark;
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -39,11 +39,28 @@ export default function AuthModal() {
   const [loading, setLoading] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [resetSent, setResetSent] = useState(false);
 
   const handleSubmit = async () => {
     setError(null);
 
-    // Brute-force protection: lock out after 5 consecutive failures
+    // Validate email — required for all modes
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.error!);
+      return;
+    }
+
+    // Forgot password flow doesn't need lockout (Supabase handles server-side rate limit)
+    if (mode === "forgot") {
+      setLoading(true);
+      await resetPassword(sanitizeInput(email));
+      setLoading(false);
+      setResetSent(true);
+      return;
+    }
+
+    // Brute-force protection: lock out after 10 consecutive failures (sign in/up)
     if (lockedUntil && Date.now() < lockedUntil) {
       const secondsLeft = Math.ceil((lockedUntil - Date.now()) / 1000);
       setError(`Too many failed attempts. Try again in ${secondsLeft}s.`);
@@ -52,13 +69,6 @@ export default function AuthModal() {
     if (lockedUntil && Date.now() >= lockedUntil) {
       setLockedUntil(null);
       setFailedAttempts(0);
-    }
-
-    // Validate inputs
-    const emailCheck = validateEmail(email);
-    if (!emailCheck.valid) {
-      setError(emailCheck.error!);
-      return;
     }
 
     const pwCheck = validatePassword(password);
@@ -88,7 +98,7 @@ export default function AuthModal() {
     if (err) {
       const newCount = failedAttempts + 1;
       setFailedAttempts(newCount);
-      if (newCount >= 5) {
+      if (newCount >= 10) {
         setLockedUntil(Date.now() + 30000);
         setError("Too many failed attempts. Try again in 30s.");
       } else {
@@ -129,120 +139,216 @@ export default function AuthModal() {
         </Pressable>
 
         <Text style={[styles.title, { color: c.fg }]}>
-          {mode === "signin" ? "Sign In" : "Create Account"}
+          {mode === "signin"
+            ? "Sign In"
+            : mode === "signup"
+            ? "Create Account"
+            : "Reset Password"}
         </Text>
 
-        {/* Apple Sign In button (iOS only, requires native module) */}
-        {Platform.OS === "ios" && AppleAuthentication && (
-          <AppleAuthentication.AppleAuthenticationButton
-            buttonType={
-              mode === "signin"
-                ? AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
-                : AppleAuthentication.AppleAuthenticationButtonType.SIGN_UP
-            }
-            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
-            cornerRadius={10}
-            style={styles.appleBtn}
-            onPress={handleAppleSignIn}
-          />
-        )}
+        {/* Forgot password — success state */}
+        {mode === "forgot" && resetSent ? (
+          <>
+            <Text style={[styles.successText, { color: c.fgMuted }]}>
+              If an account exists for that email, we&apos;ve sent a reset link.
+              Check your inbox and follow the link to set a new password.
+            </Text>
+            <Pressable
+              onPress={() => {
+                setMode("signin");
+                setResetSent(false);
+                setError(null);
+              }}
+              style={[styles.submitBtn, { backgroundColor: c.accent }]}
+            >
+              <Text style={[styles.submitBtnText, { color: c.bg }]}>
+                Back to Sign In
+              </Text>
+            </Pressable>
+          </>
+        ) : mode === "forgot" ? (
+          <>
+            <Text style={[styles.helperText, { color: c.fgMuted }]}>
+              Enter your email and we&apos;ll send you a link to reset your password.
+            </Text>
 
-        {/* Google Sign In button (all platforms) */}
-        <Pressable
-          onPress={async () => {
-            setError(null);
-            setLoading(true);
-            const err = await signInWithGoogle();
-            setLoading(false);
-            if (err) setError(err);
-            else router.back();
-          }}
-          style={[styles.googleBtn, { borderColor: c.border }]}
-        >
-          <Text style={[styles.googleBtnText, { color: c.fg }]}>
-            Continue with Google
-          </Text>
-        </Pressable>
-
-        <View style={styles.dividerRow}>
-          <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
-          <Text style={[styles.dividerText, { color: c.fgMuted }]}>or</Text>
-          <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
-        </View>
-
-        {mode === "signup" && (
-          <View>
             <TextInput
               style={[styles.input, { color: c.fg, borderColor: c.border }]}
-              placeholder="Username"
+              placeholder="Email"
               placeholderTextColor={c.fgMuted}
-              value={username}
-              onChangeText={setUsername}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              maxLength={24}
+              maxLength={254}
             />
-            <Text style={[styles.hint, { color: c.fgMuted }]}>
-              2-24 characters, letters, numbers, underscores
-            </Text>
-          </View>
+
+            {error && <Text style={styles.error}>{error}</Text>}
+
+            <Pressable
+              onPress={handleSubmit}
+              disabled={loading}
+              style={[
+                styles.submitBtn,
+                { backgroundColor: c.accent, opacity: loading ? 0.7 : 1 },
+              ]}
+            >
+              {loading ? (
+                <ActivityIndicator color={c.bg} />
+              ) : (
+                <Text style={[styles.submitBtnText, { color: c.bg }]}>
+                  Send Reset Link
+                </Text>
+              )}
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setMode("signin");
+                setError(null);
+              }}
+            >
+              <Text style={[styles.switchText, { color: c.fgMuted }]}>
+                ← Back to Sign In
+              </Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            {/* Apple Sign In button (iOS only, requires native module) */}
+            {Platform.OS === "ios" && AppleAuthentication && (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={
+                  mode === "signin"
+                    ? AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
+                    : AppleAuthentication.AppleAuthenticationButtonType.SIGN_UP
+                }
+                buttonStyle={
+                  AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                }
+                cornerRadius={10}
+                style={styles.appleBtn}
+                onPress={handleAppleSignIn}
+              />
+            )}
+
+            {/* Google Sign In button (all platforms) */}
+            <Pressable
+              onPress={async () => {
+                setError(null);
+                setLoading(true);
+                const err = await signInWithGoogle();
+                setLoading(false);
+                if (err) setError(err);
+                else router.back();
+              }}
+              style={[styles.googleBtn, { borderColor: c.border }]}
+            >
+              <Text style={[styles.googleBtnText, { color: c.fg }]}>
+                Continue with Google
+              </Text>
+            </Pressable>
+
+            <View style={styles.dividerRow}>
+              <View
+                style={[styles.dividerLine, { backgroundColor: c.border }]}
+              />
+              <Text style={[styles.dividerText, { color: c.fgMuted }]}>
+                or
+              </Text>
+              <View
+                style={[styles.dividerLine, { backgroundColor: c.border }]}
+              />
+            </View>
+
+            {mode === "signup" && (
+              <View>
+                <TextInput
+                  style={[styles.input, { color: c.fg, borderColor: c.border }]}
+                  placeholder="Username"
+                  placeholderTextColor={c.fgMuted}
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={24}
+                />
+                <Text style={[styles.hint, { color: c.fgMuted }]}>
+                  2-24 characters, letters, numbers, underscores
+                </Text>
+              </View>
+            )}
+
+            <TextInput
+              style={[styles.input, { color: c.fg, borderColor: c.border }]}
+              placeholder="Email"
+              placeholderTextColor={c.fgMuted}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              maxLength={254}
+            />
+
+            <TextInput
+              style={[styles.input, { color: c.fg, borderColor: c.border }]}
+              placeholder="Password"
+              placeholderTextColor={c.fgMuted}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              maxLength={128}
+            />
+
+            {error && <Text style={styles.error}>{error}</Text>}
+
+            <Pressable
+              onPress={handleSubmit}
+              disabled={loading}
+              style={[
+                styles.submitBtn,
+                { backgroundColor: c.accent, opacity: loading ? 0.7 : 1 },
+              ]}
+            >
+              {loading ? (
+                <ActivityIndicator color={c.bg} />
+              ) : (
+                <Text style={[styles.submitBtnText, { color: c.bg }]}>
+                  {mode === "signin" ? "Sign In" : "Create Account"}
+                </Text>
+              )}
+            </Pressable>
+
+            {mode === "signin" && (
+              <Pressable
+                onPress={() => {
+                  setMode("forgot");
+                  setError(null);
+                  setPassword("");
+                }}
+              >
+                <Text style={[styles.switchText, { color: c.fgMuted }]}>
+                  Forgot password?
+                </Text>
+              </Pressable>
+            )}
+
+            <Pressable
+              onPress={() => {
+                setMode(mode === "signin" ? "signup" : "signin");
+                setError(null);
+              }}
+            >
+              <Text style={[styles.switchText, { color: c.fgMuted }]}>
+                {mode === "signin"
+                  ? "Don't have an account? Sign Up"
+                  : "Already have an account? Sign In"}
+              </Text>
+            </Pressable>
+          </>
         )}
-
-        <TextInput
-          style={[styles.input, { color: c.fg, borderColor: c.border }]}
-          placeholder="Email"
-          placeholderTextColor={c.fgMuted}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          maxLength={254}
-        />
-
-        <TextInput
-          style={[styles.input, { color: c.fg, borderColor: c.border }]}
-          placeholder="Password"
-          placeholderTextColor={c.fgMuted}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          maxLength={128}
-        />
-
-        {error && (
-          <Text style={styles.error}>{error}</Text>
-        )}
-
-        <Pressable
-          onPress={handleSubmit}
-          disabled={loading}
-          style={[
-            styles.submitBtn,
-            { backgroundColor: c.accent, opacity: loading ? 0.7 : 1 },
-          ]}
-        >
-          {loading ? (
-            <ActivityIndicator color={c.bg} />
-          ) : (
-            <Text style={[styles.submitBtnText, { color: c.bg }]}>
-              {mode === "signin" ? "Sign In" : "Create Account"}
-            </Text>
-          )}
-        </Pressable>
-
-        <Pressable
-          onPress={() => {
-            setMode(mode === "signin" ? "signup" : "signin");
-            setError(null);
-          }}
-        >
-          <Text style={[styles.switchText, { color: c.fgMuted }]}>
-            {mode === "signin"
-              ? "Don't have an account? Sign Up"
-              : "Already have an account? Sign In"}
-          </Text>
-        </Pressable>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -323,4 +429,16 @@ const styles = StyleSheet.create({
   },
   submitBtnText: { fontSize: 16, fontWeight: "700" },
   switchText: { fontSize: 13, textAlign: "center", marginTop: 4 },
+  helperText: {
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  successText: {
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 22,
+    marginVertical: 12,
+  },
 });
