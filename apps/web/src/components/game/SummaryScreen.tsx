@@ -51,13 +51,11 @@ export function SummaryScreen({
   const [shareStatus, setShareStatus] = useState<"idle" | "sharing" | "copied">("idle");
 
   const handleShare = useCallback(async () => {
-    const base = typeof window !== "undefined" ? window.location.origin : "https://colorcram.app";
-    const text = `I scored ${avgScore}% on ColorCram ${mode}. Can you beat it? ${base}`;
-    await navigator.clipboard.writeText(text).catch(() => {});
+    await navigator.clipboard.writeText("https://colorcram.app").catch(() => {});
     setShareStatus("copied");
     setTimeout(() => setShareStatus("idle"), 2500);
     onShare?.();
-  }, [mode, avgScore, onShare]);
+  }, [onShare]);
 
   const rounds = isGradient && results.gradientRounds
     ? results.gradientRounds

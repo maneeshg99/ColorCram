@@ -7,6 +7,7 @@ import {
   ScrollView,
   Pressable,
   Modal,
+  Share,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -380,6 +381,17 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
     }, 50);
   }, [mode, difficulty, seed]);
 
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({
+        message: "https://colorcram.app",
+        url: "https://colorcram.app",
+      });
+    } catch {
+      // User cancelled or share failed silently — no UI feedback needed
+    }
+  }, []);
+
   const handleExit = useCallback(() => {
     setShowExitModal(false);
     router.back();
@@ -712,6 +724,11 @@ export function GameBoard({ mode, difficulty, seed }: GameBoardProps) {
 
           <View style={styles.actions}>
             <Button title="Play Again" onPress={handlePlayAgain} />
+            <Button
+              title="Share Result"
+              variant="secondary"
+              onPress={handleShare}
+            />
             <Button
               title="Back to Menu"
               variant="secondary"

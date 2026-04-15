@@ -57,6 +57,6 @@ export async function createShareLink(
 }
 
 export function getShareUrl(shareId: string): string {
-  const base = typeof window !== "undefined" ? window.location.origin : "https://colorcram.com";
+  const base = typeof window !== "undefined" ? window.location.origin : "https://colorcram.app";
   return `${base}/challenge/${shareId}`;
 }

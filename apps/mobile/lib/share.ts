@@ -56,5 +56,5 @@ export async function createShareLink(
 }
 
 export function getShareUrl(shareId: string): string {
-  return `https://colorcram.com/challenge/${shareId}`;
+  return `https://colorcram.app/challenge/${shareId}`;
 }
