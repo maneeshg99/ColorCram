@@ -11,6 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/lib/auth-context";
 import { fetchLeaderboard, type LeaderboardRow } from "@/lib/leaderboard";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Colors } from "@/constants/theme";
 import type { GameMode } from "@colorcram-v2/types";
 
@@ -31,14 +33,16 @@ export default function LeaderboardTab() {
   const [entries, setEntries] = useState<LeaderboardRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const activeTab = TABS.find((t) => t.id === selectedTab)!;
 
   const load = useCallback(async () => {
     setLoading(true);
     // For now the RPC only filters by mode; we'll use that
-    const data = await fetchLeaderboard(activeTab.mode);
-    setEntries(data);
+    const { rows, error: fetchError } = await fetchLeaderboard(activeTab.mode);
+    setEntries(rows);
+    setError(fetchError);
     setLoading(false);
   }, [activeTab.mode]);
 
@@ -48,8 +52,9 @@ export default function LeaderboardTab() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    const data = await fetchLeaderboard(activeTab.mode);
-    setEntries(data);
+    const { rows, error: fetchError } = await fetchLeaderboard(activeTab.mode);
+    setEntries(rows);
+    setError(fetchError);
     setRefreshing(false);
   }, [activeTab.mode]);
 
@@ -90,13 +95,17 @@ export default function LeaderboardTab() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={c.fgMuted} />
         </View>
+      ) : error ? (
+        <ErrorState
+          title="Couldn't load leaderboard"
+          message="Check your connection and try again."
+          onRetry={load}
+        />
       ) : entries.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyTitle, { color: c.fg }]}>No scores yet</Text>
-          <Text style={[styles.emptySubtitle, { color: c.fgMuted }]}>
-            Be the first to play!
-          </Text>
-        </View>
+        <EmptyState
+          title="No scores yet"
+          message="Be the first to set a high score!"
+        />
       ) : (
         <ScrollView
           style={styles.list}

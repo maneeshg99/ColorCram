@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Colors, getScoreColor } from "@/constants/theme";
 
 interface GameStat {
@@ -31,50 +33,66 @@ export default function ProfileTab() {
 
   const [stats, setStats] = useState<GameStat[]>([]);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadStats = useCallback(async () => {
     if (!user) {
       setStats([]);
+      setStatsError(null);
       return;
     }
     setStatsLoading(true);
-    (supabase
-      .from("game_scores")
-      .select("mode, difficulty, avg_score")
-      .eq("user_id", user.id) as unknown as Promise<{ data: any[] | null }>)
-      .then(({ data }) => {
-        if (!data) {
-          setStatsLoading(false);
-          return;
-        }
-        // Group by mode+difficulty
-        const grouped: Record<string, { scores: number[]; count: number }> = {};
-        data.forEach((row: any) => {
-          const key = `${row.mode}-${row.difficulty}`;
-          if (!grouped[key]) grouped[key] = { scores: [], count: 0 };
-          grouped[key].scores.push(row.avg_score);
-          grouped[key].count++;
-        });
+    setStatsError(null);
+    try {
+      const { data, error } = (await (supabase
+        .from("game_scores")
+        .select("mode, difficulty, avg_score")
+        .eq("user_id", user.id) as unknown as Promise<{
+        data: any[] | null;
+        error: { message: string } | null;
+      }>));
 
-        const result: GameStat[] = Object.entries(grouped).map(
-          ([key, val]) => {
-            const [mode, difficulty] = key.split("-");
-            return {
-              mode,
-              difficulty,
-              games_played: val.count,
-              best_avg_score: Math.max(...val.scores),
-            };
-          }
-        );
-        result.sort((a, b) => b.best_avg_score - a.best_avg_score);
-        setStats(result);
+      if (error) {
+        setStatsError(error.message);
+        setStats([]);
         setStatsLoading(false);
-      })
-      .catch(() => {
-        setStatsLoading(false);
+        return;
+      }
+
+      const rows = data ?? [];
+      // Group by mode+difficulty
+      const grouped: Record<string, { scores: number[]; count: number }> = {};
+      rows.forEach((row: any) => {
+        const key = `${row.mode}-${row.difficulty}`;
+        if (!grouped[key]) grouped[key] = { scores: [], count: 0 };
+        grouped[key].scores.push(row.avg_score);
+        grouped[key].count++;
       });
+
+      const result: GameStat[] = Object.entries(grouped).map(
+        ([key, val]) => {
+          const [mode, difficulty] = key.split("-");
+          return {
+            mode,
+            difficulty,
+            games_played: val.count,
+            best_avg_score: Math.max(...val.scores),
+          };
+        }
+      );
+      result.sort((a, b) => b.best_avg_score - a.best_avg_score);
+      setStats(result);
+      setStatsLoading(false);
+    } catch (e: any) {
+      setStatsError(e?.message ?? "Couldn't load stats");
+      setStats([]);
+      setStatsLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
   // Not logged in
   if (!loading && !user) {
@@ -147,10 +165,21 @@ export default function ProfileTab() {
 
         {statsLoading ? (
           <ActivityIndicator color={c.fgMuted} style={{ marginTop: 16 }} />
+        ) : statsError ? (
+          <View style={styles.statsStateWrap}>
+            <ErrorState
+              title="Couldn't load stats"
+              message="Check your connection and try again."
+              onRetry={loadStats}
+            />
+          </View>
         ) : stats.length === 0 ? (
-          <Text style={[styles.emptyText, { color: c.fgMuted }]}>
-            No games played yet. Go play some rounds!
-          </Text>
+          <View style={styles.statsStateWrap}>
+            <EmptyState
+              title="No games played yet"
+              message="Go play some rounds!"
+            />
+          </View>
         ) : (
           <View style={styles.statsList}>
             {stats.map((stat) => (
@@ -283,6 +312,7 @@ const styles = StyleSheet.create({
   email: { fontSize: 12, marginTop: 2 },
   sectionTitle: { fontSize: 18, fontWeight: "800", marginBottom: 12 },
   emptyText: { fontSize: 14 },
+  statsStateWrap: { minHeight: 220 },
   statsList: { gap: 8 },
   statRow: {
     flexDirection: "row",

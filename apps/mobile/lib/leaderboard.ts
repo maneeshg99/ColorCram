@@ -13,14 +13,19 @@ export interface LeaderboardRow {
 export async function fetchLeaderboard(
   mode: GameMode,
   limit: number = 50
-): Promise<LeaderboardRow[]> {
-  const { data, error } = await supabase.rpc("get_leaderboard", {
-    p_mode: mode,
-    p_limit: limit,
-  });
-  if (error) {
-    console.error("Leaderboard fetch error:", error);
-    return [];
+): Promise<{ rows: LeaderboardRow[]; error: string | null }> {
+  try {
+    const { data, error } = await supabase.rpc("get_leaderboard", {
+      p_mode: mode,
+      p_limit: limit,
+    });
+    if (error) {
+      console.error("Leaderboard fetch error:", error);
+      return { rows: [], error: error.message };
+    }
+    return { rows: (data ?? []) as LeaderboardRow[], error: null };
+  } catch (e: any) {
+    console.error("Leaderboard fetch error:", e);
+    return { rows: [], error: e?.message ?? "Network error" };
   }
-  return (data ?? []) as LeaderboardRow[];
 }

@@ -206,11 +206,10 @@ function ScoreSubmitter({ results }: { results: GameResults }) {
   const { user } = useAuth();
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
-  const submitted = useRef(false);
+  const attempted = useRef(false);
 
-  useEffect(() => {
-    if (!user || submitted.current) return;
-    submitted.current = true;
+  const submit = useCallback(async () => {
+    if (!user) return;
     setStatus("submitting");
 
     const avgScore =
@@ -218,7 +217,7 @@ function ScoreSubmitter({ results }: { results: GameResults }) {
         ? Math.round(results.totalScore / results.rounds.length)
         : 0;
 
-    supabase
+    const { error } = await supabase
       .from("game_scores")
       .insert({
         user_id: user.id,
@@ -233,15 +232,20 @@ function ScoreSubmitter({ results }: { results: GameResults }) {
           results.mode === "daily"
             ? new Date().toISOString().split("T")[0]
             : null,
-      })
-      .then(({ error }) => {
-        if (error && error.code !== "23505") {
-          setStatus("error");
-        } else {
-          setStatus("submitted");
-        }
       });
-  }, [user]);
+
+    if (error && error.code !== "23505") {
+      setStatus("error");
+    } else {
+      setStatus("submitted");
+    }
+  }, [user, results]);
+
+  useEffect(() => {
+    if (!user || attempted.current) return;
+    attempted.current = true;
+    submit();
+  }, [user, submit]);
 
   const c = Colors.dark;
 
@@ -273,6 +277,19 @@ function ScoreSubmitter({ results }: { results: GameResults }) {
       <Text style={{ color: c.fgMuted, fontSize: 13, textAlign: "center" }}>
         Saving...
       </Text>
+    );
+  }
+  if (status === "error") {
+    return (
+      <Pressable
+        onPress={submit}
+        hitSlop={8}
+        style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+      >
+        <Text style={{ color: Colors.score.poor, fontSize: 13, textAlign: "center" }}>
+          Couldn't submit score. Tap to retry.
+        </Text>
+      </Pressable>
     );
   }
   return null;
