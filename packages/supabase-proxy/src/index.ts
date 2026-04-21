@@ -4,14 +4,34 @@ interface Env {
 
 const PROXY_HOST = "api.colorcram.app";
 
-function corsHeaders(origin: string | null): Record<string, string> {
+function corsHeaders(origin: string | null, requestedHeaders?: string | null): Record<string, string> {
+  // Allow the full set of headers that Supabase JS / PostgREST clients may send.
+  // When the browser sends Access-Control-Request-Headers on preflight, echo
+  // that back as well so we cover anything we didn't explicitly anticipate.
+  const defaultHeaders = [
+    "Authorization",
+    "apikey",
+    "x-client-info",
+    "content-type",
+    "range",
+    "x-supabase-api-version",
+    "accept-profile",
+    "content-profile",
+    "prefer",
+    "x-client-version",
+  ];
+  const merged = requestedHeaders
+    ? [...new Set([...defaultHeaders, ...requestedHeaders.split(",").map((h) => h.trim())])]
+    : defaultHeaders;
   return {
     "Access-Control-Allow-Origin": origin || "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers":
-      "Authorization, apikey, x-client-info, content-type, range, x-supabase-api-version",
+    "Access-Control-Allow-Headers": merged.join(", "),
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "86400",
+    "Access-Control-Expose-Headers":
+      "Content-Range, X-Total-Count, X-Supabase-Api-Version",
+    "Vary": "Origin",
   };
 }
 
@@ -22,12 +42,13 @@ export default {
     _ctx: ExecutionContext,
   ): Promise<Response> {
     const origin = request.headers.get("Origin");
+    const requestedHeaders = request.headers.get("Access-Control-Request-Headers");
 
     // Handle CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders(origin),
+        headers: corsHeaders(origin, requestedHeaders),
       });
     }
 
@@ -63,7 +84,7 @@ export default {
     const responseHeaders = new Headers(upstreamResponse.headers);
 
     // Add CORS headers
-    for (const [key, value] of Object.entries(corsHeaders(origin))) {
+    for (const [key, value] of Object.entries(corsHeaders(origin, requestedHeaders))) {
       responseHeaders.set(key, value);
     }
 
