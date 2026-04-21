@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useAuth } from "@/lib/auth-context";
@@ -8,6 +8,8 @@ import {
   fetchLeaderboard,
   type LeaderboardRow,
 } from "@/lib/leaderboard";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { GameMode } from "@colorcram-v2/types";
 
 const TABS: { id: GameMode; label: string }[] = [
@@ -28,19 +30,26 @@ export default function LeaderboardPage() {
   const [selectedMode, setSelectedMode] = useState<GameMode>("classic");
   const [entries, setEntries] = useState<LeaderboardRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  useEffect(() => {
+  const load = useCallback((mode: GameMode) => {
     setLoading(true);
-    fetchLeaderboard(selectedMode).then((data) => {
-      setEntries(data);
+    setFetchError(null);
+    fetchLeaderboard(mode).then(({ rows, error }) => {
+      setEntries(rows);
+      setFetchError(error);
       setLoading(false);
     });
-  }, [selectedMode]);
+  }, []);
+
+  useEffect(() => {
+    load(selectedMode);
+  }, [selectedMode, load]);
 
   return (
     <div
@@ -124,17 +133,17 @@ export default function LeaderboardPage() {
             />
           ))}
         </div>
+      ) : fetchError ? (
+        <ErrorState
+          title="Couldn't load leaderboard"
+          message="Check your connection and try again."
+          onRetry={() => load(selectedMode)}
+        />
       ) : entries.length === 0 ? (
-        <motion.div
-          style={{ paddingTop: 48 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <p style={{ color: "#adadad", fontSize: 14 }}>No scores yet.</p>
-          <p style={{ color: "#666", fontSize: 12, marginTop: 4 }}>
-            Be the first to play {selectedMode} mode.
-          </p>
-        </motion.div>
+        <EmptyState
+          title="No scores yet"
+          message={`Be the first to play ${selectedMode} mode.`}
+        />
       ) : (
         <motion.div
           key={selectedMode}

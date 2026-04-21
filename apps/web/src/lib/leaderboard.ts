@@ -10,18 +10,32 @@ export interface LeaderboardRow {
   games_played: number;
 }
 
+export interface LeaderboardResult {
+  rows: LeaderboardRow[];
+  error: string | null;
+}
+
 export async function fetchLeaderboard(
   mode: GameMode,
   limit: number = 50
-): Promise<LeaderboardRow[]> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase.rpc("get_leaderboard", {
-    p_mode: mode,
-    p_limit: limit,
-  });
-  if (error) {
-    console.error("Leaderboard fetch error:", error);
-    return [];
+): Promise<LeaderboardResult> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.rpc("get_leaderboard", {
+      p_mode: mode,
+      p_limit: limit,
+    });
+    if (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Leaderboard fetch error:", error);
+      }
+      return { rows: [], error: error.message ?? "Failed to load leaderboard" };
+    }
+    return { rows: (data ?? []) as LeaderboardRow[], error: null };
+  } catch (e: any) {
+    return {
+      rows: [],
+      error: e?.message ?? "Network error. Check your connection.",
+    };
   }
-  return (data ?? []) as LeaderboardRow[];
 }
