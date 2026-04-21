@@ -11,9 +11,37 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ColorCram",
+  metadataBase: new URL("https://colorcram.app"),
+  title: {
+    default: "ColorCram",
+    template: "%s | ColorCram",
+  },
   description:
     "Memorize a color. Recreate it from memory. Test your visual perception across four game modes.",
+  applicationName: "ColorCram",
+  keywords: [
+    "color game",
+    "memory game",
+    "color perception",
+    "color matching",
+    "color quiz",
+    "HSB picker",
+  ],
+  authors: [{ name: "ColorCram" }],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://colorcram.app",
+    siteName: "ColorCram",
+    title: "ColorCram",
+    description:
+      "Memorize a color. Recreate it from memory. Test your visual perception.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ColorCram",
+    description: "Memorize a color. Recreate it from memory.",
+  },
 };
 
 export default function RootLayout({
