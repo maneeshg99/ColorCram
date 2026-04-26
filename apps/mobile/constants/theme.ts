@@ -1,12 +1,14 @@
 export const Colors = {
   dark: {
-    bg: "#131313",
+    bg: "#0f0f11",
     fg: "#ffffff",
     fgMuted: "#adadad",
-    fgSubtle: "#666666",
-    surface: "#1f1f1f",
-    surfaceElevated: "#2a2a2a",
-    border: "#2a2a2a",
+    fgSubtle: "#888888",
+    fgFaint: "#555555",
+    surface: "#1a1a1d",
+    surfaceElevated: "#22222a",
+    border: "#2a2a30",
+    borderStrong: "#3a3a44",
     accent: "#ffffff",
   },
   light: {
