@@ -1,6 +1,6 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { Colors } from "@/constants/theme";
@@ -62,6 +62,7 @@ function RainbowRule() {
 
 export default function PlayTab() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const c = Colors.dark;
 
   return (
@@ -135,8 +136,8 @@ export default function PlayTab() {
         </View>
       </ScrollView>
 
-      {/* Footer */}
-      <View style={styles.footer}>
+      {/* Footer — sits above home indicator on Face ID iPhones */}
+      <View style={[styles.footer, { bottom: insets.bottom + 16 }]}>
         <Text style={[styles.versionText, { color: c.fgSubtle }]}>
           v{APP_VERSION}
         </Text>
@@ -232,10 +233,9 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
 
-  // Footer
+  // Footer (bottom is set dynamically with safe-area inset)
   footer: {
     position: "absolute",
-    bottom: 24,
     left: 24,
     right: 24,
     flexDirection: "row",

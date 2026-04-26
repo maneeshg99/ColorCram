@@ -11,7 +11,7 @@ import {
   Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { Colors, getScoreColor } from "@/constants/theme";
@@ -343,6 +343,7 @@ function Slide4({
 // --- Main Onboarding Screen ---
 export default function OnboardingScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [currentPage, setCurrentPage] = useState(0);
   const [demoActive, setDemoActive] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
@@ -380,8 +381,10 @@ export default function OnboardingScreen() {
       {currentPage < 3 && !demoActive && (
         <Pressable
           onPress={handleSkip}
+          hitSlop={16}
           style={({ pressed }) => [
             styles.skipButton,
+            { top: insets.top + 8 },
             pressed && { opacity: 0.5 },
           ]}
         >
@@ -627,10 +630,9 @@ const styles = StyleSheet.create({
     color: c.bg,
   },
 
-  // Skip button
+  // Skip button (top is set dynamically using safe-area insets)
   skipButton: {
     position: "absolute",
-    top: 8,
     right: 20,
     zIndex: 10,
     paddingVertical: 8,

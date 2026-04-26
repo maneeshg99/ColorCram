@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { useEffect, useRef } from "react";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { View, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -7,26 +7,22 @@ import { AuthProvider } from "@/lib/auth-context";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export default function RootLayout() {
-  const [isReady, setIsReady] = useState(false);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
   const router = useRouter();
-  const segments = useSegments();
+  const didCheck = useRef(false);
 
+  // Run once on mount: if the user hasn't seen onboarding, send them there.
+  // After this runs we never check again — onboarding's finishOnboarding()
+  // writes the flag and navigates to (tabs). If we kept checking on every
+  // segment change, the stale `hasSeenOnboarding` state would loop us back.
   useEffect(() => {
+    if (didCheck.current) return;
+    didCheck.current = true;
     AsyncStorage.getItem("hasSeenOnboarding").then((value) => {
-      setHasSeenOnboarding(value === "true");
-      setIsReady(true);
+      if (value !== "true") {
+        router.replace("/onboarding");
+      }
     });
-  }, []);
-
-  useEffect(() => {
-    if (!isReady) return;
-    // Only redirect if we haven't seen onboarding and we're not already on the onboarding screen
-    const onOnboarding = segments[0] === "onboarding";
-    if (!hasSeenOnboarding && !onOnboarding) {
-      router.replace("/onboarding");
-    }
-  }, [isReady, hasSeenOnboarding, segments, router]);
+  }, [router]);
 
   return (
     <ErrorBoundary>
