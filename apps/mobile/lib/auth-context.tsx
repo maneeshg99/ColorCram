@@ -8,11 +8,49 @@ import React, {
 import { Platform } from "react-native";
 import type { User } from "@supabase/supabase-js";
 import * as Crypto from "expo-crypto";
-import * as WebBrowser from "expo-web-browser";
-import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "./supabase";
 
-WebBrowser.maybeCompleteAuthSession();
+// Native Google Sign-In — lazily required because the native module
+// isn't present in Expo Go (only in EAS dev builds and production).
+let GoogleSignin:
+  | typeof import("@react-native-google-signin/google-signin").GoogleSignin
+  | null = null;
+let GoogleStatusCodes:
+  | typeof import("@react-native-google-signin/google-signin").statusCodes
+  | null = null;
+try {
+  const mod = require("@react-native-google-signin/google-signin");
+  GoogleSignin = mod.GoogleSignin;
+  GoogleStatusCodes = mod.statusCodes;
+} catch {
+  // Native module not installed — Google Sign-In button will be hidden
+}
+
+// Configure once at module load. Both client IDs come from Google Cloud
+// Console for the same OAuth project. The iOS client ID is needed to
+// initiate native sign-in. The web client ID is what Supabase has
+// configured under Auth → Providers → Google, and is used to verify
+// the ID token on Supabase's side via signInWithIdToken.
+const GOOGLE_WEB_CLIENT_ID =
+  "595175145400-0vbmd6cvua3a8fiin8uq8qnn3n33lpf0.apps.googleusercontent.com";
+// IMPORTANT: replace this placeholder with the iOS OAuth client ID
+// you created in Google Cloud Console (must match bundle id
+// com.colorcram.app). Without a real value, native sign-in fails with
+// "DEVELOPER_ERROR" before the account picker even opens.
+const GOOGLE_IOS_CLIENT_ID =
+  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? "";
+
+if (GoogleSignin && GOOGLE_IOS_CLIENT_ID) {
+  GoogleSignin.configure({
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    // Request the ID token (we hand it to Supabase). offlineAccess=false
+    // because we don't need the long-lived refresh token from Google;
+    // Supabase issues its own refresh token for our session.
+    offlineAccess: false,
+    scopes: ["profile", "email"],
+  });
+}
 
 interface Profile {
   id: string;
@@ -190,55 +228,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async (): Promise<string | null> => {
+    if (!GoogleSignin) {
+      return "Google Sign In requires the native module — install the dev build.";
+    }
+    if (!GOOGLE_IOS_CLIENT_ID) {
+      return "Google Sign In is not configured. Contact support.";
+    }
+
     try {
-      const redirectTo = makeRedirectUri();
+      // Make sure Google Play Services / native auth services are available
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          skipBrowserRedirect: true,
-        },
-      });
-
-      if (error || !data.url) {
-        return "Google Sign In failed. Please try again.";
-      }
-
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        redirectTo
-      );
-
-      if (result.type === "success") {
-        const url = new URL(result.url);
-        // Extract tokens from the URL fragment
-        const params = new URLSearchParams(url.hash.substring(1));
-        const accessToken = params.get("access_token");
-        const refreshToken = params.get("refresh_token");
-
-        if (accessToken && refreshToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (sessionError) return "Google Sign In failed. Please try again.";
-          return null;
-        }
-      }
-
-      if (result.type === "cancel" || result.type === "dismiss") {
+      // Native account picker sheet appears here. Returns a userInfo
+      // object with an idToken we hand to Supabase.
+      const userInfo = await GoogleSignin.signIn();
+      // SDK 16+ returns { type: "success" | "cancelled", data: { ... } }
+      if (userInfo.type === "cancelled") {
         return null;
       }
+      const idToken = userInfo.data?.idToken;
 
-      return "Google Sign In failed. Please try again.";
+      if (!idToken) {
+        return "Google Sign In failed — no identity token received.";
+      }
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: idToken,
+      });
+
+      if (error) return error.message;
+      return null;
     } catch (e: any) {
-      return "Google Sign In failed. Please try again.";
+      // statusCodes.SIGN_IN_CANCELLED is what older SDK versions throw
+      if (
+        GoogleStatusCodes &&
+        (e?.code === GoogleStatusCodes.SIGN_IN_CANCELLED ||
+          e?.code === "SIGN_IN_CANCELLED")
+      ) {
+        return null;
+      }
+      if (
+        GoogleStatusCodes &&
+        e?.code === GoogleStatusCodes.IN_PROGRESS
+      ) {
+        return null; // sign-in already in flight, ignore the duplicate tap
+      }
+      if (
+        GoogleStatusCodes &&
+        e?.code === GoogleStatusCodes.PLAY_SERVICES_NOT_AVAILABLE
+      ) {
+        // Misnamed status code — actually fires on iOS too if the Google
+        // SDK can't initialize. Use a platform-neutral message.
+        return "Google Sign In is unavailable. Please try again.";
+      }
+      if (__DEV__) {
+        console.warn("[signInWithGoogle]", e);
+      }
+      return e?.message ?? "Google Sign In failed. Please try again.";
     }
   }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    // Best-effort native Google sign-out so the next tap re-prompts
+    // the account picker (instead of silently re-using the cached one).
+    if (GoogleSignin) {
+      try {
+        await GoogleSignin.signOut();
+      } catch {
+        // Not signed in to Google or no native module — ignore.
+      }
+    }
     setProfile(null);
   }, []);
 
@@ -250,6 +311,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setProfile(null);
       await supabase.auth.signOut();
+      if (GoogleSignin) {
+        try {
+          await GoogleSignin.signOut();
+          // revokeAccess removes the OAuth grant on Google's side so the
+          // user gets the consent screen again next time, not just the
+          // picker. Important after a delete-account.
+          await GoogleSignin.revokeAccess();
+        } catch {
+          /* ignore */
+        }
+      }
       return null;
     } catch (e: any) {
       return e.message || "Failed to delete account";
