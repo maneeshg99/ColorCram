@@ -19,43 +19,72 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div
-      className="min-h-[100dvh] flex flex-col items-center justify-center px-8 gap-4 text-center"
-      style={{ backgroundColor: "var(--bg)", color: "var(--fg)" }}
+    <main
+      style={{
+        minHeight: "100dvh",
+        display: "grid",
+        placeItems: "center",
+        padding: "48px 24px",
+        position: "relative",
+        zIndex: 2,
+      }}
     >
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col items-center gap-4 max-w-md"
+        style={{
+          display: "grid",
+          gap: 16,
+          justifyItems: "start",
+          maxWidth: 520,
+        }}
       >
-        <h1
-          className="font-black tracking-tighter leading-none"
-          style={{ fontSize: "clamp(2.5rem, 7vw, 4rem)" }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span
+            style={{
+              height: 2,
+              width: 24,
+              background: "var(--rainbow)",
+              borderRadius: 999,
+            }}
+          />
+          <span className="cc-eyebrow">Error</span>
+        </div>
+        <h1 className="cc-display" style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)", margin: 0 }}>
           Something broke
         </h1>
-        <p className="text-sm leading-relaxed" style={{ color: "var(--fg-muted)" }}>
+        <p
+          style={{
+            fontSize: 15,
+            color: "var(--fg-muted)",
+            maxWidth: "48ch",
+            lineHeight: 1.55,
+          }}
+        >
           An unexpected error occurred. Try refreshing — if it keeps happening,
           reach out at{" "}
           <a
             href="mailto:support@colorcram.app"
-            className="underline underline-offset-2 hover:text-white transition-colors"
-            style={{ color: "var(--fg)" }}
+            style={{
+              color: "var(--fg)",
+              textDecoration: "underline",
+              textUnderlineOffset: 3,
+            }}
           >
             support@colorcram.app
           </a>
           .
         </p>
-        <div className="flex gap-3 mt-4">
+        <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
           <Button variant="primary" onClick={reset}>
-            Try Again
+            Try again
           </Button>
           <Link href="/">
-            <Button variant="secondary">Go Home</Button>
+            <Button variant="secondary">Back home</Button>
           </Link>
         </div>
       </motion.div>
-    </div>
+    </main>
   );
 }

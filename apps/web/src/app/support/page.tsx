@@ -48,25 +48,67 @@ export default function SupportPage() {
       }}
     >
       <div className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase mb-12 transition-colors duration-200"
-          style={{ color: "var(--fg-subtle)" }}
+        <div
+          className="flex items-center justify-between mb-16"
+          style={{
+            borderBottom: "1px solid var(--border)",
+            paddingBottom: 18,
+          }}
         >
-          <span>&larr;</span>
-          <span>Home</span>
-        </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 transition-colors duration-200"
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--fg-subtle)",
+            }}
+          >
+            <span>&larr;</span>
+            <span>Home</span>
+          </Link>
+          <Link
+            href="/"
+            aria-label="ColorCram home"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: 12,
+              fontWeight: 900,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            <span className="cc-rainbow-text">color</span>
+            <span style={{ color: "var(--fg)" }}>cram</span>
+          </Link>
+        </div>
 
-        <div className="mb-12">
+        <div className="mb-14">
+          <div className="flex items-center gap-3 mb-5">
+            <span
+              style={{
+                height: 2,
+                width: 22,
+                background: "var(--rainbow)",
+                borderRadius: 999,
+              }}
+            />
+            <span className="cc-eyebrow">Help</span>
+          </div>
           <h1
-            className="font-black tracking-tight mb-2"
-            style={{ fontSize: "var(--text-headline)" }}
+            className="cc-display mb-3"
+            style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)" }}
           >
             Support
           </h1>
           <p
-            className="text-sm font-bold tracking-wide"
-            style={{ color: "var(--fg-subtle)" }}
+            style={{
+              fontSize: 15,
+              color: "var(--fg-muted)",
+              maxWidth: "42ch",
+              lineHeight: 1.55,
+            }}
           >
             Need help with ColorCram? Check the FAQs below or reach out
             directly.

@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "motion/react";
 import { getSupabase } from "@/lib/supabase";
-import { RainbowRing } from "@/components/design-system/RainbowRing";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { Button } from "@/components/ui/Button";
 import { hsbToHex } from "@colorcram-v2/color-utils";
 
 interface SharedResult {
@@ -19,10 +20,10 @@ interface SharedResult {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 90) return "#14b861";
-  if (score >= 70) return "#ffe103";
-  if (score >= 40) return "#ff9500";
-  return "#ff3b3b";
+  if (score >= 90) return "#38d97a";
+  if (score >= 70) return "#f5c64b";
+  if (score >= 40) return "#ff8c42";
+  return "#ff5a5a";
 }
 
 function getRankText(avgScore: number): string {
@@ -54,7 +55,6 @@ export function ChallengeView({ id }: { id: string }) {
         .single();
 
       if (error) {
-        // PGRST116 = no rows returned (genuinely not found)
         if (error.code === "PGRST116") {
           setNotFound(true);
         } else {
@@ -78,31 +78,55 @@ export function ChallengeView({ id }: { id: string }) {
 
   if (loading) {
     return (
-      <div
+      <main
         style={{
-          height: "100dvh",
-          backgroundColor: "#131313",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          minHeight: "100dvh",
+          backgroundColor: "var(--bg)",
+          display: "grid",
+          placeItems: "center",
+          padding: "clamp(24px, 5vw, 48px)",
+          position: "relative",
+          zIndex: 2,
         }}
       >
-        <RainbowRing size={64} spinning>
-          <span style={{ fontSize: 10, color: "#adadad" }}>...</span>
-        </RainbowRing>
-      </div>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 440,
+            display: "grid",
+            gap: 16,
+          }}
+        >
+          <div
+            className="cc-pulse"
+            style={{ height: 14, width: 120, borderRadius: 4, background: "var(--surface)" }}
+          />
+          <div
+            className="cc-pulse"
+            style={{ height: 40, width: "70%", borderRadius: 6, background: "var(--surface)" }}
+          />
+          <div
+            className="cc-pulse"
+            style={{ height: 180, borderRadius: 16, background: "var(--surface)" }}
+          />
+          <div
+            className="cc-pulse"
+            style={{ height: 44, width: 160, borderRadius: 999, background: "var(--surface)" }}
+          />
+        </div>
+      </main>
     );
   }
 
   if (fetchError) {
     return (
-      <div
+      <main
         style={{
-          height: "100dvh",
-          backgroundColor: "#131313",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          minHeight: "100dvh",
+          display: "grid",
+          placeItems: "center",
+          position: "relative",
+          zIndex: 2,
         }}
       >
         <ErrorState
@@ -110,42 +134,36 @@ export function ChallengeView({ id }: { id: string }) {
           message="Check your connection and try again."
           onRetry={load}
         />
-      </div>
+      </main>
     );
   }
 
   if (notFound || !result) {
     return (
-      <div
+      <main
         style={{
-          height: "100dvh",
-          backgroundColor: "#131313",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
+          minHeight: "100dvh",
+          display: "grid",
+          placeItems: "center",
           gap: 16,
+          padding: 32,
+          position: "relative",
+          zIndex: 2,
         }}
       >
-        <span style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
-          Challenge not found
-        </span>
-        <button
-          onClick={() => router.push("/")}
-          style={{
-            background: "none",
-            border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: 20,
-            padding: "8px 24px",
-            fontSize: 14,
-            fontWeight: 600,
-            color: "#fff",
-            cursor: "pointer",
-          }}
-        >
-          Go Home
-        </button>
-      </div>
+        <div style={{ display: "grid", gap: 14, justifyItems: "center", textAlign: "center" }}>
+          <span className="cc-eyebrow">Challenge</span>
+          <h1 className="cc-headline" style={{ fontSize: "clamp(1.5rem, 4vw, 2.25rem)" }}>
+            This challenge doesn&apos;t exist
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--fg-subtle)", maxWidth: "38ch" }}>
+            It may have been removed, or the link was copied incorrectly.
+          </p>
+          <Button variant="primary" size="md" onClick={() => router.push("/")}>
+            Back home
+          </Button>
+        </div>
+      </main>
     );
   }
 
@@ -153,91 +171,88 @@ export function ChallengeView({ id }: { id: string }) {
   const rankText = getRankText(result.avg_score);
 
   return (
-    <div
+    <main
       style={{
         minHeight: "100dvh",
-        backgroundColor: "#131313",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
         padding: "clamp(24px, 5vw, 48px)",
-        textAlign: "center",
+        display: "grid",
+        placeItems: "center",
+        position: "relative",
+        zIndex: 2,
       }}
     >
-      <motion.div
+      <motion.article
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 16,
-          maxWidth: 440,
+          display: "grid",
+          gap: 24,
+          maxWidth: 480,
+          width: "100%",
         }}
       >
-        {/* Rainbow ring icon */}
-        <RainbowRing size={80} spinning>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-            <polygon points="6,3 20,12 6,21" />
-          </svg>
-        </RainbowRing>
+        {/* Eyebrow */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span
+            style={{
+              height: 2,
+              width: 22,
+              background: "var(--rainbow)",
+              borderRadius: 999,
+            }}
+          />
+          <span className="cc-eyebrow">Challenge</span>
+          <span
+            style={{ width: 1, height: 10, background: "var(--border-strong)" }}
+          />
+          <span
+            className="cc-eyebrow cc-mono"
+            style={{ color: "var(--fg-faint)" }}
+          >
+            {result.mode} · {result.difficulty}
+          </span>
+        </div>
 
-        {/* Challenge text */}
+        {/* Headline */}
         <h1
+          className="cc-display"
           style={{
-            fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
-            fontWeight: 900,
-            color: "#ffffff",
-            lineHeight: 1.2,
-            letterSpacing: "-0.02em",
+            fontSize: "clamp(2rem, 5.5vw, 3.25rem)",
             margin: 0,
           }}
         >
-          Someone challenged you
+          Someone thinks they can see color.
+          <span style={{ color: "var(--fg-muted)" }}> Can you beat them?</span>
         </h1>
-
-        <p
-          style={{
-            fontSize: 15,
-            color: "#adadad",
-            lineHeight: 1.6,
-            margin: 0,
-          }}
-        >
-          They scored{" "}
-          <span style={{ color: scoreColor, fontWeight: 800 }}>
-            {result.avg_score}%
-          </span>{" "}
-          on{" "}
-          <span style={{ color: "#fff", fontWeight: 600 }}>
-            {result.mode}
-          </span>{" "}
-          mode. Can you beat it?
-        </p>
 
         {/* Score card */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.15 }}
           style={{
-            backgroundColor: "#1f1f1f",
-            border: "1px solid #2a2a2a",
-            borderRadius: 16,
-            padding: "24px 32px",
-            width: "100%",
-            marginTop: 8,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 20,
+            padding: "28px 28px 32px",
+            position: "relative",
+            boxShadow: "var(--shadow-md), var(--shadow-inset)",
           }}
         >
           <div
+            className="cc-eyebrow"
+            style={{ marginBottom: 8, color: "var(--fg-subtle)" }}
+          >
+            They scored
+          </div>
+          <div
+            className="cc-display cc-tnum"
             style={{
-              fontSize: "clamp(2.5rem, 6vw, 4rem)",
-              fontWeight: 900,
+              fontSize: "clamp(3rem, 7vw, 5rem)",
               color: scoreColor,
-              lineHeight: 1,
-              textShadow: `0 0 40px ${scoreColor}30`,
+              textShadow: `0 0 40px ${scoreColor}33`,
+              lineHeight: 0.95,
             }}
           >
             {result.avg_score}%
@@ -245,9 +260,9 @@ export function ChallengeView({ id }: { id: string }) {
           <div
             style={{
               fontSize: 14,
-              color: "#adadad",
-              marginTop: 8,
               fontWeight: 500,
+              color: "var(--fg-muted)",
+              marginTop: 6,
             }}
           >
             {rankText} · {result.rounds_played} round
@@ -258,40 +273,38 @@ export function ChallengeView({ id }: { id: string }) {
           <div
             style={{
               display: "flex",
-              gap: 6,
-              justifyContent: "center",
-              marginTop: 16,
+              gap: 10,
+              marginTop: 24,
               flexWrap: "wrap",
             }}
           >
             {result.rounds_data.map((round: any, i: number) => {
               const isGrad = round.targetStart;
-              const targetColor = isGrad
-                ? hsbToHex(round.targetStart)
-                : hsbToHex(round.target);
               const rScore = round.score ?? 0;
               return (
                 <div
                   key={i}
                   style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 8,
-                    backgroundColor: targetColor,
-                    position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 6,
                   }}
                 >
-                  <span
+                  <div
                     style={{
-                      position: "absolute",
-                      bottom: -16,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      fontSize: 10,
-                      color: "#666",
-                      fontFamily: "monospace",
-                      whiteSpace: "nowrap",
+                      width: 34,
+                      height: 34,
+                      borderRadius: 8,
+                      background: isGrad
+                        ? `linear-gradient(135deg, ${hsbToHex(round.targetStart)}, ${hsbToHex(round.targetEnd)})`
+                        : hsbToHex(round.target),
+                      boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.08)",
                     }}
+                  />
+                  <span
+                    className="cc-mono cc-tnum"
+                    style={{ fontSize: 10, color: "var(--fg-faint)" }}
                   >
                     {rScore}%
                   </span>
@@ -301,44 +314,39 @@ export function ChallengeView({ id }: { id: string }) {
           </div>
         </motion.div>
 
-        {/* Play button */}
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
+        {/* Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          onClick={() => router.push("/play/classic")}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          style={{
-            marginTop: 16,
-            background: "#ffffff",
-            border: "none",
-            borderRadius: 12,
-            padding: "14px 40px",
-            fontSize: 16,
-            fontWeight: 700,
-            color: "#131313",
-            cursor: "pointer",
-          }}
+          transition={{ delay: 0.3 }}
+          style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}
         >
-          Beat Their Score
-        </motion.button>
-
-        <button
-          onClick={() => router.push("/")}
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: 14,
-            fontWeight: 500,
-            color: "#adadad",
-            cursor: "pointer",
-            padding: "8px 0",
-          }}
-        >
-          or just play for fun
-        </button>
-      </motion.div>
-    </div>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => router.push("/play/classic")}
+          >
+            Beat their score
+          </Button>
+          <Link
+            href="/"
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "var(--fg-subtle)",
+              transition: "color var(--duration-fast) var(--ease-out)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--fg)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--fg-subtle)";
+            }}
+          >
+            or just play for fun
+          </Link>
+        </motion.div>
+      </motion.article>
+    </main>
   );
 }

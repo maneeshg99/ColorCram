@@ -13,16 +13,16 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import type { GameMode } from "@colorcram-v2/types";
 
 const TABS: { id: GameMode; label: string }[] = [
-  { id: "classic", label: "Easy" },
+  { id: "classic", label: "Classic" },
   { id: "daily", label: "Daily" },
   { id: "blitz", label: "Blitz" },
   { id: "gradient", label: "Gradient" },
 ];
 
 const RANK_COLORS: Record<number, string> = {
-  1: "#d4a853",
-  2: "#a8a8a8",
-  3: "#b87333",
+  1: "#e9c767",
+  2: "#b8b8c0",
+  3: "#c07c4a",
 };
 
 export default function LeaderboardPage() {
@@ -32,7 +32,6 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -52,83 +51,185 @@ export default function LeaderboardPage() {
   }, [selectedMode, load]);
 
   return (
-    <div
+    <main
       style={{
         minHeight: "100dvh",
-        maxWidth: 600,
+        maxWidth: 680,
         margin: "0 auto",
-        padding: "0 clamp(24px, 5vw, 48px)",
+        padding: "0 clamp(20px, 5vw, 48px) 80px",
+        position: "relative",
+        zIndex: 2,
       }}
     >
-      {/* Nav bar — matches home page */}
+      {/* Nav */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "16px 0",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          marginBottom: 32,
+          padding: "18px 0 16px",
+          borderBottom: "1px solid var(--border)",
+          marginBottom: 36,
         }}
       >
         <Link
           href="/"
-          className="text-sm text-[#888] hover:text-white transition-colors duration-200"
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--fg-subtle)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            transition: "color var(--duration-fast) var(--ease-out)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = "var(--fg)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = "var(--fg-subtle)";
+          }}
         >
-          &larr; Home
+          <span aria-hidden="true">&larr;</span>
+          <span>Home</span>
+        </Link>
+
+        <Link
+          href="/"
+          aria-label="ColorCram home"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: 12,
+            fontWeight: 900,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          <span className="cc-rainbow-text">color</span>
+          <span style={{ color: "var(--fg)" }}>cram</span>
         </Link>
       </div>
 
-      {/* Title */}
-      <motion.h1
-        className="font-[900] tracking-tighter leading-none text-white"
-        style={{ fontSize: "clamp(2rem, 7vw, 3.5rem)", marginBottom: 24 }}
-        initial={{ opacity: 0, y: 10 }}
+      {/* Title block */}
+      <motion.header
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          display: "grid",
+          gap: 14,
+          marginBottom: 32,
+        }}
       >
-        Leaderboard
-      </motion.h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span
+            style={{
+              height: 2,
+              width: 24,
+              background: "var(--rainbow)",
+              borderRadius: 999,
+            }}
+          />
+          <span className="cc-eyebrow">Top scores</span>
+        </div>
+        <h1
+          className="cc-display"
+          style={{
+            fontSize: "clamp(2.5rem, 7vw, 4.25rem)",
+          }}
+        >
+          Leaderboard
+        </h1>
+        <p
+          style={{
+            fontSize: 14,
+            color: "var(--fg-subtle)",
+            maxWidth: "42ch",
+          }}
+        >
+          The ten highest average scores across each mode. Sign in and play to
+          land on the board.
+        </p>
+      </motion.header>
 
-      {/* Mode tabs */}
+      {/* Mode tabs — pill group */}
       <motion.div
-        style={{ display: "flex", gap: 20, marginBottom: 28 }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.15, duration: 0.4 }}
+        transition={{ delay: 0.12, duration: 0.4 }}
+        role="tablist"
+        style={{
+          display: "inline-flex",
+          padding: 3,
+          gap: 2,
+          borderRadius: 999,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          marginBottom: 28,
+          overflowX: "auto",
+          maxWidth: "100%",
+        }}
       >
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setSelectedMode(tab.id)}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 13,
-              fontWeight: selectedMode === tab.id ? 700 : 500,
-              color: selectedMode === tab.id ? "#fff" : "#888",
-              padding: "4px 0",
-              borderBottom: selectedMode === tab.id ? "2px solid #fff" : "2px solid transparent",
-              transition: "all 0.2s",
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {TABS.map((tab) => {
+          const active = selectedMode === tab.id;
+          return (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setSelectedMode(tab.id)}
+              style={{
+                background: active ? "var(--surface-overlay)" : "transparent",
+                color: active ? "var(--fg)" : "var(--fg-muted)",
+                fontSize: 13,
+                fontWeight: active ? 700 : 500,
+                padding: "7px 16px",
+                borderRadius: 999,
+                border: "none",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition:
+                  "background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out)",
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </motion.div>
+
+      {/* List header */}
+      {!loading && !fetchError && entries.length > 0 && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "32px 1fr auto",
+            gap: 14,
+            padding: "0 12px 10px",
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
+          <span className="cc-eyebrow">#</span>
+          <span className="cc-eyebrow">Player</span>
+          <span className="cc-eyebrow" style={{ textAlign: "right" }}>
+            Avg
+          </span>
+        </div>
+      )}
 
       {/* Content */}
       {loading ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
           {Array.from({ length: 8 }, (_, i) => (
             <div
               key={i}
+              className="cc-pulse"
               style={{
-                height: 44,
+                height: 46,
                 borderRadius: 10,
-                background: "#1a1a1a",
-                animation: "pulse 1.5s ease-in-out infinite",
+                background: "var(--surface)",
+                opacity: 0.6 - i * 0.05,
               }}
             />
           ))}
@@ -142,10 +243,10 @@ export default function LeaderboardPage() {
       ) : entries.length === 0 ? (
         <EmptyState
           title="No scores yet"
-          message={`Be the first to play ${selectedMode} mode.`}
+          message={`Be the first to post a score on ${selectedMode} mode.`}
         />
       ) : (
-        <motion.div
+        <motion.ol
           key={selectedMode}
           initial="hidden"
           animate="visible"
@@ -153,94 +254,127 @@ export default function LeaderboardPage() {
             hidden: {},
             visible: { transition: { staggerChildren: 0.03 } },
           }}
-          style={{ display: "flex", flexDirection: "column", gap: 4 }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            listStyle: "none",
+            padding: 0,
+            margin: 0,
+          }}
         >
           {entries.map((entry) => {
             const isCurrentUser = user?.id === entry.user_id;
             const rankColor = RANK_COLORS[entry.rank];
             const isTop3 = entry.rank <= 3;
+            const isFirst = entry.rank === 1;
 
             return (
-              <motion.div
+              <motion.li
                 key={entry.user_id}
                 variants={{
                   hidden: { opacity: 0, x: -12 },
                   visible: { opacity: 1, x: 0 },
                 }}
                 style={{
-                  display: "flex",
+                  display: "grid",
+                  gridTemplateColumns: "32px 1fr auto",
                   alignItems: "center",
-                  gap: 16,
-                  padding: "10px 14px",
-                  borderRadius: 10,
+                  gap: 14,
+                  padding: "14px 12px",
                   background: isCurrentUser
                     ? "rgba(255,255,255,0.04)"
-                    : isTop3
-                    ? "rgba(255,255,255,0.02)"
                     : "transparent",
-                  border: isCurrentUser
-                    ? "1px solid rgba(255,255,255,0.08)"
-                    : "1px solid transparent",
-                  transition: "background 0.2s",
+                  borderBottom: "1px solid var(--border)",
+                  transition: "background var(--duration-fast) var(--ease-out)",
+                  position: "relative",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isCurrentUser ? "rgba(255,255,255,0.04)" : isTop3 ? "rgba(255,255,255,0.02)" : "transparent"; }}
+                onMouseEnter={(e) => {
+                  if (!isCurrentUser) {
+                    (e.currentTarget as HTMLElement).style.background =
+                      "rgba(255,255,255,0.025)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isCurrentUser) {
+                    (e.currentTarget as HTMLElement).style.background =
+                      "transparent";
+                  }
+                }}
               >
+                {/* First-place rainbow accent bar */}
+                {isFirst && (
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 10,
+                      bottom: 10,
+                      width: 3,
+                      borderRadius: 999,
+                      background: "var(--rainbow)",
+                    }}
+                  />
+                )}
+
                 {/* Rank */}
                 <span
+                  className="cc-mono cc-tnum"
                   style={{
-                    fontFamily: "monospace",
-                    fontSize: isTop3 ? 16 : 12,
+                    fontSize: isTop3 ? 16 : 13,
                     fontWeight: isTop3 ? 800 : 500,
-                    color: rankColor || "#555",
-                    width: 28,
+                    color: rankColor || "var(--fg-faint)",
                     textAlign: "right",
-                    flexShrink: 0,
-                    fontVariantNumeric: "tabular-nums",
                   }}
                 >
                   {entry.rank}
                 </span>
 
                 {/* Username */}
-                <span
-                  style={{
-                    flex: 1,
-                    fontSize: 14,
-                    fontWeight: isCurrentUser ? 700 : isTop3 ? 600 : 400,
-                    color: rankColor || "#ccc",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {entry.username}
+                <div style={{ minWidth: 0, display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <span
+                    style={{
+                      fontSize: 14.5,
+                      fontWeight: isCurrentUser ? 700 : isTop3 ? 600 : 500,
+                      color: isTop3 ? "var(--fg)" : "var(--fg-muted)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      letterSpacing: "-0.005em",
+                    }}
+                  >
+                    {entry.username}
+                  </span>
                   {isCurrentUser && (
-                    <span style={{ color: "#666", fontSize: 11, marginLeft: 8 }}>you</span>
+                    <span
+                      className="cc-eyebrow"
+                      style={{
+                        color: "var(--fg-subtle)",
+                        fontSize: 10,
+                      }}
+                    >
+                      you
+                    </span>
                   )}
-                </span>
+                </div>
 
                 {/* Score */}
                 <span
+                  className="cc-tnum"
                   style={{
-                    fontFamily: "monospace",
-                    fontSize: 14,
+                    fontSize: isTop3 ? 16 : 14,
                     fontWeight: 800,
-                    color: rankColor || "#fff",
-                    fontVariantNumeric: "tabular-nums",
-                    flexShrink: 0,
+                    color: rankColor || "var(--fg)",
+                    letterSpacing: "-0.01em",
                   }}
                 >
                   {Math.round(entry.best_avg_score)}%
                 </span>
-              </motion.div>
+              </motion.li>
             );
           })}
-        </motion.div>
+        </motion.ol>
       )}
-
-      {/* Bottom padding */}
-      <div style={{ height: 48 }} />
-    </div>
+    </main>
   );
 }

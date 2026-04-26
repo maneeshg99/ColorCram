@@ -9,10 +9,13 @@ import {
   validatePassword,
   sanitizeInput,
 } from "@colorcram-v2/types";
+import { Button } from "@/components/ui/Button";
+
+type Tab = "signin" | "signup" | "forgot";
 
 export function AuthModal() {
   const { showAuthModal, setShowAuthModal, signIn, signUp, resetPassword } = useAuth();
-  const [tab, setTab] = useState<"signin" | "signup" | "forgot">("signin");
+  const [tab, setTab] = useState<Tab>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -27,6 +30,11 @@ export function AuthModal() {
     setError(null);
     setSubmitting(false);
     setResetSent(false);
+  };
+
+  const close = () => {
+    setShowAuthModal(false);
+    reset();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,149 +94,247 @@ export function AuthModal() {
     <AnimatePresence>
       {showAuthModal && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center px-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-modal-title"
+          className="fixed inset-0 flex items-center justify-center"
+          style={{
+            padding: 24,
+            zIndex: 100,
+            background: "rgba(5, 5, 10, 0.72)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
+          transition={{ duration: 0.22 }}
+          onClick={close}
         >
-          {/* Overlay */}
-          <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
-            onClick={() => {
-              setShowAuthModal(false);
-              reset();
-            }}
-          />
-
-          {/* Close button */}
+          {/* Close */}
           <button
-            onClick={() => {
-              setShowAuthModal(false);
-              reset();
+            onClick={close}
+            aria-label="Close sign in"
+            style={{
+              position: "absolute",
+              top: 18,
+              right: 18,
+              width: 36,
+              height: 36,
+              display: "grid",
+              placeItems: "center",
+              borderRadius: 999,
+              color: "var(--fg-subtle)",
+              background: "transparent",
+              cursor: "pointer",
+              transition: "color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
             }}
-            className="absolute top-6 right-6 text-[#666] hover:text-white transition-colors duration-200 z-10"
-            aria-label="Close"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--fg)";
+              e.currentTarget.style.background = "var(--surface)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--fg-subtle)";
+              e.currentTarget.style.background = "transparent";
+            }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
 
-          {/* Form */}
+          {/* Panel */}
           <motion.div
-            className="relative w-full max-w-xs z-10"
-            initial={{ scale: 0.95, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.95, y: 20 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            style={{
+              width: "100%",
+              maxWidth: 380,
+              background: "var(--surface-elevated)",
+              border: "1px solid var(--border-strong)",
+              borderRadius: "var(--radius-lg)",
+              padding: "32px 28px 28px",
+              boxShadow: "var(--shadow-lg), var(--shadow-inset)",
+              position: "relative",
+            }}
           >
-            {/* Tabs (hidden during forgot password flow) */}
+            {/* Rainbow hairline on top */}
+            <span
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 24,
+                right: 24,
+                height: 2,
+                background: "var(--rainbow)",
+                borderRadius: 999,
+                transform: "translateY(-1px)",
+              }}
+            />
+
+            {/* Header */}
+            <div style={{ marginBottom: 22 }}>
+              <span className="cc-eyebrow" style={{ color: "var(--fg-subtle)" }}>
+                {tab === "forgot"
+                  ? "Reset password"
+                  : tab === "signin"
+                    ? "Welcome back"
+                    : "Create your account"}
+              </span>
+              <h2
+                id="auth-modal-title"
+                className="cc-headline"
+                style={{
+                  fontSize: 24,
+                  marginTop: 6,
+                  color: "var(--fg)",
+                }}
+              >
+                {tab === "forgot"
+                  ? "We'll email you a link"
+                  : tab === "signin"
+                    ? "Sign in to ColorCram"
+                    : "Claim a username"}
+              </h2>
+            </div>
+
+            {/* Tabs (hidden during forgot) */}
             {tab !== "forgot" && (
-              <div className="flex gap-6 mb-10 justify-center">
-                <button
-                  className={`text-sm font-semibold transition-colors duration-200 ${
-                    tab === "signin" ? "text-white" : "text-[#adadad] hover:text-white"
-                  }`}
+              <div
+                role="tablist"
+                style={{
+                  display: "inline-flex",
+                  padding: 3,
+                  gap: 2,
+                  borderRadius: 999,
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  marginBottom: 22,
+                }}
+              >
+                <TabPill
+                  label="Sign in"
+                  active={tab === "signin"}
                   onClick={() => {
                     setTab("signin");
                     setError(null);
                   }}
-                >
-                  Sign In
-                </button>
-                <button
-                  className={`text-sm font-semibold transition-colors duration-200 ${
-                    tab === "signup" ? "text-white" : "text-[#adadad] hover:text-white"
-                  }`}
+                />
+                <TabPill
+                  label="Sign up"
+                  active={tab === "signup"}
                   onClick={() => {
                     setTab("signup");
                     setError(null);
                   }}
-                >
-                  Sign Up
-                </button>
+                />
               </div>
             )}
 
-            {/* Forgot password header with back button */}
+            {/* Forgot: back link */}
             {tab === "forgot" && (
-              <div className="mb-10">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTab("signin");
-                    setError(null);
-                    setResetSent(false);
-                  }}
-                  className="text-xs text-[#adadad] hover:text-white transition-colors duration-200 mb-4 inline-flex items-center gap-1"
-                >
-                  <span>←</span>
-                  <span>Back to Sign In</span>
-                </button>
-                <h2 className="text-sm font-semibold text-white">Reset password</h2>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setTab("signin");
+                  setError(null);
+                  setResetSent(false);
+                }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--fg-subtle)",
+                  marginBottom: 16,
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <span aria-hidden="true">&larr;</span>
+                <span>Back to sign in</span>
+              </button>
             )}
 
-            {/* Reset email sent confirmation */}
+            {/* Reset-sent confirmation */}
             {tab === "forgot" && resetSent ? (
-              <div className="space-y-4">
-                <p className="text-sm text-[#adadad]">
-                  If an account exists for that email, we&apos;ve sent a reset link. Check your inbox.
+              <div style={{ display: "grid", gap: 16 }}>
+                <p style={{ fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.55 }}>
+                  If an account exists for that email, we&apos;ve sent a reset
+                  link. Check your inbox.
                 </p>
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
+                  size="md"
                   onClick={() => {
                     setTab("signin");
                     reset();
                   }}
-                  className="w-full text-sm font-semibold text-white py-2 transition-all duration-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]"
                 >
-                  Back to Sign In
-                </button>
+                  Back to sign in
+                </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-8">
+              <form
+                onSubmit={handleSubmit}
+                style={{ display: "grid", gap: 18 }}
+                noValidate
+              >
                 {tab === "signup" && (
-                  <div>
+                  <Field
+                    label="Username"
+                    helper="2-24 characters · letters, numbers, underscores"
+                  >
                     <input
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full bg-transparent border-0 border-b border-white/20 focus:border-white outline-none py-2 text-sm text-white placeholder:text-[#666] transition-colors duration-200"
-                      placeholder="Username"
+                      style={inputStyle}
+                      placeholder="chroma_fox"
                       maxLength={24}
                       autoComplete="username"
                       required
                     />
-                    <p className="text-[10px] text-[#666] mt-2">
-                      2-24 characters, letters, numbers, underscores
-                    </p>
-                  </div>
+                  </Field>
                 )}
 
-                <div>
+                <Field label="Email">
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-transparent border-0 border-b border-white/20 focus:border-white outline-none py-2 text-sm text-white placeholder:text-[#666] transition-colors duration-200"
-                    placeholder="Email"
+                    style={inputStyle}
+                    placeholder="you@example.com"
                     maxLength={254}
                     autoComplete="email"
                     required
                   />
-                </div>
+                </Field>
 
                 {tab !== "forgot" && (
-                  <div>
+                  <Field label="Password">
                     <input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-transparent border-0 border-b border-white/20 focus:border-white outline-none py-2 text-sm text-white placeholder:text-[#666] transition-colors duration-200"
-                      placeholder="Password"
+                      style={inputStyle}
+                      placeholder="At least 8 characters"
                       minLength={8}
                       maxLength={128}
                       autoComplete={
@@ -236,26 +342,41 @@ export function AuthModal() {
                       }
                       required
                     />
-                  </div>
+                  </Field>
                 )}
 
                 {error && (
-                  <p className="text-xs text-[#ff3b3b]">{error}</p>
+                  <p
+                    role="alert"
+                    style={{
+                      fontSize: 12.5,
+                      color: "#ff6a6a",
+                      background: "rgba(255, 106, 106, 0.08)",
+                      border: "1px solid rgba(255, 106, 106, 0.2)",
+                      borderRadius: 10,
+                      padding: "8px 12px",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {error}
+                  </p>
                 )}
 
-                <button
+                <Button
                   type="submit"
+                  variant="primary"
+                  size="md"
                   disabled={submitting}
-                  className="w-full text-sm font-semibold text-white py-2 transition-all duration-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] disabled:opacity-40"
+                  style={{ width: "100%" }}
                 >
                   {submitting
-                    ? "..."
+                    ? "Working…"
                     : tab === "signin"
-                      ? "Sign In"
+                      ? "Sign in"
                       : tab === "signup"
-                        ? "Create Account"
-                        : "Send Reset Link"}
-                </button>
+                        ? "Create account"
+                        : "Send reset link"}
+                </Button>
 
                 {tab === "signin" && (
                   <button
@@ -265,7 +386,22 @@ export function AuthModal() {
                       setError(null);
                       setPassword("");
                     }}
-                    className="w-full text-xs text-[#666] hover:text-white transition-colors duration-200"
+                    style={{
+                      fontSize: 12,
+                      color: "var(--fg-subtle)",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "4px 0",
+                      justifySelf: "center",
+                      transition: "color var(--duration-fast) var(--ease-out)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "var(--fg)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "var(--fg-subtle)";
+                    }}
                   >
                     Forgot password?
                   </button>
@@ -276,5 +412,77 @@ export function AuthModal() {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  background: "var(--bg-inset)",
+  border: "1px solid var(--border)",
+  borderRadius: 10,
+  padding: "10px 12px",
+  fontSize: 14,
+  color: "var(--fg)",
+  outline: "none",
+  transition:
+    "border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+};
+
+function Field({
+  label,
+  helper,
+  children,
+}: {
+  label: string;
+  helper?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label style={{ display: "grid", gap: 6 }}>
+      <span
+        className="cc-eyebrow"
+        style={{ color: "var(--fg-subtle)", fontSize: 10.5 }}
+      >
+        {label}
+      </span>
+      {children}
+      {helper && (
+        <span style={{ fontSize: 11, color: "var(--fg-faint)", marginTop: 2 }}>
+          {helper}
+        </span>
+      )}
+    </label>
+  );
+}
+
+function TabPill({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      style={{
+        background: active ? "var(--surface-overlay)" : "transparent",
+        color: active ? "var(--fg)" : "var(--fg-muted)",
+        fontSize: 13,
+        fontWeight: active ? 700 : 500,
+        padding: "7px 16px",
+        borderRadius: 999,
+        border: "none",
+        cursor: "pointer",
+        transition:
+          "background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out)",
+      }}
+    >
+      {label}
+    </button>
   );
 }

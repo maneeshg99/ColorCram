@@ -16,6 +16,51 @@ interface DualHSBPickerProps {
   submitButton?: ReactNode;
 }
 
+interface TabPillProps {
+  label: string;
+  active: boolean;
+  swatch: string;
+  onClick: () => void;
+}
+
+function TabPill({ label, active, swatch, onClick }: TabPillProps) {
+  return (
+    <button
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "6px 14px",
+        borderRadius: 999,
+        background: active ? "var(--surface-overlay)" : "transparent",
+        color: active ? "var(--fg)" : "var(--fg-muted)",
+        fontSize: 12,
+        fontWeight: active ? 700 : 500,
+        letterSpacing: "0.02em",
+        cursor: "pointer",
+        border: "none",
+        transition:
+          "background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out)",
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          background: swatch,
+          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.2)",
+        }}
+      />
+      <span>{label}</span>
+    </button>
+  );
+}
+
 export function DualHSBPicker({
   startValue,
   endValue,
@@ -65,43 +110,29 @@ export function DualHSBPicker({
       }}
     >
       {/* Tab switcher */}
-      <div style={{ display: "flex", gap: 24 }}>
-        <button
+      <div
+        role="tablist"
+        style={{
+          display: "inline-flex",
+          padding: 3,
+          gap: 2,
+          borderRadius: 999,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <TabPill
+          label="Start"
+          active={activeTab === "start"}
+          swatch={startHex}
           onClick={() => setActiveTab("start")}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: activeTab === "start" ? 700 : 500,
-            color: activeTab === "start" ? "#ffffff" : "#adadad",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase" as const,
-            padding: "8px 0",
-            borderBottom: activeTab === "start" ? "2px solid #ffffff" : "2px solid transparent",
-            transition: "all 0.2s ease",
-          }}
-        >
-          Start Color
-        </button>
-        <button
+        />
+        <TabPill
+          label="End"
+          active={activeTab === "end"}
+          swatch={endHex}
           onClick={() => setActiveTab("end")}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: activeTab === "end" ? 700 : 500,
-            color: activeTab === "end" ? "#ffffff" : "#adadad",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase" as const,
-            padding: "8px 0",
-            borderBottom: activeTab === "end" ? "2px solid #ffffff" : "2px solid transparent",
-            transition: "all 0.2s ease",
-          }}
-        >
-          End Color
-        </button>
+        />
       </div>
 
       {/* HSB strips + right column (color circle, gradient bar, GO) */}
@@ -137,21 +168,24 @@ export function DualHSBPicker({
               height: "clamp(64px, 12vw, 100px)",
               borderRadius: "50%",
               backgroundColor: hex,
-              boxShadow: `0 12px 40px ${hex}50`,
+              boxShadow: `0 16px 40px ${hex}55, inset 0 0 0 1px rgba(255,255,255,0.08)`,
             }}
-            animate={{ boxShadow: `0 12px 40px ${hex}50` }}
+            animate={{ boxShadow: `0 16px 40px ${hex}55, inset 0 0 0 1px rgba(255,255,255,0.08)` }}
             transition={{ duration: 0.3 }}
           />
           <span
+            className="cc-mono cc-tnum"
             style={{
-              fontFamily: "monospace",
-              fontSize: 11,
-              color: "#adadad",
-              fontVariantNumeric: "tabular-nums",
-              letterSpacing: "0.05em",
+              fontSize: 10.5,
+              color: "var(--fg-muted)",
+              letterSpacing: "0.08em",
+              padding: "3px 9px",
+              borderRadius: 999,
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
             }}
           >
-            {hex}
+            {hex.toUpperCase()}
           </span>
 
           {/* Gradient preview bar (vertical) — matches strip height minus circle/hex/button */}
@@ -162,8 +196,7 @@ export function DualHSBPicker({
               minHeight: 60,
               borderRadius: 12,
               background: `linear-gradient(to bottom, ${startHex}, ${endHex})`,
-              boxShadow: `0 4px 16px ${startHex}20, 0 4px 16px ${endHex}20`,
-              border: "2px solid rgba(255,255,255,0.1)",
+              boxShadow: `0 8px 24px ${startHex}25, 0 8px 24px ${endHex}25, inset 0 0 0 1px rgba(255,255,255,0.08)`,
             }}
           />
 

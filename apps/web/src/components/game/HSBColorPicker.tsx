@@ -69,31 +69,34 @@ export function HSBColorPicker({ value, onChange, disabled = false, submitButton
         </div>
 
         {/* Color preview + submit button */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <motion.div
             style={{
-              width: "clamp(72px, 14vw, 120px)",
-              height: "clamp(72px, 14vw, 120px)",
+              width: "clamp(76px, 14vw, 124px)",
+              height: "clamp(76px, 14vw, 124px)",
               borderRadius: "50%",
               backgroundColor: hex,
-              boxShadow: `0 12px 40px ${hex}50`,
+              boxShadow: `0 16px 48px ${hex}55, inset 0 0 0 1px rgba(255,255,255,0.08)`,
             }}
-            animate={{ boxShadow: `0 12px 40px ${hex}50` }}
+            animate={{ boxShadow: `0 16px 48px ${hex}55, inset 0 0 0 1px rgba(255,255,255,0.08)` }}
             transition={{ duration: 0.3 }}
           />
           <span
+            className="cc-mono cc-tnum"
             style={{
-              fontFamily: "monospace",
-              fontSize: 12,
-              color: "#adadad",
-              fontVariantNumeric: "tabular-nums",
-              letterSpacing: "0.05em",
+              fontSize: 11,
+              color: "var(--fg-muted)",
+              letterSpacing: "0.08em",
+              padding: "3px 10px",
+              borderRadius: 999,
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
             }}
           >
-            {hex}
+            {hex.toUpperCase()}
           </span>
           {submitButton && (
-            <div style={{ marginTop: 8 }}>
+            <div style={{ marginTop: 6 }}>
               {submitButton}
             </div>
           )}

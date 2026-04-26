@@ -8,7 +8,8 @@ import { GuessScreen } from "./GuessScreen";
 import { ResultScreen } from "./ResultScreen";
 import { SummaryScreen } from "./SummaryScreen";
 import { BlitzClock } from "./BlitzClock";
-import { hsbToHex } from "@colorcram-v2/color-utils";
+import { Modal, ModalHeader, ModalActions } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import { BLITZ_DURATION_MS } from "@colorcram-v2/game-logic";
 import type { GameMode, Difficulty } from "@colorcram-v2/types";
 import { playSound } from "@/lib/sounds";
@@ -117,7 +118,7 @@ export function GameBoard({ mode, difficulty, seed, onExit }: GameBoardProps) {
 
   return (
     <>
-    {/* Exit button — rendered outside overflow container */}
+    {/* Exit chip — rendered outside overflow container */}
     {showExit && (
       <button
         onClick={() => setShowExitConfirm(true)}
@@ -126,101 +127,65 @@ export function GameBoard({ mode, difficulty, seed, onExit }: GameBoardProps) {
           bottom: "clamp(12px, 2vw, 20px)",
           left: "50%",
           transform: "translateX(-50%)",
-          zIndex: 200,
-          background: "rgba(40,40,40,0.8)",
-          border: "1px solid rgba(255,255,255,0.25)",
-          borderRadius: 20,
-          padding: "6px 16px",
+          zIndex: 60,
+          background: "rgba(20, 20, 24, 0.7)",
+          border: "1px solid var(--border-strong)",
+          borderRadius: 999,
+          padding: "7px 18px",
           fontSize: 11,
-          fontWeight: 600,
-          color: "#bbb",
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: "var(--fg-muted)",
           cursor: "pointer",
-          transition: "color 0.2s, border-color 0.2s",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
+          transition: "color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = "#bbb"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = "var(--fg)";
+          e.currentTarget.style.borderColor = "var(--border-focus)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = "var(--fg-muted)";
+          e.currentTarget.style.borderColor = "var(--border-strong)";
+        }}
       >
         Exit
       </button>
     )}
 
-    {/* Exit confirmation modal */}
-    {showExitConfirm && (
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 300,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "rgba(0,0,0,0.7)",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-        }}
-        onClick={() => setShowExitConfirm(false)}
-      >
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            background: "#1a1a1a",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 16,
-            padding: "28px 32px",
-            maxWidth: 320,
-            width: "90%",
-            textAlign: "center",
+    {/* Exit confirmation */}
+    <Modal
+      open={showExitConfirm}
+      onClose={() => setShowExitConfirm(false)}
+      labelledBy="exit-confirm-title"
+    >
+      <ModalHeader
+        id="exit-confirm-title"
+        title="Quit this game?"
+        description="You'll lose all progress in this round."
+      />
+      <ModalActions>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowExitConfirm(false)}
+        >
+          Keep playing
+        </Button>
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={() => {
+            setShowExitConfirm(false);
+            onExit?.();
           }}
         >
-          <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
-            Quit game?
-          </p>
-          <p style={{ fontSize: 13, color: "#888", marginBottom: 24, lineHeight: 1.5 }}>
-            You&apos;ll lose all progress in this round.
-          </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-            <button
-              onClick={() => { setShowExitConfirm(false); onExit?.(); }}
-              style={{
-                background: "none",
-                border: "1px solid rgba(239,68,68,0.4)",
-                borderRadius: 20,
-                padding: "8px 20px",
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#ef4444",
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.1)"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.6)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.4)"; }}
-            >
-              Quit
-            </button>
-            <button
-              onClick={() => setShowExitConfirm(false)}
-              style={{
-                background: "none",
-                border: "1px solid rgba(255,255,255,0.2)",
-                borderRadius: 20,
-                padding: "8px 20px",
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#fff",
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
-            >
-              Keep playing
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+          Quit
+        </Button>
+      </ModalActions>
+    </Modal>
 
     <div style={{ position: "relative", height: "100dvh", overflow: "hidden" }}>
       {/* Persistent blitz clock overlay */}
