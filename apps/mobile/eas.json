@@ -53,7 +53,10 @@
         "autoIncrement": true
       },
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://api.colorcram.app",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdob292Z3hva21wcWhzdW53YWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjg2NTIsImV4cCI6MjA5MDc0NDY1Mn0.vKh4YDCS5WuIZ4kTCKetYTjZjuKKrZmuqswv-DKo2IE",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "595175145400-taglvsvgnh93fr0dkc0th8nfsu7mt98t.apps.googleusercontent.com"
       }
     }
   },
