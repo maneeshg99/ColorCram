@@ -7,6 +7,7 @@ import { hsbToHex } from "@colorcram-v2/color-utils";
 import { NumberSlide } from "@/components/design-system/NumberSlide";
 import { FoldReveal } from "@/components/design-system/FoldReveal";
 import { ScoreSubmitter } from "./ScoreSubmitter";
+import { Button } from "@/components/ui/Button";
 
 interface SummaryScreenProps {
   results: GameResults;
@@ -26,16 +27,23 @@ function getRankText(avgScore: number): string {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 90) return "#22c55e";
-  if (score >= 70) return "#eab308";
-  if (score >= 40) return "#f97316";
-  return "#ef4444";
+  if (score >= 90) return "var(--score-perfect)";
+  if (score >= 70) return "var(--score-great)";
+  if (score >= 40) return "var(--score-good)";
+  return "var(--score-poor)";
+}
+
+// Resolve CSS var to usable rgba for textShadow glow
+function getScoreGlowHex(score: number): string {
+  if (score >= 90) return "#38d97a";
+  if (score >= 70) return "#f5c64b";
+  if (score >= 40) return "#ff8c42";
+  return "#ff5a5a";
 }
 
 export function SummaryScreen({
   results,
   mode,
-  difficulty,
   onPlayAgain,
   onShare,
 }: SummaryScreenProps) {
@@ -44,6 +52,7 @@ export function SummaryScreen({
       ? Math.round(results.totalScore / results.rounds.length)
       : 0;
   const scoreColor = getScoreColor(avgScore);
+  const scoreGlow = getScoreGlowHex(avgScore);
   const rankText = getRankText(avgScore);
   const isGradient = mode === "gradient";
   const isBlitz = mode === "blitz";
@@ -69,76 +78,95 @@ export function SummaryScreen({
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       style={{
         height: "100dvh",
-        backgroundColor: "#131313",
+        backgroundColor: "var(--bg)",
         display: "flex",
         flexDirection: "column",
-        padding: "clamp(24px, 4vw, 48px)",
+        padding: "clamp(20px, 4vw, 48px)",
         overflow: "hidden",
       }}
     >
+      {/* Eyebrow */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: "clamp(8px, 2vw, 16px)",
+        }}
+      >
+        <span
+          style={{
+            height: 2,
+            width: 24,
+            background: "var(--rainbow)",
+            borderRadius: 999,
+          }}
+        />
+        <span className="cc-eyebrow">
+          {isBlitz ? "Time's up" : "Game over"}
+        </span>
+        <span
+          style={{
+            width: 1,
+            height: 10,
+            background: "var(--border-strong)",
+          }}
+        />
+        <span
+          className="cc-mono cc-tnum"
+          style={{ fontSize: 11, color: "var(--fg-faint)" }}
+        >
+          {results.rounds.length} round{results.rounds.length !== 1 ? "s" : ""}
+        </span>
+      </motion.div>
+
       {/* Main layout */}
       <div
         style={{
           flex: 1,
-          display: "flex",
-          gap: "clamp(16px, 3vw, 40px)",
-          flexWrap: "wrap",
-          alignItems: "flex-start",
+          display: "grid",
+          gridTemplateColumns: "minmax(260px, 1fr) minmax(260px, 1fr)",
+          gap: "clamp(24px, 4vw, 56px)",
+          alignItems: "start",
           minHeight: 0,
           overflow: "auto",
         }}
       >
-        {/* Left side: score + actions */}
+        {/* Left — score + actions */}
         <div
           style={{
-            flex: "1 1 300px",
             display: "flex",
             flexDirection: "column",
             gap: 24,
           }}
         >
-          {/* Title */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            style={{
-              fontSize: 14,
-              fontWeight: 500,
-              color: "#adadad",
-              letterSpacing: "0.05em",
-            }}
-          >
-            {isBlitz ? "Time's Up" : "Game Over"}
-            {" \u00B7 "}
-            {results.rounds.length} round{results.rounds.length !== 1 ? "s" : ""}
-          </motion.div>
-
           {/* Massive score */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 25 }}
+            transition={{ delay: 0.15, type: "spring", stiffness: 280, damping: 24 }}
           >
             <div
+              className="cc-display cc-tnum"
               style={{
-                fontSize: "clamp(3rem, 8vw, 6rem)",
-                fontWeight: 900,
+                fontSize: "clamp(4rem, 11vw, 8rem)",
                 color: scoreColor,
-                lineHeight: 1,
-                fontVariantNumeric: "tabular-nums",
-                textShadow: `0 0 80px ${scoreColor}30`,
+                lineHeight: 0.95,
+                textShadow: `0 0 90px ${scoreGlow}40`,
               }}
             >
               <NumberSlide value={`${avgScore}%`} />
             </div>
             <div
               style={{
-                fontSize: "clamp(1rem, 2vw, 1.5rem)",
+                fontSize: "clamp(1.1rem, 2vw, 1.4rem)",
                 fontWeight: 600,
-                color: "#adadad",
-                marginTop: 8,
-                letterSpacing: "-0.01em",
+                color: "var(--fg)",
+                marginTop: 10,
+                letterSpacing: "-0.015em",
               }}
             >
               {rankText}
@@ -148,51 +176,31 @@ export function SummaryScreen({
           {/* Blitz stats */}
           {isBlitz && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
+              transition={{ delay: 0.32 }}
               style={{
                 display: "flex",
-                gap: 32,
+                gap: 40,
+                paddingTop: 4,
               }}
             >
-              <div>
-                <div
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 800,
-                    color: "#ffffff",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {Math.max(...results.rounds.map((r) => r.score ?? 0))}%
-                </div>
-                <div style={{ fontSize: 12, color: "#adadad", marginTop: 2 }}>
-                  best round
-                </div>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 800,
-                    color: "#ffffff",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {results.rounds.length > 0
+              <StatBlock
+                label="Best round"
+                value={`${Math.max(...results.rounds.map((r) => r.score ?? 0))}%`}
+              />
+              <StatBlock
+                label="Avg time"
+                value={`${
+                  results.rounds.length > 0
                     ? (
                         results.rounds.reduce((s, r) => s + (r.timeMs ?? 0), 0) /
                         results.rounds.length /
                         1000
                       ).toFixed(1)
-                    : 0}
-                  s
-                </div>
-                <div style={{ fontSize: 12, color: "#adadad", marginTop: 2 }}>
-                  avg time
-                </div>
-              </div>
+                    : 0
+                }s`}
+              />
             </motion.div>
           )}
 
@@ -200,101 +208,104 @@ export function SummaryScreen({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.45 }}
           >
             <ScoreSubmitter results={results} />
           </motion.div>
 
           {/* Actions */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            style={{ display: "flex", gap: 24, marginTop: 8 }}
+            transition={{ delay: 0.55 }}
+            style={{ display: "flex", gap: 12, marginTop: 4, flexWrap: "wrap" }}
           >
-            <button
-              onClick={onPlayAgain}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: 15,
-                fontWeight: 600,
-                color: "#ffffff",
-                padding: 0,
-                transition: "opacity 0.2s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
-            >
-              Play Again
-            </button>
-            <button
+            <Button variant="primary" size="md" onClick={onPlayAgain}>
+              Play again
+            </Button>
+            <Button
+              variant={shareStatus === "copied" ? "secondary" : "secondary"}
+              size="md"
               onClick={handleShare}
-              style={{
-                background: shareStatus === "copied" ? "rgba(20,184,97,0.1)" : "none",
-                border: `1px solid ${shareStatus === "copied" ? "#14b861" : "rgba(255,255,255,0.25)"}`,
-                borderRadius: 20,
-                padding: "8px 20px",
-                cursor: "pointer",
-                fontSize: 14,
-                fontWeight: 600,
-                color: shareStatus === "copied" ? "#14b861" : "#ffffff",
-                transition: "all 0.3s",
-              }}
-              onMouseEnter={(e) => { if (shareStatus !== "copied") { e.currentTarget.style.borderColor = "rgba(255,255,255,0.5)"; } }}
-              onMouseLeave={(e) => { if (shareStatus !== "copied") { e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; } }}
+              style={
+                shareStatus === "copied"
+                  ? {
+                      color: "var(--score-perfect)",
+                      borderColor: "rgba(56, 217, 122, 0.45)",
+                    }
+                  : undefined
+              }
             >
-              {shareStatus === "copied" ? "✓ Link Copied!" : "Challenge a Friend"}
-            </button>
+              {shareStatus === "copied" ? "Link copied" : "Challenge a friend"}
+            </Button>
           </motion.div>
         </div>
 
-        {/* Right side: round results */}
+        {/* Right — round ledger */}
         <div
           style={{
-            flex: "1 1 280px",
             display: "flex",
             flexDirection: "column",
-            gap: 0,
           }}
         >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "auto auto 1fr auto",
+              gap: 14,
+              alignItems: "center",
+              paddingBottom: 10,
+              borderBottom: "1px solid var(--border)",
+            }}
+          >
+            <span className="cc-eyebrow">#</span>
+            <span className="cc-eyebrow">Target</span>
+            <span />
+            <span className="cc-eyebrow" style={{ textAlign: "right" }}>
+              Score
+            </span>
+          </div>
+
           {rounds.map((round, i) => {
             const roundScore = round.score ?? 0;
             const rColor = getScoreColor(roundScore);
 
             return (
-              <FoldReveal key={i} delay={0.4 + i * 0.08}>
+              <FoldReveal key={i} delay={0.35 + i * 0.06}>
                 <div
                   style={{
-                    display: "flex",
+                    display: "grid",
+                    gridTemplateColumns: "auto auto 1fr auto",
                     alignItems: "center",
-                    gap: 16,
+                    gap: 14,
                     padding: "14px 0",
-                    borderBottom: i < rounds.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                    borderBottom:
+                      i < rounds.length - 1 ? "1px solid var(--border)" : "none",
                   }}
                 >
-                  {/* Round number */}
+                  {/* Index */}
                   <span
+                    className="cc-mono cc-tnum"
                     style={{
                       fontSize: 12,
-                      fontFamily: "monospace",
-                      color: "rgba(255,255,255,0.3)",
-                      width: 20,
-                      flexShrink: 0,
+                      color: "var(--fg-faint)",
+                      width: 18,
                     }}
                   >
-                    {i + 1}
+                    {String(i + 1).padStart(2, "0")}
                   </span>
 
-                  {/* Color circles */}
+                  {/* Swatch */}
                   {isGradient && "targetStart" in round ? (
                     <div
                       style={{
-                        width: 48,
-                        height: 24,
+                        width: 52,
+                        height: 26,
                         borderRadius: 6,
-                        background: `linear-gradient(to right, ${hsbToHex((round as any).targetStart)}, ${hsbToHex((round as any).targetEnd)})`,
+                        background: `linear-gradient(to right, ${hsbToHex(
+                          (round as any).targetStart
+                        )}, ${hsbToHex((round as any).targetEnd)})`,
+                        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.08)",
                         flexShrink: 0,
                       }}
                     />
@@ -302,33 +313,37 @@ export function SummaryScreen({
                     <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                       <div
                         style={{
-                          width: 24,
-                          height: 24,
+                          width: 26,
+                          height: 26,
                           borderRadius: "50%",
                           backgroundColor: hsbToHex((round as any).target),
+                          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
                         }}
                       />
                       {"guess" in round && (round as any).guess && (
                         <div
                           style={{
-                            width: 24,
-                            height: 24,
+                            width: 26,
+                            height: 26,
                             borderRadius: "50%",
                             backgroundColor: hsbToHex((round as any).guess),
+                            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
                           }}
                         />
                       )}
                     </div>
                   )}
 
+                  <span />
+
                   {/* Score */}
                   <span
+                    className="cc-tnum"
                     style={{
-                      marginLeft: "auto",
                       fontSize: 15,
                       fontWeight: 800,
                       color: rColor,
-                      fontVariantNumeric: "tabular-nums",
+                      textAlign: "right",
                     }}
                   >
                     {roundScore}%
@@ -340,5 +355,26 @@ export function SummaryScreen({
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function StatBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div
+        className="cc-tnum"
+        style={{
+          fontSize: 22,
+          fontWeight: 800,
+          color: "var(--fg)",
+          letterSpacing: "-0.015em",
+        }}
+      >
+        {value}
+      </div>
+      <div className="cc-eyebrow" style={{ marginTop: 2 }}>
+        {label}
+      </div>
+    </div>
   );
 }

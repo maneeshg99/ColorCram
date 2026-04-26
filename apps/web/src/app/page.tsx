@@ -4,46 +4,95 @@ import { HomeContent } from "@/components/home/HomeContent";
 
 export default function HomePage() {
   return (
-    <div className="relative flex flex-col min-h-screen select-none">
-      {/* Top nav bar — server-rendered */}
-      <div
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between"
+    <main className="relative flex flex-col min-h-[100dvh] select-none">
+      {/* Top nav — translucent, hairline, small wordmark on the left */}
+      <nav
+        aria-label="Primary"
         style={{
-          padding: "16px clamp(24px, 5vw, 48px)",
-          backgroundColor: "rgba(19, 19, 19, 0.85)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 40,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px clamp(20px, 4vw, 48px)",
+          background: "rgba(15, 15, 17, 0.72)",
+          backdropFilter: "blur(16px) saturate(140%)",
+          WebkitBackdropFilter: "blur(16px) saturate(140%)",
+          borderBottom: "1px solid var(--border)",
         }}
       >
-        <div className="flex items-center gap-6">
+        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+          {/* Tiny wordmark in nav — establishes brand at small scale */}
+          <Link
+            href="/"
+            aria-label="ColorCram home"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 900,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            <span className="cc-rainbow-text">color</span>
+            <span style={{ color: "var(--fg)" }}>cram</span>
+          </Link>
+
+          <span
+            aria-hidden="true"
+            style={{
+              width: 1,
+              height: 14,
+              background: "var(--border-strong)",
+              display: "inline-block",
+            }}
+          />
+
           <Link
             href="/leaderboard"
-            className="text-sm font-black text-[#adadad] hover:text-white transition-colors duration-200 tracking-widest uppercase"
-            style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "var(--fg-muted)",
+              transition: "color var(--duration-fast) var(--ease-out)",
+            }}
+            className="hover:text-white"
           >
             Leaderboard
           </Link>
           <Link
             href="/support"
-            className="text-xs font-bold text-[#666] hover:text-[#adadad] transition-colors duration-200 tracking-wide uppercase"
-            style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+            className="hidden sm:inline"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--fg-subtle)",
+              transition: "color var(--duration-fast) var(--ease-out)",
+            }}
           >
             Support
           </Link>
           <Link
             href="/privacy"
-            className="text-xs font-bold text-[#666] hover:text-[#adadad] transition-colors duration-200 tracking-wide uppercase"
-            style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+            className="hidden sm:inline"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--fg-subtle)",
+              transition: "color var(--duration-fast) var(--ease-out)",
+            }}
           >
             Privacy
           </Link>
         </div>
         <AuthButton />
-      </div>
+      </nav>
 
-      {/* Client island — animations, sounds, mute toggle */}
       <HomeContent />
-    </div>
+    </main>
   );
 }

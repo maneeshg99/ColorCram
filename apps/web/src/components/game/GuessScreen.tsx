@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import type { HSB } from "@colorcram-v2/types";
-import { hsbToHex } from "@colorcram-v2/color-utils";
 import { HSBColorPicker } from "./HSBColorPicker";
 import { DualHSBPicker } from "./DualHSBPicker";
 import { RainbowRing } from "@/components/design-system/RainbowRing";
+import { Modal, ModalHeader, ModalActions } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 const DEFAULT_GUESS: HSB = { h: 180, s: 50, b: 50 };
 
@@ -35,7 +36,6 @@ export function GuessScreen({
   onGuessStartChange,
   onGuessEndChange,
 }: GuessScreenProps) {
-  const [goHovered, setGoHovered] = useState(false);
   const [showEndColorWarning, setShowEndColorWarning] = useState(false);
 
   const isEndColorDefault = guessEnd &&
@@ -53,14 +53,13 @@ export function GuessScreen({
 
   const submitButton = (
     <motion.button
-      onHoverStart={() => setGoHovered(true)}
-      onHoverEnd={() => setGoHovered(false)}
       onClick={isGradient ? handleGradientSubmit : onSubmit}
       style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
       whileTap={{ scale: 0.95 }}
+      aria-label="Submit guess"
     >
       <RainbowRing size={64} spinning>
-        <span style={{ fontSize: 12, fontWeight: 800, color: "#ffffff", letterSpacing: "0.08em" }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: "#ffffff", letterSpacing: "0.12em", textTransform: "uppercase" }}>
           Submit
         </span>
       </RainbowRing>
@@ -75,7 +74,7 @@ export function GuessScreen({
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       style={{
         height: "100dvh",
-        backgroundColor: "#131313",
+        backgroundColor: "var(--bg)",
         display: "flex",
         flexDirection: "column",
         padding: "clamp(12px, 2vw, 32px)",
@@ -87,26 +86,37 @@ export function GuessScreen({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "flex-start",
+          alignItems: "center",
           marginBottom: "clamp(4px, 1.5vw, 16px)",
           flexShrink: 0,
         }}
       >
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          style={{ fontSize: 13, fontWeight: 500, color: "#adadad", letterSpacing: "0.05em" }}
+          style={{ display: "flex", alignItems: "center", gap: 10 }}
         >
-          {round} / {totalRounds}
+          <span
+            style={{
+              height: 2,
+              width: 18,
+              background: "var(--rainbow)",
+              borderRadius: 999,
+            }}
+          />
+          <span className="cc-eyebrow cc-mono cc-tnum">
+            Round {round} / {totalRounds}
+          </span>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          style={{ fontSize: "clamp(1.2rem, 3vw, 2rem)", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.02em" }}
+          className="cc-headline"
+          style={{ fontSize: "clamp(1.3rem, 3vw, 2.25rem)", color: "var(--fg)" }}
         >
-          GUESS
+          Recreate it
         </motion.div>
       </div>
 
@@ -145,89 +155,37 @@ export function GuessScreen({
         </motion.div>
       </div>
 
-      {/* End color warning modal */}
-      <AnimatePresence>
-        {showEndColorWarning && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 300,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(0,0,0,0.7)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-            }}
+      {/* End color warning */}
+      <Modal
+        open={showEndColorWarning}
+        onClose={() => setShowEndColorWarning(false)}
+        labelledBy="end-color-warning-title"
+      >
+        <ModalHeader
+          id="end-color-warning-title"
+          title="Submit without an end color?"
+          description="You haven't picked an end color for this gradient yet."
+        />
+        <ModalActions>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowEndColorWarning(false)}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: "#1a1a1a",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 16,
-                padding: "28px 32px",
-                maxWidth: 320,
-                width: "90%",
-                textAlign: "center",
-              }}
-            >
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
-                Are you sure?
-              </p>
-              <p style={{ fontSize: 13, color: "#888", marginBottom: 24, lineHeight: 1.5 }}>
-                You haven&apos;t chosen an End Color.
-              </p>
-              <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-                <button
-                  onClick={() => { setShowEndColorWarning(false); onSubmit(); }}
-                  style={{
-                    background: "none",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: 20,
-                    padding: "8px 20px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#fff",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
-                >
-                  Submit anyway
-                </button>
-                <button
-                  onClick={() => setShowEndColorWarning(false)}
-                  style={{
-                    background: "none",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: 20,
-                    padding: "8px 20px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#adadad",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
-                >
-                  Go back
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            Go back
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              setShowEndColorWarning(false);
+              onSubmit();
+            }}
+          >
+            Submit anyway
+          </Button>
+        </ModalActions>
+      </Modal>
     </motion.div>
   );
 }

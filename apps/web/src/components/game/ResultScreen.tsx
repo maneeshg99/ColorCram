@@ -26,10 +26,10 @@ interface ResultScreenProps {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 90) return "#22c55e";
-  if (score >= 70) return "#eab308";
-  if (score >= 40) return "#f97316";
-  return "#ef4444";
+  if (score >= 90) return "#38d97a";
+  if (score >= 70) return "#f5c64b";
+  if (score >= 40) return "#ff8c42";
+  return "#ff5a5a";
 }
 
 function getFeedback(score: number): string {
@@ -75,7 +75,7 @@ export function ResultScreen({
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       style={{
         height: "100dvh",
-        backgroundColor: "#131313",
+        backgroundColor: "var(--bg)",
         display: "flex",
         flexDirection: "column",
         padding: "clamp(12px, 2vw, 24px)",
@@ -90,10 +90,10 @@ export function ResultScreen({
           marginBottom: "clamp(8px, 1.5vw, 16px)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {/* Home button */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {/* Home */}
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
           >
@@ -101,32 +101,35 @@ export function ResultScreen({
               href="/"
               style={{
                 fontSize: 13,
-                fontWeight: 500,
-                color: "#777",
-                textDecoration: "none",
-                transition: "color 0.2s",
+                fontWeight: 600,
+                color: "var(--fg-subtle)",
+                transition: "color var(--duration-fast) var(--ease-out)",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#777"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "var(--fg)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "var(--fg-subtle)"; }}
             >
               ← Home
             </Link>
           </motion.div>
 
+          <span
+            aria-hidden="true"
+            style={{
+              width: 1,
+              height: 12,
+              background: "var(--border-strong)",
+            }}
+          />
+
           {/* Round indicator */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
+          <motion.span
+            initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            style={{
-              fontSize: 13,
-              fontWeight: 500,
-              color: "#adadad",
-              letterSpacing: "0.05em",
-            }}
+            className="cc-eyebrow cc-mono cc-tnum"
           >
-            {round} / {totalRounds}
-          </motion.div>
+            Round {round} / {totalRounds}
+          </motion.span>
         </div>
 
         {/* Score */}
@@ -306,20 +309,26 @@ export function ResultScreen({
         <button
           onClick={onNext}
           style={{
-            background: "none",
-            border: "none",
+            background: "var(--accent)",
+            color: "var(--accent-ink)",
+            border: "1px solid var(--accent)",
+            borderRadius: 999,
             cursor: "pointer",
-            fontSize: 16,
-            fontWeight: 600,
-            color: "#ffffff",
-            letterSpacing: "0.02em",
-            padding: "12px 0",
-            transition: "opacity 0.2s",
+            fontSize: 14,
+            fontWeight: 700,
+            letterSpacing: "-0.005em",
+            padding: "10px 22px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            transition: "transform var(--duration-fast) var(--ease-out)",
+            boxShadow: "var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.2)",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
         >
-          {isLastRound ? "See Results" : "Next"} &rarr;
+          <span>{isLastRound ? "See results" : "Next round"}</span>
+          <span aria-hidden="true">&rarr;</span>
         </button>
       </motion.div>
     </motion.div>

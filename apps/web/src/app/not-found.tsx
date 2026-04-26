@@ -8,29 +8,59 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div
-      className="min-h-[100dvh] flex flex-col items-center justify-center px-8 gap-4 text-center"
-      style={{ backgroundColor: "var(--bg)", color: "var(--fg)" }}
+    <main
+      style={{
+        minHeight: "100dvh",
+        display: "grid",
+        placeItems: "center",
+        padding: "48px 24px",
+        position: "relative",
+        zIndex: 2,
+      }}
     >
-      <div className="flex flex-col items-center gap-4 max-w-md">
+      <div
+        style={{
+          display: "grid",
+          gap: 18,
+          justifyItems: "start",
+          maxWidth: 480,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span
+            style={{
+              height: 2,
+              width: 24,
+              background: "var(--rainbow)",
+              borderRadius: 999,
+            }}
+          />
+          <span className="cc-eyebrow">Page not found</span>
+        </div>
         <h1
-          className="font-black tracking-tighter leading-none"
-          style={{ fontSize: "clamp(3rem, 10vw, 6rem)" }}
+          className="cc-display cc-tnum"
+          style={{ fontSize: "clamp(4rem, 12vw, 8rem)", margin: 0 }}
         >
-          404
+          <span className="cc-rainbow-text">4</span>
+          <span style={{ color: "var(--fg)" }}>04</span>
         </h1>
         <p
-          className="text-sm leading-relaxed"
-          style={{ color: "var(--fg-muted)" }}
+          style={{
+            fontSize: 15,
+            color: "var(--fg-muted)",
+            maxWidth: "42ch",
+            lineHeight: 1.55,
+          }}
         >
-          This page doesn&apos;t exist or has been moved.
+          We couldn&apos;t find the page you were looking for. It may have
+          moved, or the link was copied incorrectly.
         </p>
-        <Link href="/">
-          <Button variant="primary" className="mt-4">
-            Go Home
+        <Link href="/" style={{ marginTop: 8 }}>
+          <Button variant="primary" size="md">
+            Back home
           </Button>
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

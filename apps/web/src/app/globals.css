@@ -1,53 +1,105 @@
 @import "tailwindcss";
 
 /* ============================================
-   Obsidian Chroma Design System — Dark Only
+   Obsidian Chroma — Dark, editorial, color-forward
    ============================================ */
 
 :root {
-  /* Backgrounds */
-  --bg: #131313;
+  /* Backgrounds — off-black, not pure black. Tinted slightly cool. */
+  --bg: #0f0f11;
+  --bg-elevated: #141418;
+  --bg-inset: #0a0a0c;
+
+  /* Foreground */
   --fg: #ffffff;
-  --fg-muted: #adadad;
-  --fg-subtle: #666;
+  --fg-muted: #a8a8ae;
+  --fg-subtle: #6a6a70;
+  --fg-faint: #3e3e44;
 
-  /* Surfaces */
-  --surface: #1f1f1f;
-  --surface-elevated: #2a2a2a;
-  --border: #2a2a2a;
+  /* Surfaces — layered, each a small step up */
+  --surface: #17171b;
+  --surface-elevated: #1e1e24;
+  --surface-overlay: #24242b;
 
-  /* Accent */
+  /* Borders — hairlines, progressively lighter */
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --border-focus: rgba(255, 255, 255, 0.35);
+
+  /* Accent — the brand is white on dark, the rainbow is decoration */
   --accent: #ffffff;
+  --accent-ink: #0f0f11;
 
-  /* Score colors */
-  --score-perfect: #14b861;
-  --score-great: #ffe103;
-  --score-good: #ff9500;
-  --score-poor: #ff3b3b;
+  /* Score tiers */
+  --score-perfect: #38d97a;
+  --score-great: #f5c64b;
+  --score-good: #ff8c42;
+  --score-poor: #ff5a5a;
+
+  /* Brand — rainbow */
+  --rainbow: linear-gradient(
+    90deg,
+    #ff3b5c 0%,
+    #ff9a3c 16%,
+    #ffe24a 33%,
+    #38d97a 50%,
+    #3aa8ff 66%,
+    #7a5cff 83%,
+    #ff3b9e 100%
+  );
+  --rainbow-conic: conic-gradient(
+    from 0deg,
+    #ff3b5c,
+    #ff9a3c,
+    #ffe24a,
+    #38d97a,
+    #3aa8ff,
+    #7a5cff,
+    #ff3b9e,
+    #ff3b5c
+  );
+
+  /* Tinted shadow — matches the cool background hue, not pure black */
+  --shadow-sm: 0 2px 8px rgba(5, 5, 10, 0.4);
+  --shadow-md: 0 8px 24px rgba(5, 5, 10, 0.5);
+  --shadow-lg: 0 24px 60px rgba(5, 5, 10, 0.55);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 
   /* Typography */
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --text-display: clamp(2.5rem, 5vw + 1rem, 4.5rem);
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Menlo", "Consolas", ui-monospace, monospace;
+
+  --text-display: clamp(3rem, 7vw + 1rem, 7rem);
+  --text-hero: clamp(2.25rem, 5vw + 0.5rem, 4.5rem);
   --text-headline: clamp(1.75rem, 3vw + 0.5rem, 3rem);
   --text-title: clamp(1.25rem, 2vw + 0.25rem, 1.75rem);
-  --text-body: clamp(0.875rem, 1vw + 0.25rem, 1.125rem);
-  --text-label: clamp(0.6875rem, 0.5vw + 0.25rem, 0.8125rem);
+  --text-body: clamp(0.9375rem, 0.8vw + 0.5rem, 1.0625rem);
+  --text-small: 0.8125rem;
+  --text-label: 0.6875rem;
 
   /* Shape */
-  --radius: 9999px;
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  --radius-pill: 9999px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
 
   /* Spacing */
   --gutter: 30px;
 
   /* Transitions */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 150ms;
-  --duration-normal: 300ms;
+  --duration-normal: 260ms;
   --duration-slow: 500ms;
+
+  /* Z-scale */
+  --z-nav: 40;
+  --z-overlay: 50;
+  --z-modal: 100;
+  --z-toast: 200;
 }
 
 *,
@@ -63,6 +115,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 body {
@@ -72,10 +125,11 @@ body {
   color: var(--fg);
   background-color: var(--bg);
   min-height: 100dvh;
+  letter-spacing: -0.005em;
 }
 
 ::selection {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.18);
   color: var(--fg);
 }
 
@@ -109,6 +163,7 @@ select {
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -116,6 +171,142 @@ select {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: var(--radius);
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Focus ring — visible for keyboard nav, invisible on mouse */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================
+   Utility classes
+   ============================================ */
+
+/* Rainbow text — use sparingly */
+.cc-rainbow-text {
+  background: var(--rainbow);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Rainbow hairline rule */
+.cc-rainbow-rule {
+  height: 2px;
+  background: var(--rainbow);
+  border-radius: var(--radius-pill);
+}
+
+/* Grain overlay — subtle noise to break flatness. Applied as fixed pseudo. */
+.cc-grain {
+  position: relative;
+  isolation: isolate;
+}
+.cc-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1   0 0 0 0 1   0 0 0 0 1   0 0 0 0.35 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/></svg>");
+  background-size: 160px 160px;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+}
+
+/* Fixed global grain — put once in root layout */
+.cc-grain-fixed {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1   0 0 0 0 1   0 0 0 0 1   0 0 0 0.4 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/></svg>");
+  background-size: 180px 180px;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+}
+
+/* Ambient radial vignette — gently lifts the center of hero sections */
+.cc-vignette {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 35%, rgba(255, 255, 255, 0.035), transparent 60%),
+    var(--bg);
+}
+
+/* Skeleton loader pulse */
+@keyframes cc-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.cc-pulse {
+  animation: cc-pulse 1.6s ease-in-out infinite;
+}
+
+/* Tabular numbers utility */
+.cc-tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Mono family */
+.cc-mono {
+  font-family: var(--font-mono);
+}
+
+/* Eyebrow label — replaces most uppercase tracking-widest */
+.cc-eyebrow {
+  font-size: var(--text-label);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+/* Display headline — tight, heavy, balanced */
+.cc-display {
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  text-wrap: balance;
+}
+
+.cc-headline {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+/* Measure — cap reading width */
+.cc-measure {
+  max-width: 38ch;
+}
+
+/* Surface card — subtle, hairline only */
+.cc-surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-inset);
+}
+
+/* Rainbow ring keyframes (consumed by RainbowRing) */
+@keyframes cc-rainbow-spin {
+  to { transform: rotate(360deg); }
 }

@@ -1,49 +1,62 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { RainbowRing } from "@/components/design-system/RainbowRing";
+import { Modal, ModalHeader, ModalActions } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import { playSound } from "@/lib/sounds";
 import type { GameMode } from "@colorcram-v2/types";
 
-const MODE_INFO: Record<string, { title: string; description: string; detail: string }> = {
+const MODE_INFO: Record<
+  string,
+  { title: string; tagline: string; detail: string; index: string }
+> = {
   classic: {
     title: "Classic",
-    description: "Memorize. Guess. Repeat.",
-    detail: "You'll see a color for a few seconds, then recreate it from memory using the HSB picker. 5 rounds — accuracy is everything.",
+    tagline: "Memorize. Guess. Repeat.",
+    detail:
+      "Study one color, then recreate it from memory using the HSB picker. Five rounds. Accuracy is everything.",
+    index: "01",
   },
   daily: {
-    title: "Daily Challenge",
-    description: "Same colors. Everyone. Every day.",
-    detail: "One attempt per day with the same 5 colors worldwide. Compare your score on the leaderboard.",
+    title: "Daily",
+    tagline: "Same colors. Everyone. Every day.",
+    detail:
+      "One attempt per day with five colors shared worldwide. Compare where you land on the leaderboard.",
+    index: "02",
   },
   blitz: {
     title: "Blitz",
-    description: "60 seconds. As many as you can.",
-    detail: "Colors flash fast and you guess faster. Race the clock — every round counts toward your total score.",
+    tagline: "60 seconds. As many as you can.",
+    detail:
+      "Colors flash fast and you guess faster. Race the clock. Every round counts toward your total.",
+    index: "03",
   },
   gradient: {
     title: "Gradient",
-    description: "Two colors. One smooth blend.",
-    detail: "Memorize a gradient, then recreate both the start and end colors. Twice the challenge.",
+    tagline: "Two colors. One smooth blend.",
+    detail:
+      "Memorize a gradient, then recreate both the start and end color. Twice the challenge.",
+    index: "04",
   },
 };
 
 const EXPERT_WARNINGS = [
   "Your confidence is inspiring. Your accuracy? We'll see.",
   "Bold move. Hope your cones are warmed up.",
-  "Expert mode doesn't grade on a curve. Just saying.",
+  "Expert mode doesn't grade on a curve.",
   "5 rounds. 2 seconds each. No mercy.",
-  "You sure? The colors don't get easier, the timer gets shorter.",
-  "Most people regret this. Just so you know.",
+  "The colors don't get easier. The timer gets shorter.",
+  "Most people regret this.",
   "The leaderboard remembers everything.",
   "Statistically, you will be humbled.",
 ];
 
-function PlayIcon() {
+function PlayIcon({ size = 16 }: { size?: number }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" style={{ marginLeft: 2 }}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="white" style={{ marginLeft: 2 }}>
       <polygon points="6,3 20,12 6,21" />
     </svg>
   );
@@ -68,188 +81,289 @@ export function PreGameScreen({ mode, onStart }: PreGameScreenProps) {
   };
 
   return (
-    <div style={{ height: "100dvh", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", userSelect: "none" }}>
-      {/* Back link */}
-      <motion.div
-        className="fixed top-4 left-8 sm:left-12 z-50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
+    <div
+      style={{
+        minHeight: "100dvh",
+        display: "grid",
+        gridTemplateRows: "auto 1fr auto",
+        padding: "clamp(16px, 3vw, 28px) clamp(20px, 4vw, 48px)",
+        userSelect: "none",
+      }}
+    >
+      {/* Top bar — back link on the left, mode index on the right */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
       >
         <Link
           href="/"
           onClick={() => playSound("click")}
-          className="text-sm text-[#666] hover:text-white transition-colors"
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--fg-subtle)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            transition: "color var(--duration-fast) var(--ease-out)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = "var(--fg)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = "var(--fg-subtle)";
+          }}
         >
-          &larr; Back
+          <span aria-hidden="true">&larr;</span>
+          <span>Home</span>
         </Link>
-      </motion.div>
 
-      {/* Title */}
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="text-4xl sm:text-5xl font-[900] tracking-tighter text-white mb-3"
+        <span className="cc-eyebrow cc-mono" style={{ color: "var(--fg-faint)" }}>
+          Mode {info.index}
+        </span>
+      </div>
+
+      {/* Hero — editorial, left-anchored, with a right-side detail on wide screens */}
+      <motion.section
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+        }}
+        style={{
+          width: "100%",
+          maxWidth: 1100,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr)",
+          gap: "clamp(32px, 6vh, 56px)",
+          alignContent: "center",
+          padding: "24px 0",
+        }}
       >
-        {info.title}
-      </motion.h1>
-
-      {/* Tagline */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15, duration: 0.5 }}
-        className="text-lg text-[#adadad] mb-2"
-      >
-        {info.description}
-      </motion.p>
-
-      {/* Detail */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.25, duration: 0.5 }}
-        className="text-sm text-[#666] max-w-sm text-center leading-relaxed mb-12"
-      >
-        {info.detail}
-      </motion.p>
-
-      {isClassic ? (
-        /* Classic: Easy and Expert buttons side by side */
-        <>
+        {/* Title block */}
         <motion.div
-          className="flex flex-col items-center gap-6 relative"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
+          variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            display: "grid",
+            gap: 18,
+            maxWidth: 820,
+          }}
         >
-          <div className="flex items-center gap-8">
-            <button
-              onClick={() => { playSound("click"); onStart("easy"); }}
-              onMouseEnter={() => playSound("hover")}
-              className="flex flex-col items-center gap-2"
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
-            >
-              <RainbowRing size={72} spinning>
-                <PlayIcon />
-              </RainbowRing>
-              <span className="text-sm font-bold text-white tracking-wide">Easy</span>
-            </button>
-
-            <button
-              onClick={handleExpertClick}
-              onMouseEnter={() => playSound("hover")}
-              className="flex flex-col items-center gap-2"
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
-            >
-              <RainbowRing size={72} spinning>
-                <PlayIcon />
-              </RainbowRing>
-              <span className="text-sm font-bold text-white tracking-wide">Expert</span>
-            </button>
+          {/* Rainbow rule + eyebrow */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span
+              style={{
+                height: 2,
+                width: 28,
+                background: "var(--rainbow)",
+                borderRadius: 999,
+              }}
+            />
+            <span className="cc-eyebrow">Ready?</span>
           </div>
 
-        </motion.div>
-      {/* Expert warning modal — fullscreen overlay */}
-      <AnimatePresence>
-        {showExpertWarning && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          {/* Title */}
+          <h1
+            className="cc-display"
             style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 300,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(0,0,0,0.7)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
+              fontSize: "clamp(3rem, 9vw, 6.5rem)",
+              margin: 0,
+              color: "var(--fg)",
             }}
-            onClick={() => { playSound("click"); setShowExpertWarning(false); }}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: "#1a1a1a",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 16,
-                padding: "28px 32px",
-                maxWidth: 320,
-                width: "90%",
-                textAlign: "center",
-              }}
-            >
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
-                Expert Mode
-              </p>
-              <p style={{ fontSize: 13, color: "#888", marginBottom: 24, lineHeight: 1.5, fontStyle: "italic" }}>
-                &ldquo;{EXPERT_WARNINGS[warningIdx]}&rdquo;
-              </p>
-              <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-                <button
-                  onClick={() => { playSound("click"); onStart("expert"); }}
-                  style={{
-                    background: "none",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: 20,
-                    padding: "8px 20px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#fff",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
-                >
-                  Bring it on
-                </button>
-                <button
-                  onClick={() => { playSound("click"); setShowExpertWarning(false); }}
-                  style={{
-                    background: "none",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: 20,
-                    padding: "8px 20px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#adadad",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
-                >
-                  Maybe not
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-        </>
-      ) : (
-        /* Other modes: single GO button */
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 25 }}
-          onClick={() => { playSound("click"); onStart(); }}
-          onMouseEnter={() => playSound("hover")}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            {info.title}
+          </h1>
+
+          {/* Tagline */}
+          <p
+            style={{
+              fontSize: "clamp(1.05rem, 1.8vw, 1.35rem)",
+              fontWeight: 500,
+              color: "var(--fg-muted)",
+              maxWidth: "38ch",
+              lineHeight: 1.4,
+            }}
+          >
+            {info.tagline}
+          </p>
+
+          {/* Detail */}
+          <p
+            style={{
+              fontSize: 14,
+              color: "var(--fg-subtle)",
+              maxWidth: "52ch",
+              lineHeight: 1.65,
+            }}
+          >
+            {info.detail}
+          </p>
+        </motion.div>
+
+        {/* Start controls */}
+        <motion.div
+          variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "clamp(16px, 3vw, 36px)",
+            paddingTop: 8,
+            borderTop: "1px solid var(--border)",
+            flexWrap: "wrap",
+          }}
         >
-          <RainbowRing size={88} spinning>
-            <span className="text-lg font-[800] text-white tracking-widest">GO</span>
-          </RainbowRing>
-        </motion.button>
-      )}
+          {isClassic ? (
+            <>
+              <DifficultyButton
+                label="Easy"
+                hint="5 seconds to memorize"
+                onClick={() => {
+                  playSound("click");
+                  onStart("easy");
+                }}
+              />
+              <DifficultyButton
+                label="Expert"
+                hint="2 seconds. No mercy."
+                onClick={handleExpertClick}
+              />
+            </>
+          ) : (
+            <DifficultyButton
+              label="Start"
+              hint="Let's see what you've got"
+              big
+              onClick={() => {
+                playSound("click");
+                onStart();
+              }}
+            />
+          )}
+        </motion.div>
+      </motion.section>
+
+      {/* Footer hairline */}
+      <div
+        style={{
+          paddingTop: 20,
+          borderTop: "1px solid var(--border)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontSize: 11,
+          color: "var(--fg-faint)",
+        }}
+      >
+        <span className="cc-eyebrow">ColorCram</span>
+        <span className="cc-mono">v1.0</span>
+      </div>
+
+      {/* Expert warning modal */}
+      <Modal
+        open={showExpertWarning}
+        onClose={() => {
+          playSound("click");
+          setShowExpertWarning(false);
+        }}
+        labelledBy="expert-warning-title"
+      >
+        <ModalHeader
+          id="expert-warning-title"
+          title="Expert mode"
+          description={
+            <span style={{ fontStyle: "italic" }}>
+              &ldquo;{EXPERT_WARNINGS[warningIdx]}&rdquo;
+            </span>
+          }
+        />
+        <ModalActions>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              playSound("click");
+              setShowExpertWarning(false);
+            }}
+          >
+            Maybe not
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              playSound("click");
+              onStart("expert");
+            }}
+          >
+            Bring it on
+          </Button>
+        </ModalActions>
+      </Modal>
     </div>
+  );
+}
+
+interface DifficultyButtonProps {
+  label: string;
+  hint: string;
+  onClick: () => void;
+  big?: boolean;
+}
+
+function DifficultyButton({ label, hint, onClick, big }: DifficultyButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => playSound("hover")}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 16,
+        background: "transparent",
+        border: "none",
+        cursor: "pointer",
+        padding: "8px 0",
+      }}
+    >
+      <RainbowRing size={big ? 84 : 64}>
+        <PlayIcon size={big ? 16 : 14} />
+      </RainbowRing>
+      <span
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          lineHeight: 1.2,
+        }}
+      >
+        <span
+          style={{
+            fontSize: big ? 22 : 18,
+            fontWeight: 800,
+            color: "var(--fg)",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {label}
+        </span>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 500,
+            color: "var(--fg-subtle)",
+            marginTop: 2,
+          }}
+        >
+          {hint}
+        </span>
+      </span>
+    </button>
   );
 }
