@@ -8,6 +8,10 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -26,7 +30,7 @@ interface GameStat {
 }
 
 export default function ProfileTab() {
-  const { user, profile, loading, signOut, deleteAccount } = useAuth();
+  const { user, profile, loading, signOut, deleteAccount, changeUsername } = useAuth();
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
   const c = Colors.dark;
@@ -34,6 +38,42 @@ export default function ProfileTab() {
   const [stats, setStats] = useState<GameStat[]>([]);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
+
+  // Username change modal state
+  const [usernameModalVisible, setUsernameModalVisible] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [usernameSubmitting, setUsernameSubmitting] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernameSuccessFlash, setUsernameSuccessFlash] = useState(false);
+  const openUsernameModal = useCallback(() => {
+    setUsernameInput(profile?.username ?? "");
+    setUsernameError(null);
+    setUsernameModalVisible(true);
+  }, [profile?.username]);
+  const closeUsernameModal = useCallback(() => {
+    setUsernameModalVisible(false);
+    setUsernameError(null);
+    setUsernameSubmitting(false);
+  }, []);
+  const submitUsername = useCallback(async () => {
+    setUsernameError(null);
+    setUsernameSubmitting(true);
+    const result = await changeUsername(usernameInput);
+    setUsernameSubmitting(false);
+    if (result.status === "ok") {
+      setUsernameSuccessFlash(true);
+      setTimeout(() => {
+        setUsernameSuccessFlash(false);
+        closeUsernameModal();
+      }, 900);
+    } else if (result.status === "noop") {
+      // No change made — just close
+      closeUsernameModal();
+    } else {
+      // 'cooldown' | 'conflict' | 'error' — surface the message
+      setUsernameError(result.message);
+    }
+  }, [changeUsername, usernameInput, closeUsernameModal]);
 
   const loadStats = useCallback(async () => {
     if (!user) {
@@ -143,7 +183,7 @@ export default function ProfileTab() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={[styles.title, { color: c.fg }]}>Profile</Text>
 
-        {/* User card */}
+        {/* User card — pencil button next to username opens change modal */}
         <View style={[styles.userCard, { backgroundColor: c.surface }]}>
           <View style={[styles.avatar, { backgroundColor: c.surfaceElevated }]}>
             <Text style={[styles.avatarText, { color: c.fg }]}>
@@ -151,9 +191,28 @@ export default function ProfileTab() {
             </Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.username, { color: c.fg }]}>
-              {profile?.username ?? "Loading..."}
-            </Text>
+            <View style={styles.usernameRow}>
+              <Text
+                style={[styles.username, { color: c.fg }]}
+                numberOfLines={1}
+              >
+                {profile?.username ?? "Loading..."}
+              </Text>
+              <Pressable
+                onPress={openUsernameModal}
+                hitSlop={12}
+                accessibilityLabel="Change username"
+                style={({ pressed }) => [
+                  styles.editButton,
+                  { borderColor: c.border },
+                  pressed && { opacity: 0.5 },
+                ]}
+              >
+                <Text style={[styles.editButtonText, { color: c.fgMuted }]}>
+                  Change
+                </Text>
+              </Pressable>
+            </View>
             <Text style={[styles.email, { color: c.fgMuted }]}>
               {user?.email}
             </Text>
@@ -271,6 +330,115 @@ export default function ProfileTab() {
           </Pressable>
         </View>
       </ScrollView>
+
+      {/* Change username modal */}
+      <Modal
+        visible={usernameModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeUsernameModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={usernameSubmitting ? undefined : closeUsernameModal}
+          />
+          <View style={[styles.modalCard, { backgroundColor: c.surface }]}>
+            {usernameSuccessFlash ? (
+              <View style={styles.modalSuccessBox}>
+                <Text style={[styles.modalSuccessTitle, { color: c.fg }]}>
+                  Username updated
+                </Text>
+                <Text style={[styles.modalSuccessMsg, { color: c.fgMuted }]}>
+                  Next change available in 30 days.
+                </Text>
+              </View>
+            ) : (
+              <>
+                <Text style={[styles.modalTitle, { color: c.fg }]}>
+                  Change username
+                </Text>
+                <Text style={[styles.modalHelper, { color: c.fgMuted }]}>
+                  2-24 characters. Letters, numbers, and underscores only —
+                  no spaces or symbols. You can change your username once
+                  every 30 days.
+                </Text>
+                <TextInput
+                  value={usernameInput}
+                  onChangeText={(t) => {
+                    setUsernameInput(t);
+                    if (usernameError) setUsernameError(null);
+                  }}
+                  placeholder="Username"
+                  placeholderTextColor={c.fgSubtle}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={24}
+                  style={[
+                    styles.modalInput,
+                    {
+                      color: c.fg,
+                      borderColor: usernameError ? "#ff3b3b" : c.border,
+                      backgroundColor: c.surfaceElevated,
+                    },
+                  ]}
+                  editable={!usernameSubmitting}
+                  returnKeyType="done"
+                  onSubmitEditing={submitUsername}
+                />
+                {usernameError && (
+                  <Text style={styles.modalError}>{usernameError}</Text>
+                )}
+                <View style={styles.modalActions}>
+                  <Pressable
+                    onPress={closeUsernameModal}
+                    disabled={usernameSubmitting}
+                    style={({ pressed }) => [
+                      styles.modalBtn,
+                      { borderColor: c.border, borderWidth: 1 },
+                      pressed && { opacity: 0.6 },
+                    ]}
+                  >
+                    <Text style={[styles.modalBtnText, { color: c.fg }]}>
+                      Cancel
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={submitUsername}
+                    disabled={
+                      usernameSubmitting || usernameInput.trim().length < 2
+                    }
+                    style={({ pressed }) => [
+                      styles.modalBtn,
+                      {
+                        backgroundColor: c.accent,
+                        opacity:
+                          usernameSubmitting ||
+                          usernameInput.trim().length < 2
+                            ? 0.4
+                            : pressed
+                            ? 0.7
+                            : 1,
+                      },
+                    ]}
+                  >
+                    {usernameSubmitting ? (
+                      <ActivityIndicator color={c.bg} />
+                    ) : (
+                      <Text style={[styles.modalBtnText, { color: c.bg }]}>
+                        Save
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              </>
+            )}
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -326,4 +494,79 @@ const styles = StyleSheet.create({
   linksSection: { marginTop: 24, alignItems: "center", gap: 12 },
   linkRow: { paddingVertical: 4 },
   linkText: { fontSize: 13, textDecorationLine: "underline" },
+  // Username row + change button
+  usernameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  editButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  editButtonText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  // Username change modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 360,
+    borderRadius: 16,
+    padding: 22,
+    gap: 14,
+  },
+  modalTitle: { fontSize: 20, fontWeight: "800" },
+  modalHelper: { fontSize: 13, lineHeight: 19 },
+  modalInput: {
+    height: 48,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  modalError: {
+    fontSize: 13,
+    color: "#ff3b3b",
+    marginTop: -4,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 4,
+  },
+  modalBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalBtnText: { fontSize: 14, fontWeight: "700" },
+  // Success flash inside the username modal
+  modalSuccessBox: {
+    paddingVertical: 24,
+    alignItems: "center",
+    gap: 6,
+  },
+  modalSuccessTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  modalSuccessMsg: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
+  },
 });

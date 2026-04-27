@@ -59,6 +59,12 @@ interface Profile {
   role: string;
 }
 
+export interface ChangeUsernameResult {
+  /** ok | noop | cooldown | conflict | error */
+  status: "ok" | "noop" | "cooldown" | "conflict" | "error";
+  message: string;
+}
+
 interface AuthContextValue {
   user: User | null;
   profile: Profile | null;
@@ -74,6 +80,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<string | null>;
   resetPassword: (email: string) => Promise<string | null>;
+  changeUsername: (newUsername: string) => Promise<ChangeUsernameResult>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -87,6 +94,7 @@ const AuthContext = createContext<AuthContextValue>({
   signOut: async () => {},
   deleteAccount: async () => null,
   resetPassword: async () => null,
+  changeUsername: async () => ({ status: "error", message: "Not initialized" }),
 });
 
 export function useAuth() {
@@ -350,6 +358,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const changeUsername = useCallback(
+    async (newUsername: string): Promise<ChangeUsernameResult> => {
+      const trimmed = (newUsername ?? "").trim();
+      if (trimmed.length < 2 || trimmed.length > 24) {
+        return { status: "error", message: "Username must be 2-24 characters" };
+      }
+      if (!/^[A-Za-z0-9_]+$/.test(trimmed)) {
+        return {
+          status: "error",
+          message: "Letters, numbers, and underscores only",
+        };
+      }
+      try {
+        const { data, error } = await supabase.rpc("change_username", {
+          new_username: trimmed,
+        });
+        if (error) {
+          return {
+            status: "error",
+            message: error.message ?? "Couldn't update username",
+          };
+        }
+        // RPC returns a single-row table — supabase-js gives us an array
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row?.status) {
+          return { status: "error", message: "Unexpected response" };
+        }
+        // On success, refresh the profile so UI reflects new username
+        if (row.status === "ok" && user) {
+          await fetchProfile(user.id);
+        }
+        return {
+          status: row.status as ChangeUsernameResult["status"],
+          message: row.message ?? "",
+        };
+      } catch (e: any) {
+        return {
+          status: "error",
+          message: e?.message ?? "Network error. Try again.",
+        };
+      }
+    },
+    [user, fetchProfile]
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -363,6 +416,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         deleteAccount,
         resetPassword,
+        changeUsername,
       }}
     >
       {children}
